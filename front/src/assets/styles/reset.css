@@ -1,0 +1,57 @@
+* {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+*,
+:after,
+:before {
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  line-height: 1.5;
+  cursor: default;
+  overflow-wrap: break-word;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+}
+
+li {
+  list-style-type: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
