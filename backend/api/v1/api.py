@@ -1,8 +1,8 @@
 # app/api/v1/api.py
 
 from fastapi import APIRouter
-from app.api.v1.endpoints.auth import subdomain as domain1_subdomain
-from app.api.v1.endpoints.user import subdomain as domain2_subdomain
+from api.v1.auth import auth_example as domain1_subdomain
+from api.v1.user import user_example as domain2_subdomain
 
 router = APIRouter()
 
