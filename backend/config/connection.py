@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import paramiko
 from gremlin_python.driver import client, serializer
 from starlette.requests import Request
+from sshtunnel import SSHTunnelForwarder
 
 app = FastAPI()
 ssh_client = None
@@ -52,7 +53,7 @@ class NeptuneConnection:
 
     def get_gremlin_client(self):
         return client.Client(
-            f"wss://soohwan-cluster.cluster-c5was46486j3.ap-northeast-2.neptune.amazonaws.com",
+            f"soohwan-cluster.cluster-c5was46486j3.ap-northeast-2.neptune.amazonaws.com",
             "g",
             message_serializer=serializer.GraphSONSerializersV2d0(),
         )
