@@ -1,27 +1,15 @@
+import ssl
+from config.constants.ssh import ssh_host, ssh_port, ssh_user, ssh_key_path
+from config.constants.neptune import neptune_endpoint, neptune_port
 from fastapi import FastAPI
 from api.v1.api import router as api_v1_router
 from config.database import connect_to_db, close_db_connection
 from config.connection import NeptuneConnection
-
-app = FastAPI()
-
-from fastapi import FastAPI
-
 from sshtunnel import SSHTunnelForwarder
 from gremlin_python.driver import client as gremlin_client, serializer
-import ssl
 
 app = FastAPI()
 
-# SSH 및 Neptune 설정
-ssh_host = "52.78.109.39"
-ssh_port = 22
-ssh_user = "ec2-user"
-ssh_key_path = "C:/Users/Minsoo/gooroom/ssh/test.pem"
-neptune_endpoint = (
-    "soohwan-cluster.cluster-c5was46486j3.ap-northeast-2.neptune.amazonaws.com"
-)
-neptune_port = 8182
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
