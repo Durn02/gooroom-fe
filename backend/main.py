@@ -13,14 +13,17 @@ async def startup_event():
     global tunnel
     tunnel = create_ssh_tunnel()
     tunnel.start()
-    print("SSH 터널이 시작되었습니다. Neptune 데이터베이스에 연결합니다...")
+    print("SSH 터널 시작.")
 
 
 @app.on_event("shutdown")
 async def close_ssh_tunnel():
     global tunnel
     tunnel.stop()
-    print("SSH 터널이 시작되었습니다. Neptune 데이터베이스에 연결합니다...")
+    print("SSH 터널 종료.")
+
+
+app.include_router(api_v1_router, prefix="/api/v1")
 
 
 @app.get("/persons")
@@ -34,9 +37,6 @@ async def read_persons():
         gremlin_client.close()
         tunnel.stop()
         print("SSH 터널이 종료되었습니다.")
-
-
-app.include_router(api_v1_router, prefix="/api/v1")
 
 
 @app.get("/")

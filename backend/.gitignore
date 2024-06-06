@@ -49,3 +49,4 @@ dmypy.json
 
 #env
 .env
+*.env

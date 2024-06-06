@@ -6,6 +6,9 @@ from starlette.requests import Request
 from sshtunnel import SSHTunnelForwarder
 from dotenv import load_dotenv
 import ssl
+import nest_asyncio
+
+nest_asyncio.apply()
 
 import os
 from pathlib import Path
@@ -45,8 +48,6 @@ def create_gremlin_client():
     client = Client(
         "wss://localhost:8182/gremlin",
         "g",
-        username="/db/neptune",
-        password="",
         message_serializer=serializer.GraphSONSerializersV3d0(),
         ssl_context=ssl_context,  # SSL 인증서 검증 비활성화
     )
