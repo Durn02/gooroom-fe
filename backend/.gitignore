@@ -49,3 +49,6 @@ dmypy.json
 
 #env
 .env
+
+#poetry
+*.toml

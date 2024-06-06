@@ -1,6 +1,4 @@
 import ssl
-from config.constants.ssh import ssh_host, ssh_port, ssh_user, ssh_key_path
-from config.constants.neptune import neptune_endpoint, neptune_port
 from fastapi import FastAPI
 from api.v1.api import router as api_v1_router
 
