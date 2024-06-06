@@ -16,7 +16,9 @@ async def startup_event():
 
 @app.on_event('shutdown')
 async def close_ssh_tunnel():
+    global tunnel
     tunnel.stop()
+    print("SSH 터널이 시작되었습니다. Neptune 데이터베이스에 연결합니다...")
 
 
 @app.get("/persons")
