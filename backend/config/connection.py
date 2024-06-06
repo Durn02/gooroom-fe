@@ -1,59 +1,60 @@
-# from fastapi import FastAPI
-# import paramiko
-# from gremlin_python.driver import client, serializer
-# from starlette.requests import Request
-# from sshtunnel import SSHTunnelForwarder
+from fastapi import FastAPI
+import paramiko
+from gremlin_python.driver import serializer
+from gremlin_python.driver.client import Client
+from starlette.requests import Request
+from sshtunnel import SSHTunnelForwarder
+from dotenv import load_dotenv
+import ssl
 
-# app = FastAPI()
-# ssh_client = None
-# gremlin_client = None
+import os
+from pathlib import Path
+
+# .env 파일 경로 설정
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+ssh_host = os.getenv("SSH_HOST")
+ssh_port = int(os.getenv("SSH_PORT"))
+ssh_user = os.getenv("SSH_USER")
+ssh_key_path = os.getenv("SSH_KEY_PATH")
+neptune_endpoint = os.getenv("NEPTUNE_ENDPOINT")
+neptune_port = int(os.getenv("NEPTUNE_PORT"))
 
 
-# class NeptuneConnection:
-#     def __init__(
-#         self,
-#         ssh_host,
-#         ssh_port,
-#         ssh_user,
-#         ssh_key,
-#         neptune_endpoint,
-#         neptune_port,
-#         local_port,
-#     ):
-#         self.ssh_host = ssh_host
-#         self.ssh_port = ssh_port
-#         self.ssh_user = ssh_user
-#         self.ssh_key = ssh_key
-#         self.neptune_endpoint = neptune_endpoint
-#         self.neptune_port = neptune_port
-#         self.local_port = local_port
-#         self.ssh_client = None
-#         self.tunnel = None
+# SSL 설정
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
-#     def start_ssh_tunnel(self):
-#         self.ssh_client = paramiko.SSHClient()
-#         self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#         self.ssh_client.connect(
-#             self.ssh_host,
-#             port=self.ssh_port,
-#             username=self.ssh_user,
-#             key_filename=self.ssh_key,
-#         )
-#         self.tunnel = self.ssh_client.get_transport().open_channel(
-#             "direct-tcpip",
-#             (self.neptune_endpoint, self.neptune_port),
-#             ("localhost", self.local_port),
-#         )
 
-#     def close_ssh_tunnel(self):
-#         if self.tunnel:
-#             self.tunnel.close()
-#         if self.ssh_client:
-#             self.ssh_client.close()
+# SSH 터널링 설정
+def create_ssh_tunnel():
+    tunnel = SSHTunnelForwarder(
+        (ssh_host, ssh_port),
+        ssh_username=ssh_user,
+        ssh_private_key=ssh_key_path,
+        remote_bind_address=(neptune_endpoint, neptune_port),
+        local_bind_address=("localhost", 8182),
+    )
+    return tunnel
 
-#     def get_gremlin_client(self):
-#         return client.Client(
-#             f"soohwan-cluster.cluster-c5was46486j3.ap-northeast-2.neptune.amazonaws.com",
-#             "g",
-#             message_serializer=serializer.GraphSONSerializersV2d0(),
-#         )
+
+# Gremlin 클라이언트 설정
+def create_gremlin_client():
+    client = Client(
+        "wss://localhost:8182/gremlin",
+        "g",
+        username="/db/neptune",
+        password="",
+        message_serializer=serializer.GraphSONSerializersV3d0(),
+        ssl_context=ssl_context,  # SSL 인증서 검증 비활성화
+    )
+    return client
+
+
+# 그래프 탐색 함수
+def get_persons(client):
+    query = "g.V()"
+    result = client.submit(query).all().result()
+    return result

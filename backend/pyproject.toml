@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["Dcaffein <hj02117@korea.ac.kr>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+paramiko = "^3.4.0"
+sshtunnel = "^0.4.0"
+python-dotenv = "^1.0.1"
+fastapi = "^0.111.0"
+gremlinpython = "^3.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
