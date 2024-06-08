@@ -23,6 +23,7 @@ share/python-wheels/
 *.egg
 
 # Virtual environments
+
 env/
 venv/
 ENV/
@@ -46,4 +47,6 @@ dmypy.json
 # VS Code project files
 .vscode/
 
+#env
 .env
+*.env

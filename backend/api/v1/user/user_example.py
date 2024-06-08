@@ -1,6 +1,5 @@
-# app/api/v1/endpoints/domain1/subdomain.py
+from fastapi import APIRouter, HTTPException
 
-from fastapi import APIRouter
 
 router = APIRouter()
 
