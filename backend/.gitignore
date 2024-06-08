@@ -45,3 +45,5 @@ dmypy.json
 
 # VS Code project files
 .vscode/
+
+.env
