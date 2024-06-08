@@ -1,11 +1,12 @@
+import sys
+import os
+from config.connection import create_gremlin_client
 from fastapi import HTTPException, APIRouter, Depends
-import sys, os
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from config.connection import create_gremlin_client, get_persons
 
 router = APIRouter()
 

@@ -1,8 +1,7 @@
-# app/api/v1/api.py
-
+# app/domain/api.py
 from fastapi import APIRouter
-from api.v1.auth import auth_example as auth
-from api.v1.user import user_example as user
+from domain.auth import auth_example as auth
+from domain.user import user_example as user
 
 router = APIRouter()
 

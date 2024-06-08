@@ -1,22 +1,19 @@
-from fastapi import FastAPI
-import paramiko
+import ssl
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 from gremlin_python.driver import serializer
 from gremlin_python.driver.client import Client
-from starlette.requests import Request
 from sshtunnel import SSHTunnelForwarder
-from dotenv import load_dotenv
-import ssl
 import nest_asyncio
 
 nest_asyncio.apply()
-
-import os
-from pathlib import Path
 
 # .env 파일 경로 설정
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
+# 환경 변수 설정
 ssh_host = os.getenv("SSH_HOST")
 ssh_port = int(os.getenv("SSH_PORT"))
 ssh_user = os.getenv("SSH_USER")
