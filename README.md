@@ -2,15 +2,6 @@
 
 - GooRoom의 repository 입니다.
 
-## clone 또는 pull 이후 세팅
-
-- `yarn install`
-
-## 실행 방법
-
-- `cd ./front`
-- `yarn start`
-
 ## git commit convention
 
 | 종류    | 내용                    | 예시                                    |
