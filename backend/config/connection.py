@@ -49,10 +49,3 @@ def create_gremlin_client():
         ssl_context=ssl_context,  # SSL 인증서 검증 비활성화
     )
     return client
-
-
-# 그래프 탐색 함수
-def get_persons(client):
-    query = "g.V()"
-    result = client.submit(query).all().result()
-    return result

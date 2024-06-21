@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from domain.api import router as domain_api_router
-from config.connection import create_ssh_tunnel, create_gremlin_client, get_persons
+from config.connection import create_ssh_tunnel
 
 app = FastAPI()
 
@@ -23,19 +23,6 @@ async def close_ssh_tunnel():
 
 
 app.include_router(domain_api_router, prefix="/api/v1")
-
-
-@app.get("/persons")
-async def read_persons():
-    gremlin_client = create_gremlin_client()
-
-    try:
-        persons = get_persons(gremlin_client)
-        return {"persons": persons}
-    finally:
-        gremlin_client.close()
-        tunnel.stop()
-        print("SSH 터널이 종료되었습니다.")
 
 
 @app.get("/")
