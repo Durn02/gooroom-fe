@@ -22,7 +22,7 @@ async def close_ssh_tunnel():
     print("SSH 터널 종료.")
 
 
-app.include_router(domain_api_router, prefix="/api/v1")
+app.include_router(domain_api_router, prefix="/domain")
 
 
 @app.get("/")
