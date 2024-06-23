@@ -1,6 +1,6 @@
 import ssl
 from fastapi import FastAPI
-from api.v1.api import router as api_v1_router
+from domain.api import router as domain_api_router
 from config.connection import create_ssh_tunnel, create_gremlin_client, get_persons
 
 app = FastAPI()
@@ -20,7 +20,7 @@ async def close_ssh_tunnel():
     tunnel.stop()
     print("SSH 터널 종료")
 
-app.include_router(api_v1_router, prefix="/api/v1")
+app.include_router(domain_api_router, prefix="/domain")
 
 @app.get("/")
 async def root():
