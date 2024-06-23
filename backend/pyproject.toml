@@ -13,6 +13,8 @@ python-dotenv = "^1.0.1"
 fastapi = "^0.111.0"
 gremlinpython = "^3.7.2"
 nest-asyncio = "^1.6.0"
+colorama = "^0.4.6"
+uvicorn = "^0.30.1"
 
 
 [build-system]
