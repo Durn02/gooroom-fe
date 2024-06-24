@@ -1,14 +1,14 @@
 # backend/domain/auth/auth.py
 import os
 import sys
+import json
 from fastapi import HTTPException, APIRouter, Depends, Body
 from config.connection import create_gremlin_client
 from utils.logger import Logger
-from .request.signup_request import SignUpRequest
-from .response.signup_response import SignUpResponse
 from utils.jwt_utils import create_access_token
 from gremlin_python.driver.client import Client
-import json
+from .request.signup_request import SignUpRequest
+from .response.signup_response import SignUpResponse
 
 logger = Logger("domain.auth").get_logger()
 
@@ -19,10 +19,12 @@ sys.path.append(
 router = APIRouter()
 
 
-
 @router.post("/signup")
-async def signup(client:Client= Depends(create_gremlin_client), signup_request: SignUpRequest = Body(...), ):
-    
+async def signup(
+    client: Client = Depends(create_gremlin_client),
+    signup_request: SignUpRequest = Body(...),
+):
+
     # Todo. 비밀번호 형식 검증해야함(숫자,특수문자 등).
     # pw = signUpRequest.password
 
@@ -48,7 +50,7 @@ async def signup(client:Client= Depends(create_gremlin_client), signup_request: 
         uuid = private_result[0].id
 
         print(f"Private Node ID: {uuid}")
-      
+
         concern_json = json.dumps(signup_request.concern)
         create_user_query = f"g.addV('User').property('nickname', '{signup_request.nickname}').property('username', '{signup_request.username}').property('concern', '{concern_json}')"
         user_result_set = client.submitAsync(create_user_query)
