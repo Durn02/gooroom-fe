@@ -1,7 +1,7 @@
 import ssl
 from fastapi import FastAPI
 from domain.api import router as domain_api_router
-from config.connection import create_ssh_tunnel, create_gremlin_client, get_persons
+from config.connection import create_ssh_tunnel, create_gremlin_client
 
 app = FastAPI()
 
