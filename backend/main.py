@@ -1,44 +1,45 @@
-import ssl
 from fastapi import FastAPI
-from api.v1.api import router as api_v1_router
-from config.connection import create_ssh_tunnel, create_gremlin_client, get_persons
+import uvicorn
+from domain.api import router as domain_api_router
+from config.connection import create_ssh_tunnel
+from utils.logger import Logger
 
 app = FastAPI()
+logger = Logger("main").get_logger()
 
 tunnel = None
 
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("FastAPI 서버 시작")
     global tunnel
     tunnel = create_ssh_tunnel()
     tunnel.start()
-    print("SSH 터널 시작.")
+    logger.info("SSH 터널 시작")
 
 
 @app.on_event("shutdown")
 async def close_ssh_tunnel():
     global tunnel
     tunnel.stop()
-    print("SSH 터널 종료.")
+    logger.info("SSH 터널 종료")
 
 
-app.include_router(api_v1_router, prefix="/api/v1")
-
-
-@app.get("/persons")
-async def read_persons():
-    gremlin_client = create_gremlin_client()
-
-    try:
-        persons = get_persons(gremlin_client)
-        return {"persons": persons}
-    finally:
-        gremlin_client.close()
-        tunnel.stop()
-        print("SSH 터널이 종료되었습니다.")
+app.include_router(domain_api_router, prefix="/domain")
 
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to my FastAPI application"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="localhost",
+        port=8000,
+        log_level="warning",
+        reload=True,
+        loop="asyncio",
+    )

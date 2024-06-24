@@ -1,0 +1,13 @@
+from .admin import admin_router
+from .auth import auth_router
+from .service import block_router, mute_router, content_router
+from .user import user_router
+
+__all__ = [
+    "admin_router",
+    "auth_router",
+    "block_router",
+    "mute_router",
+    "content_router",
+    "user_router",
+]
