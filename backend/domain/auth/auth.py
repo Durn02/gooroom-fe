@@ -8,6 +8,7 @@ from .request.signup_request import SignUpRequest
 from .response.signup_response import SignUpResponse
 from utils.jwt_utils import create_access_token
 from gremlin_python.driver.client import Client
+import json
 
 logger = Logger("domain.auth").get_logger()
 
@@ -25,43 +26,47 @@ async def signup(client:Client= Depends(create_gremlin_client), signup_request: 
     # Todo. 비밀번호 형식 검증해야함(숫자,특수문자 등).
     # pw = signUpRequest.password
 
+    print(signup_request)
+
     # email 중복 검사
     try:
-        query = "g.V().hasLabel('privateData').has('email', email)"
-        bindings = {"email" : signup_request.email}
-        result_set = client.submitAsync(query,bindings)
-        results = result_set.result()
-        print("results : ", type(results))
-        result = results.one()
-        print("result : ", type(result))
-        # results = results.all()
-        # print("results : ", type(results))
-        # resultsAll = results.all()
-        # print("resultsAll : ", type(resultsAll))
-        # if results:
-        #     raise HTTPException(status_code=400, detail="already registered email")
+        query = f"g.V().hasLabel('PrivateData').has('email', '{signup_request.email}')"
+        result_set = client.submitAsync(query)
+        result = result_set.result().one()
+        print("result :", result)
+        if result:
+            raise HTTPException(status_code=400, detail="already registered email")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # try:
-    #     create_private_query = "g.addV('PrivateData').property(email, email).property(password, password).property(username, username)"
-    #     private_bindings = {"email": signup_request.email, "password": signup_request.password, "username": signup_request.username}
-    #     private_result = await client.submit(create_private_query, private_bindings).all()
-    #     uuid = private_result[0].id
-      
-    #     create_user_query = "g.addV('User').property(nickname, nickname).property(username, username).property(concern, concern)"
-    #     user_bindings = {"nickname": signup_request.nickname, "username": signup_request.username, "concern": signup_request.concern}
-    #     user_result = await client.submit(create_user_query, user_bindings).all().result()
-    #     user_node_id = user_result[0].id
+    try:
+        create_private_query = f"g.addV('PrivateData').property('email', '{signup_request.email}').property('password', '{signup_request.password}').property('username', '{signup_request.username}')"
+        private_result_set = client.submitAsync(create_private_query)
+        private_result = private_result_set.result().one()
+        uuid = private_result[0].id
 
-    #     create_edge_query = "g.V(uuid).addE('is_info').to(g.V(user_node_id))"
-    #     edge_bindings = {"uuid": uuid, "user_node_id": user_node_id}
-    #     await client.submit(create_edge_query, edge_bindings).all().result()
-    #     return create_access_token(uuid)
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
-    # finally:
-    #     client.close()
+        print(f"Private Node ID: {uuid}")
+      
+        concern_json = json.dumps(signup_request.concern)
+        create_user_query = f"g.addV('User').property('nickname', '{signup_request.nickname}').property('username', '{signup_request.username}').property('concern', '{concern_json}')"
+        user_result_set = client.submitAsync(create_user_query)
+        user_result = user_result_set.result().one()
+        user_node_id = user_result[0].id
+
+        print(f"User Node ID: {user_node_id}")
+
+        create_edge_query = f"g.V('{uuid}').addE('is_info').to(V('{user_node_id}'))"
+        edge_result_set = client.submitAsync(create_edge_query)
+        edge_result = edge_result_set.result()
+        print(f"Edge Result: {edge_result}")
+
+        return create_access_token(uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
 
 
 # 노드 정보 조회(테스트용)
