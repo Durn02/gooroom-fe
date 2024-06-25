@@ -8,7 +8,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 
-def create_access_token(uuid: str):
+def create_access_token(uuid: str)->str:
     to_encode = {"uuid" : uuid, "exp" : datetime.now() + timedelta(minutes=5)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

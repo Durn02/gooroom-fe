@@ -4,11 +4,10 @@ import sys
 import json
 from fastapi import HTTPException, APIRouter, Depends, Body
 from config.connection import create_gremlin_client
-from utils.logger import Logger
-from utils.jwt_utils import create_access_token
+from utils import hash_password,verify_password,create_access_token,Logger
 from gremlin_python.driver.client import Client
-from .request.signup_request import SignUpRequest
-from .response.signup_response import SignUpResponse
+from gremlin_python.process.traversal import T
+from .request import SignInRequest, SignUpRequest
 
 logger = Logger("domain.auth").get_logger()
 
@@ -17,7 +16,6 @@ sys.path.append(
 )
 
 router = APIRouter()
-
 
 @router.post("/signup")
 async def signup(
@@ -35,7 +33,6 @@ async def signup(
         query = f"g.V().hasLabel('PrivateData').has('email', '{signup_request.email}')"
         result_set = client.submitAsync(query)
         result = result_set.result().one()
-        print("result :", result)
         if result:
             raise HTTPException(status_code=400, detail="already registered email")
     except HTTPException as e:
@@ -44,7 +41,8 @@ async def signup(
         raise HTTPException(status_code=500, detail=str(e))
 
     try:
-        create_private_query = f"g.addV('PrivateData').property('email', '{signup_request.email}').property('password', '{signup_request.password}').property('username', '{signup_request.username}')"
+        encrypted_password = hash_password(signup_request.password)
+        create_private_query = f"g.addV('PrivateData').property('email', '{signup_request.email}').property('password', '{encrypted_password}').property('username', '{signup_request.username}')"
         private_result_set = client.submitAsync(create_private_query)
         private_result = private_result_set.result().one()
         uuid = private_result[0].id
@@ -65,6 +63,33 @@ async def signup(
         print(f"Edge Result: {edge_result}")
 
         return create_access_token(uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/signin")
+async def signin(client=Depends(create_gremlin_client),signin_request: SignInRequest = Body(...),):
+    logger.info("로그인")
+    try:
+        query = f"g.V().hasLabel('PrivateData').has('email','{signin_request.email}').valueMap(true)"
+        result_set = client.submitAsync(query)
+        result = result_set.result().one()
+        print(result[0])
+
+        # result.get('password', ['default_value'])는 ['실제 pw value']를 반환
+        # 유효한 데이터가 없으면 ['default_Value'] 설정한 기본값 반환
+        # ['실제 pw value'][0]는 'my_password'를 반환
+        password = result[0].get('password',[''])[0]
+        print("password : ",password)
+        if not password:
+            raise HTTPException(status_code=400, detail="not registered email")
+        if not verify_password(signin_request.password,password):
+            raise HTTPException(status_code=400, detail="inconsistent password")
+        uuid = result[0].get(T.id)
+        return create_access_token(uuid)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
