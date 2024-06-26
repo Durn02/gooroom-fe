@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from typing import Dict
 
 
 class SignUpRequest(BaseModel):
