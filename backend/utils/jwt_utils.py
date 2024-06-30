@@ -1,6 +1,7 @@
 import jwt
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from fastapi import HTTPException
 import os
 
 load_dotenv()
@@ -13,11 +14,11 @@ def create_access_token(uuid: str)->str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def verify_access_token(token: str):
+def verify_access_token(token: str)->dict:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         return payload
     except jwt.ExpiredSignatureError:
-        return "expire"
+        raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
-        return "invalid"
+        raise HTTPException(status_code=401, detail="Invalid token")

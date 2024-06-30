@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr
-from typing import Dict
+from typing import List
 
 
 class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
-    concern: list
+    concern: List[str]
     nickname: str
     username: str
