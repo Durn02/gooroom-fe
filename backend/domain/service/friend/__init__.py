@@ -1,3 +1,4 @@
+# domain/service/friend/__init__.py
 from .block import block_router
 from .mute import mute_router
 
