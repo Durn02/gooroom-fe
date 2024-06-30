@@ -1,17 +1,18 @@
 import React from "react";
+import Landing from "./pages/landingpage/LandingPage";
+import Signin from "./pages/signinpage/SigninPage";
+import NoPage from "./pages/nopage/NoPage";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="App">
-      <h1>React App</h1>
-      <button
-        onClick={() => {
-          alert("hello world!");
-        }}
-      >
-        Click me
-      </button>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/*" element={<NoPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
