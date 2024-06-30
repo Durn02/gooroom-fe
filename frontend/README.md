@@ -8,5 +8,5 @@
 
 ## 실행 방법
 
-- `cd ./front`
+- `cd ./frontend`
 - `yarn start`

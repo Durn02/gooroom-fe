@@ -8,7 +8,7 @@ from gremlin_python.process.traversal import T
 from .request import SignInRequest, SignUpRequest
 from .response import SignUpResponse, SignInResponse, SignOutResponse
 
-logger = Logger("domain.auth").get_logger()
+logger = Logger(__file__)
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,6 +16,7 @@ sys.path.append(
 
 router = APIRouter()
 access_token = "access_token"
+
 
 
 @router.post("/signup")
@@ -71,6 +72,7 @@ async def signup(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
+
 
 @router.post("/signin")
 async def signin(
@@ -137,4 +139,5 @@ async def get_nodes(client=Depends(create_gremlin_client)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        logger.info("완료")
         client.close()
