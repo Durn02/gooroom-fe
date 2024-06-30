@@ -4,18 +4,19 @@ import sys
 import json
 from fastapi import HTTPException, APIRouter, Depends, Body
 from config.connection import create_gremlin_client
-from utils import hash_password,verify_password,create_access_token,Logger
+from utils import hash_password, verify_password, create_access_token, Logger
 from gremlin_python.driver.client import Client
 from gremlin_python.process.traversal import T
 from .request import SignInRequest, SignUpRequest
 
-logger = Logger("domain.auth").get_logger()
+logger = Logger(__file__)
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 router = APIRouter()
+
 
 @router.post("/signup")
 async def signup(
@@ -68,8 +69,12 @@ async def signup(
     finally:
         client.close()
 
+
 @router.post("/signin")
-async def signin(client=Depends(create_gremlin_client),signin_request: SignInRequest = Body(...),):
+async def signin(
+    client=Depends(create_gremlin_client),
+    signin_request: SignInRequest = Body(...),
+):
     logger.info("로그인")
     try:
         query = f"g.V().hasLabel('PrivateData').has('email','{signin_request.email}').valueMap(true)"
@@ -80,11 +85,11 @@ async def signin(client=Depends(create_gremlin_client),signin_request: SignInReq
         # result.get('password', ['default_value'])는 ['실제 pw value']를 반환
         # 유효한 데이터가 없으면 ['default_Value'] 설정한 기본값 반환
         # ['실제 pw value'][0]는 'my_password'를 반환
-        password = result[0].get('password',[''])[0]
-        print("password : ",password)
+        password = result[0].get("password", [""])[0]
+        print("password : ", password)
         if not password:
             raise HTTPException(status_code=400, detail="not registered email")
-        if not verify_password(signin_request.password,password):
+        if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
         uuid = result[0].get(T.id)
         return create_access_token(uuid)
@@ -108,4 +113,5 @@ async def get_nodes(client=Depends(create_gremlin_client)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        logger.info("완료")
         client.close()
