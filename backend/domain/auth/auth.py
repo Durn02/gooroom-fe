@@ -66,7 +66,7 @@ async def signup(
         print(f"Edge Result: {edge_result}")
 
         token = create_access_token(uuid)
-        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignUpResponse()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -107,7 +107,9 @@ async def signin(
             raise HTTPException(status_code=400, detail="inconsistent password")
         user_node_id = userNode.get(T.id)
         token = create_access_token(user_node_id)
-        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
+        print("token : ", token)
+        print("verifed result : ", verify_access_token(token))
         return SignInResponse()
     except HTTPException as e:
         raise e
