@@ -1,2 +1,3 @@
 from .list_knock_response import ListKnockResponse
 from .send_knock_response import SendKnockResponse
+from .accept_knock_response import AcceptKnockResponse
