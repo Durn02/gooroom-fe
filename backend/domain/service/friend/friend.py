@@ -115,3 +115,70 @@ async def accept_knock(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
+
+@router.post("/get-members")
+async def get_members(
+    request: Request,
+    client=Depends(create_gremlin_client),
+):
+    user_node_id = 'user4'
+    
+    try:
+        query = f"""g.V('{user_node_id}').out('is_roommate')
+        .where(not(__.inE('block').outV().hasId('{user_node_id}')))
+        .group().by(id())
+        .by(
+        project('roommate', 'posts', 'stickers')
+        .by(valueMap(true))
+        .by(out('is_post').id().fold())
+        .by(out('is_sticker').id().fold())
+        )
+        .aggregate('roommates')
+        .V('{user_node_id}').out('is_roommate').out('is_roommate')
+        .where(not(__.inE('block').outV().hasId('{user_node_id}')))
+        .where(not(hasId('{user_node_id}'))).dedup()
+        .group().by(id())
+        .by(
+        project('neighbor', 'posts', 'stickers')
+        .by(valueMap(true))
+        .by(out('is_post').id().fold())
+        .by(out('is_sticker').id().fold())
+        ).aggregate('neighbors').cap('roommates', 'neighbors')
+        """
+
+        friend_result_set = client.submitAsync(query).result().all()
+        friend_results = await asyncio.wrap_future(friend_result_set)
+
+        friends = friend_results[0]
+        print("friends : ", friends)
+        print("len(friends['roommates']) : ", len(friends['roommates']))
+        if not len(friends['roommates']):
+            roommates = {} 
+        else : 
+            roommates = friends['roommates'][0]
+        if not len(friends['neighbors']):
+            neighbors = {} 
+        else : 
+            neighbors = friends['neighbors'][0]
+
+        print("roommates : ", roommates)
+        print("neighbors : ", neighbors)
+        for k in roommates.keys():
+            neighbors.pop(k,None)
+
+        print("pure_neighbors : ", neighbors)
+
+        response = {
+            'roommates': roommates,
+            'neighbors': neighbors
+        }
+
+        return response
+
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
