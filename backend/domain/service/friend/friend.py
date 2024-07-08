@@ -3,8 +3,8 @@ import os , sys, json, asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from utils import verify_access_token
 from config.connection import create_gremlin_client
-from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest
-from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse
+from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest
+from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse
 from gremlin_python.process.traversal import T
 
 router = APIRouter()
@@ -27,7 +27,6 @@ async def send_knock(
         __.select('from_user_node').outE('knock').where(inV().as('to_user_node')),
         __.addE('knock').from('from_user_node').to('to_user_node'))
         """
-        print("query : ",query)
         edge_result_set = client.submitAsync(query)
         edge_result = edge_result_set.result().one()
         print("edge_result : ", edge_result)
@@ -54,6 +53,7 @@ async def list_knock(
         result_list = ListKnockResponse(knocks=[])
         for result in results:
             edge_id = result['knock'][T.id]
+            # nickname[0] index Error
             nickname = result['from_user_node']['nickname'][0]
             result_list.append_knock(edge_id,nickname)
 
@@ -121,7 +121,8 @@ async def get_members(
     request: Request,
     client=Depends(create_gremlin_client),
 ):
-    user_node_id = 'user4'
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
     
     try:
         query = f"""g.V('{user_node_id}').out('is_roommate')
@@ -177,6 +178,40 @@ async def get_members(
 
 
     except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/get-member")
+async def accept_knock(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    get_friend_request: GetFriendRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+
+        query = f"""g.V('{get_friend_request.user_node_id}').valueMap(true).as('friend_node')
+        .coalesce(
+        V('{user_node_id}').inE('is_roommate').where(outV().hasId('{user_node_id}')).properties('memo').value(),
+        __.constant(''))
+        .as('memo')
+        .select('friend_node', 'memo')
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not len(results):
+            raise HTTPException(status_code=404, detail='no such friend')
+
+        return GetFriendResponse.from_data(results[0]['friend_node'], results[0]['memo'])
+
+    except HTTPException as e :
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
