@@ -3,8 +3,8 @@ import os , sys, json, asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from utils import verify_access_token
 from config.connection import create_gremlin_client
-from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest
-from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse
+from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest
+from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse
 from gremlin_python.process.traversal import T
 
 router = APIRouter()
@@ -73,7 +73,7 @@ async def reject_knock(
     verify_access_token(token)['user_node_id']
 
     try:
-        query = f"g.E('{reject_knock_request.knock_id}').hasLabel('knock').drop()"
+        query = f"g.E('{reject_knock_request.knock_id}').drop()"
         future_result_set = client.submitAsync(query).result().all()
         await asyncio.wrap_future(future_result_set)
     except Exception as e:
@@ -173,9 +173,7 @@ async def get_members(
             'roommates': roommates,
             'neighbors': neighbors
         }
-
         return response
-
 
     except HTTPException as e:
         raise e
@@ -185,7 +183,7 @@ async def get_members(
         client.close()
 
 @router.post("/get-member")
-async def accept_knock(
+async def get_member(
     request: Request,
     client=Depends(create_gremlin_client),
     get_friend_request: GetFriendRequest = Body(...),
@@ -197,7 +195,7 @@ async def accept_knock(
 
         query = f"""g.V('{get_friend_request.user_node_id}').valueMap(true).as('friend_node')
         .coalesce(
-        V('{user_node_id}').inE('is_roommate').where(outV().hasId('{user_node_id}')).properties('memo').value(),
+        V('{get_friend_request.user_node_id}').inE('is_roommate').where(outV().hasId('{user_node_id}')).properties('memo').value(),
         __.constant(''))
         .as('memo')
         .select('friend_node', 'memo')
@@ -210,6 +208,77 @@ async def accept_knock(
             raise HTTPException(status_code=404, detail='no such friend')
 
         return GetFriendResponse.from_data(results[0]['friend_node'], results[0]['memo'])
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/delete-member")
+async def delete_member(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    delete_friend_request: DeleteFriendRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{delete_friend_request.user_node_id}')).fold()
+        .coalesce(
+        unfold().sideEffect(drop())
+        .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
+        .constant('Edge deleted'),
+        constant('{delete_friend_request.user_node_id} is not roommate')
+        )
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not len(results):
+            raise HTTPException(status_code=404, detail='no such friend')
+
+        return DeleteFriendResponse(message=results[0])
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+
+@router.post("/delete-member")
+async def accept_knock(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    delete_friend_request: DeleteFriendRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{delete_friend_request.user_node_id}')).fold()
+        .coalesce(
+        unfold().sideEffect(drop())
+        .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
+        .constant('Edge deleted'),
+        constant('{delete_friend_request.user_node_id} is not roommate')
+        )
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not len(results):
+            raise HTTPException(status_code=404, detail='no such friend')
+
+        return DeleteFriendResponse(message=results[0])
 
     except HTTPException as e :
         raise e
