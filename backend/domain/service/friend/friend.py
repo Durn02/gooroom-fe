@@ -3,8 +3,8 @@ import os , sys, json, asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from utils import verify_access_token
 from config.connection import create_gremlin_client
-from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest
-from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse
+from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest,GetMemoRequest
+from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse,GetMemoResponse
 from gremlin_python.process.traversal import T
 
 router = APIRouter()
@@ -251,25 +251,19 @@ async def delete_member(
     finally:
         client.close()
 
-
-@router.post("/delete-member")
-async def accept_knock(
+@router.post("/memo/get-content")
+async def get_memo(
     request: Request,
     client=Depends(create_gremlin_client),
-    delete_friend_request: DeleteFriendRequest = Body(...),
+    get_memo_request: GetMemoRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)['user_node_id']
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{delete_friend_request.user_node_id}')).fold()
-        .coalesce(
-        unfold().sideEffect(drop())
-        .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
-        .constant('Edge deleted'),
-        constant('{delete_friend_request.user_node_id} is not roommate')
-        )
+        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{get_memo_request.user_node_id}'))
+        .properties('memo').value()
         """
 
         future_result_set = client.submitAsync(query).result().all()
@@ -278,7 +272,8 @@ async def accept_knock(
         if not len(results):
             raise HTTPException(status_code=404, detail='no such friend')
 
-        return DeleteFriendResponse(message=results[0])
+        print(results[0])
+        return GetMemoResponse(memo=results[0])
 
     except HTTPException as e :
         raise e

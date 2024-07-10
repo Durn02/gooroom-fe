@@ -3,3 +3,4 @@ from .reject_knock_request import RejectKnockRequest
 from .accept_knock_request import AcceptKnockRequest
 from .get_friend_request import GetFriendRequest
 from .delete_friend_request import DeleteFriendRequest
+from .get_memo_request import GetMemoRequest
