@@ -3,8 +3,8 @@ import os , sys, json, asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from utils import verify_access_token
 from config.connection import create_gremlin_client
-from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest,GetMemoRequest
-from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse,GetMemoResponse
+from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest,GetMemoRequest,ModifyMemoRequest
+from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse,GetMemoResponse, ModifyMemoResponse
 from gremlin_python.process.traversal import T
 
 router = APIRouter()
@@ -274,6 +274,37 @@ async def get_memo(
 
         print(results[0])
         return GetMemoResponse(memo=results[0])
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/memo/modify")
+async def modify_memo(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    modify_memo_request: ModifyMemoRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{modify_memo_request.user_node_id}'))
+        .property('memo','{modify_memo_request.new_memo}')
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not len(results):
+            raise HTTPException(status_code=404, detail='no such friend')
+
+        print(results[0])
+        return ModifyMemoResponse()
 
     except HTTPException as e :
         raise e
