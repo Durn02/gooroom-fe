@@ -1,6 +1,6 @@
 # backend/domain/service/friend/friend.py
-import os , sys, json, asyncio
-from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
+import asyncio
+from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token
 from config.connection import create_gremlin_client
 from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest,GetMemoRequest,ModifyMemoRequest
@@ -205,7 +205,7 @@ async def get_member(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend')
+            raise HTTPException(status_code=404, detail='no such friend {get_friend_request.user_node_id}')
 
         return GetFriendResponse.from_data(results[0]['friend_node'], results[0]['memo'])
 
@@ -240,7 +240,7 @@ async def delete_member(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend')
+            raise HTTPException(status_code=404, detail='no such friend {delete_friend_request.user_node_id}')
 
         return DeleteFriendResponse(message=results[0])
 
@@ -270,7 +270,7 @@ async def get_memo(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend')
+            raise HTTPException(status_code=404, detail='no such friend {get_memo_request.user_node_id}')
 
         print(results[0])
         return GetMemoResponse(memo=results[0])
@@ -301,7 +301,7 @@ async def modify_memo(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend')
+            raise HTTPException(status_code=404, detail='no such friend {modify_memo_request.user_node_id}')
 
         print(results[0])
         return ModifyMemoResponse()
