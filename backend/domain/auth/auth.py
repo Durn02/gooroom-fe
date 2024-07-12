@@ -71,7 +71,6 @@ async def signup(
         results = await asyncio.wrap_future(future_result_set)
         print(f"Results: {results}")
 
-<<<<<<< HEAD
         if results:
             private_node = results[0]["private"]
             user_node = results[0]["user"]
@@ -88,11 +87,6 @@ async def signup(
             raise HTTPException(status_code=500, detail="Failed to create user")
     except HTTPException as e:
         raise e
-=======
-        token = create_access_token(uuid)
-        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
-        return SignUpResponse()
->>>>>>> 0682f2548000215b0c0a00d67c3fe959233f4722
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -130,7 +124,7 @@ async def signin(
         password = privateNode.get("password", [""])[0]
         if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
-        user_node_id = privateNode.get(T.id)
+        user_node_id = userNode.get(T.id)
         token = create_access_token(user_node_id)
         response.set_cookie(key="access_token", value=token, httponly=True)
         return SignInResponse()
