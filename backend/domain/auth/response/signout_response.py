@@ -1,4 +1,5 @@
 from pydantic import BaseModel
 
+
 class SignOutResponse(BaseModel):
-    message:str
+    message: str = "signout success"
