@@ -10,8 +10,11 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 
 
-def create_access_token(uuid: str) -> str:
-    to_encode = {"uuid": uuid, "exp": datetime.now() + timedelta(minutes=5)}
+def create_access_token(user_node_id: str) -> str:
+    to_encode = {
+        "user_node_id": user_node_id,
+        "exp": datetime.now() + timedelta(hours=1),
+    }
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

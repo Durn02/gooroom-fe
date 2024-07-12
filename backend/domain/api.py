@@ -9,6 +9,7 @@ from domain import (
     mute_router as mute,
     content_router as content,
     user_router as user,
+    friend_router as friend
 )
 
 router = APIRouter()
@@ -19,3 +20,4 @@ router.include_router(block, prefix="/block", tags=["block"])
 router.include_router(mute, prefix="/mute", tags=["mute"])
 router.include_router(content, prefix="/content", tags=["content"])
 router.include_router(user, prefix="/user", tags=["user"])
+router.include_router(friend, prefix="/friend", tags=["friend"])

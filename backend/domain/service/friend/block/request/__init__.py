@@ -1,0 +1,1 @@
+from .block_friend_request import BlockFriendRequest

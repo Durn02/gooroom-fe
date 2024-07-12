@@ -71,6 +71,7 @@ async def signup(
         results = await asyncio.wrap_future(future_result_set)
         print(f"Results: {results}")
 
+<<<<<<< HEAD
         if results:
             private_node = results[0]["private"]
             user_node = results[0]["user"]
@@ -87,6 +88,11 @@ async def signup(
             raise HTTPException(status_code=500, detail="Failed to create user")
     except HTTPException as e:
         raise e
+=======
+        token = create_access_token(uuid)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
+        return SignUpResponse()
+>>>>>>> 0682f2548000215b0c0a00d67c3fe959233f4722
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -252,10 +258,11 @@ async def signout(
 async def get_nodes(client=Depends(create_gremlin_client)):
     logger.info("노드 정보 조회")
     try:
-        query = "g.V()"
-        result = client.submit(query).all().result()
-        logger.info("/nodes 200 ok")
-        return result
+        query = "g.V().hasLabel('User').valueMap(true)"
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+        print(type(results[0]['concern']))
+        return results[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
