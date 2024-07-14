@@ -21,6 +21,8 @@ async def create_sticker(
     user_node_id = verify_access_token(token)['user_node_id']
 
     try:
+        # code for test commit
+
         query = f"""
         g.addV('sticker').property('content','{create_sticker_request.content}').property('image_url','{create_sticker_request.image_url}').as('new_sticker')
         .addE('is_sticker').from(V('{user_node_id}')).to('new_sticker')
