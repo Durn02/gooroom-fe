@@ -1,0 +1,2 @@
+from .block_friend_response import BlockFriendResponse
+from .get_blocked_response import GetBlockedResponse

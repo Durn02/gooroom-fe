@@ -17,8 +17,8 @@ class GetFriendResponse(BaseModel):
     def from_data(cls, friend_node: Dict[str, List], memo: str):
         friend_detail = FriendDetail(
             my_memo = friend_node.get('my_memo', []),
-            nickname = friend_node.get('nickname', [])[0] if friend_node.get('nickname', []) else '',
-            username = friend_node.get('username', [])[0] if friend_node.get('username', []) else '',
+            nickname = friend_node.get('nickname')[0] if friend_node.get('nickname', []) else '',
+            username = friend_node.get('username')[0] if friend_node.get('username', []) else '',
             concern = friend_node.get('concern', []),
             node_id = friend_node.get('node_id', ''),
             memo = memo
