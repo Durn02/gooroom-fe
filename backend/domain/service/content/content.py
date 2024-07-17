@@ -4,8 +4,9 @@ from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token
 from config.connection import create_gremlin_client
 from gremlin_python.process.traversal import T
-from .request import CreateStickerRequest
-from .response import CreateStickerResponse
+from typing import List
+from .request import CreateStickerRequest,GetStickersRequest
+from .response import CreateStickerResponse,GetStickersResponse
 
 
 router = APIRouter()
@@ -34,6 +35,43 @@ async def create_sticker(
 
         print(results[0])
         return CreateStickerResponse()
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/sticker/get-content",response_model = List[GetStickersResponse])
+async def get_contents(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    get_sticker_request: GetStickersRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{get_sticker_request.user_node_id}').outE('block').where(inV().hasId('{user_node_id}')).fold()
+        .coalesce(
+            unfold().constant("empty stickers"),
+            V('{get_sticker_request.user_node_id}').outE('is_sticker').inV().valueMap(true)
+        )
+        """
+
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+
+        print(results)
+        if not (results) or results==["empty stickers"]:
+            return []
+
+        response = [GetStickersResponse.from_data(result) for result in results]
+        return response
 
     except HTTPException as e :
         raise e
