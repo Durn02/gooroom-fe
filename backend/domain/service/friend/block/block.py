@@ -71,7 +71,7 @@ async def get_blocked(
     finally:
         client.close()
 
-@router.post("/pop-members")
+@router.delete("/pop-members")
 async def pop_blocked(
     request: Request,
     client = Depends(create_gremlin_client),
