@@ -69,16 +69,12 @@ async def signup(
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        print(f"Results: {results}")
 
         if results:
             private_node = results[0]["private"]
             user_node = results[0]["user"]
             uuid = private_node.id
             user_node_id = user_node.id
-
-            print(f"Private Node ID: {uuid}")
-            print(f"User Node ID: {user_node_id}")
 
             token = create_access_token(user_node_id)
             response.set_cookie(key=access_token, value=token, httponly=True)
@@ -108,12 +104,10 @@ async def signin(
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        print("result : ", results)
+
         result = results[0]
         privateNode = result["privateNode"]
         userNode = result["userNode"]
-        print("privateNode : ", privateNode)
-        print("userNode : ", userNode)
 
         if not result:
             raise HTTPException(status_code=400, detail="not registered email")
@@ -184,11 +178,10 @@ async def pw_change(
             """
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
-        print(result)
+
         if not result:
             raise HTTPException(status_code=400, detail="User not found")
         password = result[0]["password"][0]
-        print(password, verify_password(pw_change_req.currentpw, password))
 
         new_pw = pw_change_req.changepw
 
@@ -221,7 +214,7 @@ async def pw_change(
         """
         future_result_set = client.submitAsync(query2).result().all()
         result = await asyncio.wrap_future(future_result_set)
-        print(result)
+
         if result[0] == "Error occured":
             raise HTTPException(status_code=400, detail="Error occured")
 
@@ -241,13 +234,12 @@ async def signout(
     logger.info("signout")
     try:
         token = request.cookies.get(access_token)
-        print("token :", token)
+
         if not access_token:
             raise HTTPException(status_code=401, detail="Access token missing")
 
         token_payload = verify_access_token(token)
         user_node_id = token_payload.get("user_node_id")
-        print(user_node_id)
 
         if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
@@ -262,7 +254,7 @@ async def signout(
 
         future_result_set = client.submitAsync(delete_user_query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        print(results)
+
         if results[0] == "User not found":
             raise HTTPException(status_code=404, detail="User not found")
         if results[0] == "User deleted successfully":
