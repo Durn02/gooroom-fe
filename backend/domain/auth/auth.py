@@ -80,8 +80,8 @@ async def signup(
             print(f"Private Node ID: {uuid}")
             print(f"User Node ID: {user_node_id}")
 
-            token = create_access_token(uuid)
-            response.set_cookie(key="access_token", value=token, httponly=True)
+            token = create_access_token(user_node_id)
+            response.set_cookie(key=access_token, value=token, httponly=True)
             return SignUpResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to create user")
@@ -126,7 +126,7 @@ async def signin(
             raise HTTPException(status_code=400, detail="inconsistent password")
         user_node_id = userNode.get(T.id)
         token = create_access_token(user_node_id)
-        response.set_cookie(key="access_token", value=token, httponly=True)
+        response.set_cookie(key=access_token, value=token, httponly=True)
         return SignInResponse()
     except HTTPException as e:
         raise e
@@ -139,7 +139,6 @@ async def signin(
 @router.post("/logout")
 async def logout(request: Request, response: Response):
     token = request.cookies.get(access_token)
-    print("token :", token)
 
     if token:
         response.delete_cookie(key=access_token)
@@ -167,36 +166,64 @@ async def pw_change(
     client=Depends(create_gremlin_client),
     pw_change_req: PwChangeRequest = Body(...),
 ):
-    token = request.cookies.get("access_token")
+    token = request.cookies.get(access_token)
 
     if not token:
         raise HTTPException(status_code=401, detail="Access token missing")
 
     token_payload = verify_access_token(token)
-    uuid = token_payload.get("uuid")
+    user_node_id = token_payload.get("user_node_id")
 
-    if not uuid:
+    if not user_node_id:
         raise HTTPException(status_code=400, detail="Invalid input")
 
     try:
-        input_password_hashed = hash_password(pw_change_req.currentpw)
-        new_password_hashed = hash_password(pw_change_req.changepw)
-        print(input_password_hashed, new_password_hashed)
         query = f"""
-        g.V('{uuid}').fold().coalesce(unfold().choose(
-            values('password').is(eq('{input_password_hashed}')),
-            __.property(single, 'password', '{new_password_hashed}')
-            .constant('Password changed successfully'), constant('Incorrect current password')
-            ), constant('User not found')
-        )
-        """
+        g.V('{user_node_id}').inE('is_info').outV().as('u').select('u')
+        .by(valueMap(true))
+            """
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
         print(result)
-        if result[0] == "Incorrect current password":
-            raise HTTPException(status_code=400, detail="Incorrect current password")
-        elif result[0] == "User not found":
+        if not result:
             raise HTTPException(status_code=400, detail="User not found")
+        password = result[0]["password"][0]
+        print(password, verify_password(pw_change_req.currentpw, password))
+
+        new_pw = pw_change_req.changepw
+
+        if not re.match(
+            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$', new_pw
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="New password must contain at least one lowercase letter, one uppercase letter, one number, and one special character, and must be at least 8 characters long",
+            )
+
+        if verify_password(pw_change_req.changepw, password):
+            raise HTTPException(
+                status_code=400,
+                detail="Changed password should not be same with current password",
+            )
+
+        hashed_new_pw = hash_password(new_pw)
+
+        if not verify_password(pw_change_req.currentpw, password):
+            raise HTTPException(status_code=400, detail="Incorrect current password")
+
+        query2 = f"""
+            g.V('{user_node_id}').inE('is_info').outV().as('u')
+            .fold()
+            .coalesce(
+                unfold().property(single, 'password', '{hashed_new_pw}').constant('Password changed successfully'),
+                constant('Error occurred')
+            )
+        """
+        future_result_set = client.submitAsync(query2).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+        print(result)
+        if result[0] == "Error occured":
+            raise HTTPException(status_code=400, detail="Error occured")
 
         return PwChangeResponse(message="Password changed successfully")
     except HTTPException as e:
@@ -213,21 +240,21 @@ async def signout(
 ):
     logger.info("signout")
     try:
-        token = request.cookies.get("access_token")
+        token = request.cookies.get(access_token)
         print("token :", token)
         if not access_token:
             raise HTTPException(status_code=401, detail="Access token missing")
 
         token_payload = verify_access_token(token)
-        uuid = token_payload.get("uuid")
-        print(uuid)
+        user_node_id = token_payload.get("user_node_id")
+        print(user_node_id)
 
-        if not uuid:
+        if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
 
         delete_user_query = f"""
-            g.V('{uuid}').fold().coalesce(
-                unfold().as('p').out('is_info').hasLabel('User').as('u')
+            g.V('{user_node_id}').fold().coalesce(
+                unfold().as('p').inE('is_info').outV().as('u')
                 .sideEffect(select('u').unfold().drop()).sideEffect(select('p').unfold().drop())
                 .constant('User deleted successfully'), constant('User not found')
             )
@@ -239,7 +266,7 @@ async def signout(
         if results[0] == "User not found":
             raise HTTPException(status_code=404, detail="User not found")
         if results[0] == "User deleted successfully":
-            response.delete_cookie(key="access_token")
+            response.delete_cookie(key=access_token)
             return SignOutResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to sign out")
@@ -255,7 +282,7 @@ async def get_nodes(client=Depends(create_gremlin_client)):
         query = "g.V().hasLabel('User').valueMap(true)"
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        print(type(results[0]['concern']))
+        print(type(results[0]["concern"]))
         return results[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
