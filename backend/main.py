@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI):
     tunnel.stop()
     logger.info("SSH 터널이 종료되었습니다.")
     scheduler.shutdown()
+    logger.info("스케줄러가 종료되었습니다.")
 
 app = FastAPI(lifespan=lifespan)
 

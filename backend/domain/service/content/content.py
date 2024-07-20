@@ -119,7 +119,6 @@ async def delete_sticker(
         client.close()
 
 async def delete_old_stickers():
-    print("delete_old_stickers are called")
     current_time = datetime.now(timezone.utc)
     delete_before = current_time - timedelta(hours=24)
     delete_before_timestamp = delete_before.isoformat()
