@@ -4,10 +4,14 @@ from utils import Logger
 from config.connection import create_ssh_tunnel
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+<<<<<<< HEAD
+
+=======
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from domain.service.content.content import delete_old_stickers
 
 scheduler = AsyncIOScheduler()
+>>>>>>> develop
 logger = Logger("main.py")
 tunnel = None
 
@@ -17,6 +21,11 @@ async def lifespan(app: FastAPI):
     tunnel = create_ssh_tunnel()
     tunnel.start()
     logger.info("SSH 터널이 시작되었습니다. Neptune 데이터베이스에 연결합니다...")
+<<<<<<< HEAD
+    yield
+    tunnel.stop()
+    logger.info("SSH 터널이 종료되었습니다.")
+=======
     scheduler.start()
     logger.info("스케줄러가 실행되었습니다.")
     scheduler.add_job(func=delete_old_stickers, trigger='cron',hour=20,minute=38)
@@ -25,6 +34,7 @@ async def lifespan(app: FastAPI):
     logger.info("SSH 터널이 종료되었습니다.")
     scheduler.shutdown()
     logger.info("스케줄러가 종료되었습니다.")
+>>>>>>> develop
 
 app = FastAPI(lifespan=lifespan)
 
