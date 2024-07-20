@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Dict,List
 from gremlin_python.process.traversal import T
 
-class GetStickersResponse(BaseModel):
+class GetMyStickersResponse(BaseModel):
     sticker_node_id:str
     content:List[str]
     image_url:List[str]
