@@ -229,7 +229,7 @@ async def get_member(
     finally:
         client.close()
 
-@router.post("/delete-member" , response_model=DeleteFriendResponse)
+@router.delete("/delete-member" , response_model=DeleteFriendResponse)
 async def delete_member(
     request: Request,
     client=Depends(create_gremlin_client),

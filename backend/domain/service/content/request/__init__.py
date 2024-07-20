@@ -1,2 +1,3 @@
 from .create_sticker_request import CreateStickerRequest
 from .get_stickers_request import GetStickersRequest
+from .delete_sticker_request import DeleteStickerRequest
