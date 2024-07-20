@@ -80,7 +80,6 @@ async def get_contents(
     finally:
         client.close()
 
-#response_model = List[GetMyStickersResponse]
 @router.post("/sticker/get-my-content",response_model = List[GetMyStickersResponse])
 async def get_my_contents(
     request: Request,
