@@ -156,7 +156,8 @@ async def delete_old_stickers():
     try:
         print("delete_before_timestamp : ",delete_before_timestamp)
         query = f"""
-        g.V().hasLabel('sticker').has('created_at', lte('{delete_before_timestamp}')).as('old_stickers').sideEffect(store('old_stickers').by(valueMap(true))).drop().cap('old_stickers')
+        g.V().hasLabel('sticker').has('created_at', lte('{delete_before_timestamp}')).as('old_stickers')
+            .sideEffect(store('old_stickers').by(valueMap(true))).drop().cap('old_stickers')
         """
 
         future_result_set = client.submitAsync(query).result().all()
@@ -241,4 +242,3 @@ async def create_post(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
-
