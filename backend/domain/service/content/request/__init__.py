@@ -1,7 +1,5 @@
 from .create_sticker_request import CreateStickerRequest
 from .get_stickers_request import GetStickersRequest
-<<<<<<< HEAD
 from .create_post_request import CreatePostRequest
-=======
 from .delete_sticker_request import DeleteStickerRequest
->>>>>>> develop
+from .get_posts_request import GetPostsRequest
