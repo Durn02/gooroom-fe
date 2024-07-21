@@ -50,3 +50,6 @@ dmypy.json
 #env
 .env
 *.env
+
+#secret
+secret.txt

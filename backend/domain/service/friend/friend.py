@@ -10,7 +10,7 @@ from gremlin_python.process.traversal import T
 router = APIRouter()
 access_token = "access_token"
 
-@router.post("/knock/send")
+@router.post("/knock/send",  response_model=SendKnockResponse)
 async def send_knock(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -18,25 +18,35 @@ async def send_knock(
 ):
     token = request.cookies.get(access_token)
     from_user_node_id = (verify_access_token(token))['user_node_id']
-    print("from_user_node_id : ", from_user_node_id)
+    to_user_node_id = send_knock_request.to_user_node_id
 
     try:
-        query = f"""g.V('{from_user_node_id}').as('from_user_node')
-        .V('{send_knock_request.to_user_node_id}').as('to_user_node')
+        query = f"""g.V('{from_user_node_id}')
+        .outE('knock').where(inV().hasId('{to_user_node_id}')).fold()
         .coalesce(
-        __.select('from_user_node').outE('knock').where(inV().as('to_user_node')),
-        __.addE('knock').from('from_user_node').to('to_user_node'))
+            unfold().constant('already knock exists'),
+            addE('knock').from(V('{from_user_node_id}')).to(V('{to_user_node_id}'))
+        )
         """
-        edge_result_set = client.submitAsync(query)
-        edge_result = edge_result_set.result().one()
+
+        edge_result_set = client.submitAsync(query).result().all()
+        edge_result = await asyncio.wrap_future(edge_result_set)
         print("edge_result : ", edge_result)
-        return SendKnockResponse()
+
+        if edge_result :
+            if edge_result[0] == 'already knock exists':
+                raise HTTPException(status_code=400, detail="already knock exists")
+            return SendKnockResponse()
+        else :
+            raise HTTPException(status_code=404, detail=f"no such user {send_knock_request.to_user_node_id}")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.post("/knock/list")
+@router.post("/knock/list",response_model=ListKnockResponse)
 async def list_knock(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -50,11 +60,14 @@ async def list_knock(
         future_result_set = client.submitAsync(query).result().all()
         results =  await asyncio.wrap_future(future_result_set)
 
+        print(results)
+
         result_list = ListKnockResponse(knocks=[])
         for result in results:
             edge_id = result['knock'][T.id]
-            # nickname[0] index Error
-            nickname = result['from_user_node']['nickname'][0]
+            nickname = ''
+            if result['from_user_node']['nickname'] :
+                nickname = result['from_user_node']['nickname'][0]
             result_list.append_knock(edge_id,nickname)
 
         return result_list
@@ -81,7 +94,7 @@ async def reject_knock(
     finally:
         client.close()
 
-@router.post("/knock/accept")
+@router.post("/knock/accept", response_model=AcceptKnockResponse)
 async def accept_knock(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -92,8 +105,8 @@ async def accept_knock(
 
     try:
         query = f"""
-        g.E('{accept_knock_request.knock_id}').fold().
-        coalesce(
+        g.E('{accept_knock_request.knock_id}').fold()
+        .coalesce(
         unfold().as('knock').inV().as('from_user_node')
         .select('knock').outV().as('current_user_node')
         .addE('is_roommate').from('from_user_node').to('current_user_node')
@@ -182,7 +195,7 @@ async def get_members(
     finally:
         client.close()
 
-@router.post("/get-member")
+@router.post("/get-member", response_model = GetFriendResponse)
 async def get_member(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -205,7 +218,7 @@ async def get_member(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend {get_friend_request.user_node_id}')
+            raise HTTPException(status_code=404, detail=f'no such friend {get_friend_request.user_node_id}')
 
         return GetFriendResponse.from_data(results[0]['friend_node'], results[0]['memo'])
 
@@ -216,7 +229,7 @@ async def get_member(
     finally:
         client.close()
 
-@router.post("/delete-member")
+@router.delete("/delete-member" , response_model=DeleteFriendResponse)
 async def delete_member(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -240,7 +253,7 @@ async def delete_member(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend {delete_friend_request.user_node_id}')
+            raise HTTPException(status_code=404, detail=f'no such friend {delete_friend_request.user_node_id}')
 
         return DeleteFriendResponse(message=results[0])
 
@@ -251,7 +264,7 @@ async def delete_member(
     finally:
         client.close()
 
-@router.post("/memo/get-content")
+@router.post("/memo/get-content",  response_model=GetMemoResponse)
 async def get_memo(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -270,7 +283,7 @@ async def get_memo(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend {get_memo_request.user_node_id}')
+            raise HTTPException(status_code=404, detail=f'no such friend {get_memo_request.user_node_id}')
 
         print(results[0])
         return GetMemoResponse(memo=results[0])
@@ -282,7 +295,7 @@ async def get_memo(
     finally:
         client.close()
 
-@router.post("/memo/modify")
+@router.post("/memo/modify",response_model=ModifyMemoResponse)
 async def modify_memo(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -301,7 +314,7 @@ async def modify_memo(
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
-            raise HTTPException(status_code=404, detail='no such friend {modify_memo_request.user_node_id}')
+            raise HTTPException(status_code=404, detail=f'no such friend {modify_memo_request.user_node_id}')
 
         print(results[0])
         return ModifyMemoResponse()

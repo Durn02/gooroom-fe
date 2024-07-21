@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
-class BlockFriendRequest(BaseModel):
+class GetStickersRequest(BaseModel):
     user_node_id:str
     
