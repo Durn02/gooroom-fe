@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     logger.info("SSH 터널이 시작되었습니다. Neptune 데이터베이스에 연결합니다...")
     scheduler.start()
     logger.info("스케줄러가 실행되었습니다.")
-    scheduler.add_job(func=delete_old_stickers, trigger='cron',hour=20,minute=38)
+    scheduler.add_job(func=delete_old_stickers, trigger='cron',hour=0,minute=0)
     yield
     tunnel.stop()
     logger.info("SSH 터널이 종료되었습니다.")
@@ -34,7 +34,6 @@ origins = [
     "http://127.0.0.1",
     "http://127.0.0.1:8000",
 ]
-
 
 app.add_middleware(
     CORSMiddleware,

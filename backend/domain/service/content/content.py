@@ -223,7 +223,6 @@ async def create_post(
         .coalesce(
             unfold().constant("empty posts"),
             V('{create_post_request.user_node_id}').outE('is_post').inV().has('is_public','True').valueMap(true)
-        )
         """
 
         future_result_set = client.submitAsync(query).result().all()
