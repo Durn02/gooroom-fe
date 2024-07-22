@@ -7,7 +7,7 @@ from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
 from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest
-from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse
+from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse
 
 logger = Logger(__file__)
 router = APIRouter()
@@ -208,8 +208,7 @@ async def create_post(
     finally:
         client.close()
 
-#response_model = GetPostsResponse
-@router.post("/post/get-content")
+@router.post("/post/get-content",response_model = List[GetPostsResponse])
 async def create_post(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -223,8 +222,7 @@ async def create_post(
         g.V('{create_post_request.user_node_id}').outE('block').where(inV().hasId('{user_node_id}')).fold()
         .coalesce(
             unfold().constant("empty posts"),
-            V('{create_post_request.user_node_id}').outE('is_post').inV().has('is_public','True')valueMap(true)
-        )
+            V('{create_post_request.user_node_id}').outE('is_post').inV().has('is_public','True').valueMap(true)
         """
 
         future_result_set = client.submitAsync(query).result().all()
@@ -234,7 +232,8 @@ async def create_post(
         if not (results) or results==["empty posts"]:
             return []
 
-        return results
+        response = [GetPostsResponse.from_data(result) for result in results]
+        return response
 
     except HTTPException as e :
         raise e
