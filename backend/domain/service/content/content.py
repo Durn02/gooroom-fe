@@ -366,7 +366,10 @@ async def send_cast(
         """
 
         for friend in send_cast_request.friends:
-            query += f".sideEffect(addE('cast').from('user').to(V('{friend}')).property(single,'message','{send_cast_request.message}'))"
+            query += f""".sideEffect(addE('cast').from('user').to(V('{friend}'))
+            .property(single,'message','{send_cast_request.message}'))
+            .property(single,'created_at','{datetime.now(timezone.utc)}')
+            """
 
         print("query :" , query)
 
