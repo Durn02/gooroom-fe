@@ -6,8 +6,8 @@ from config.connection import create_gremlin_client
 from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
-from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest
-from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse
+from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest,DeleteMyPostRequest
+from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse
 
 logger = Logger(__file__)
 router = APIRouter()
@@ -307,6 +307,41 @@ async def modify_my_post(
             raise HTTPException(status_code=404, detail=f"no such post '{post_node_id}' in user '{user_node_id}'")
         response = GetPostsResponse.from_data(results[0])
         return response
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.delete("/post/delete-my-content",response_model = DeleteMyPostResponse)
+async def delete_my_post(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    delete_my_post_request : DeleteMyPostRequest = Body(...)
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').outE('is_post').inV().hasId('{delete_my_post_request.post_node_id}').fold()
+        .coalesce(
+            unfold().constant('not exist'),
+            V('{delete_my_post_request.post_node_id}').drop()
+        )
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        print(results)
+
+        if results== ['not exist']:
+            return DeleteMyPostResponse(message='not exist')
+        else :
+            return DeleteMyPostResponse(message=f"'{delete_my_post_request.post_node_id}' dropped")
 
     except HTTPException as e :
         raise e

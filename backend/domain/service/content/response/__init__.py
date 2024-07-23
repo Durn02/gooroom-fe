@@ -4,3 +4,4 @@ from .create_post_response import CreatePostResponse
 from .delete_sticker_response import DeleteStickerResponse
 from .get_my_stickers_response import GetMyStickersResponse
 from .get_posts_response import GetPostsResponse
+from .delete_my_post_response import DeleteMyPostResponse
