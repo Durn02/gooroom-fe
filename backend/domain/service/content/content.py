@@ -6,8 +6,8 @@ from config.connection import create_gremlin_client
 from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
-from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest,DeleteMyPostRequest
-from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse
+from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest,DeleteMyPostRequest,SendCastRequest
+from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse,SendCastResponse
 
 logger = Logger(__file__)
 router = APIRouter()
@@ -342,6 +342,41 @@ async def delete_my_post(
             return DeleteMyPostResponse(message='not exist')
         else :
             return DeleteMyPostResponse(message=f"'{delete_my_post_request.post_node_id}' dropped")
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+
+@router.post("/cast/send",response_model=SendCastResponse)
+async def send_cast(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    send_cast_request : SendCastRequest = Body(...)
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').as('user')
+        """
+
+        for friend in send_cast_request.friends:
+            query += f".sideEffect(addE('cast').from('user').to(V('{friend}')).property(single,'message','{send_cast_request.message}'))"
+
+        print("query :" , query)
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not results:
+            raise HTTPException(status_code=404, detail="there's invalid friend in friends")
+        
+        return SendCastResponse()
 
     except HTTPException as e :
         raise e
