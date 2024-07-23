@@ -242,10 +242,10 @@ async def delete_member(
         query = f"""
         g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{delete_friend_request.user_node_id}')).fold()
         .coalesce(
-        unfold().sideEffect(drop())
-        .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
-        .constant('Edge deleted'),
-        constant('{delete_friend_request.user_node_id} is not roommate')
+            unfold().sideEffect(drop())
+            .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
+            .constant('Edge deleted'),
+            constant('{delete_friend_request.user_node_id} is not roommate')
         )
         """
 

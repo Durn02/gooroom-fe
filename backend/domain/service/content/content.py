@@ -124,8 +124,8 @@ async def delete_sticker(
         query = f"""
         g.V('{user_node_id}').outE('is_sticker').inV().hasId('{delete_sticker_request.sticker_node_id}').fold()
         .coalesce(
-            unfold().constant('not exist'),
-            V('{delete_sticker_request.sticker_node_id}').drop()
+            unfold().sideEffect(V('{delete_sticker_request.sticker_node_id}').drop()).constant('dropped'),
+            constant('not exist')
         )
         """
 
@@ -328,8 +328,8 @@ async def delete_my_post(
         query = f"""
         g.V('{user_node_id}').outE('is_post').inV().hasId('{delete_my_post_request.post_node_id}').fold()
         .coalesce(
-            unfold().constant('not exist'),
-            V('{delete_my_post_request.post_node_id}').drop()
+            unfold().sideEffect(V('{delete_my_post_request.post_node_id}').drop()).constant('dropped'),
+            constant('not exist')
         )
         """
 
