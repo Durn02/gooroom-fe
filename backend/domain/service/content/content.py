@@ -6,7 +6,7 @@ from config.connection import create_gremlin_client
 from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
-from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest
+from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest
 from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse
 
 logger = Logger(__file__)
@@ -209,7 +209,7 @@ async def create_post(
         client.close()
 
 @router.post("/post/get-content",response_model = List[GetPostsResponse])
-async def create_post(
+async def get_posts(
     request: Request,
     client=Depends(create_gremlin_client),
     create_post_request: GetPostsRequest = Body(...),
@@ -233,6 +233,79 @@ async def create_post(
             return []
 
         response = [GetPostsResponse.from_data(result) for result in results]
+        return response
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/post/get-my-content",response_model = List[GetPostsResponse])
+async def get_my_posts(
+    request: Request,
+    client=Depends(create_gremlin_client),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').outE('is_post').inV().valueMap(true)
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        print(results)
+
+        response = [GetPostsResponse.from_data(result) for result in results]
+        return response
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/post/modify-my-content",response_model = GetPostsResponse)
+async def modify_my_post(
+    request: Request,
+    client=Depends(create_gremlin_client),
+    modify_my_post_request: ModifyMyPostRequest = Body(...)
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+    post_node_id = modify_my_post_request.post_node_id
+    new_content = modify_my_post_request.new_content
+    new_image_url = modify_my_post_request.new_image_url
+    new_is_public = modify_my_post_request.new_is_public
+    new_title = modify_my_post_request.new_title
+    new_tag = modify_my_post_request.new_tag
+
+    try:
+        query = f"g.V('{user_node_id}').outE('is_post').inV().hasId('{post_node_id}')"
+        if new_content:
+            query += f".property(single,'content','{new_content}')"
+        if new_image_url:
+            query += f".property(single,'image_url','{new_image_url}')"
+        if new_is_public:
+            query += f".property(single,'is_public','{new_is_public}')"
+        if new_title:
+            query += f".property(single,'title','{new_title}')"
+        if new_tag:
+            query += f".property(single,'tag','{json.dumps(new_tag)}')"
+        query += ".valueMap(true)"
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        print("results :" ,results)
+        if not results:
+            raise HTTPException(status_code=404, detail=f"no such post '{post_node_id}' in user '{user_node_id}'")
+        response = GetPostsResponse.from_data(results[0])
         return response
 
     except HTTPException as e :

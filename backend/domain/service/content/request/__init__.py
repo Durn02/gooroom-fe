@@ -3,3 +3,4 @@ from .get_stickers_request import GetStickersRequest
 from .create_post_request import CreatePostRequest
 from .delete_sticker_request import DeleteStickerRequest
 from .get_posts_request import GetPostsRequest
+from .modify_my_post_request import ModifyMyPostRequest
