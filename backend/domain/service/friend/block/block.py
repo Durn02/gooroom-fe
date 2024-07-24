@@ -78,17 +78,27 @@ async def pop_blocked(
     pop_blocked_request: PopBlockedRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)['user_node_id']
 
     try:
         query = f"""
-        g.E('{pop_blocked_request.block_edge_id}').drop()
+        g.V('{user_node_id}').outE('block').hasId('{pop_blocked_request.block_edge_id}').fold()
+        .coalesce(
+            unfold().sideEffect(V('{pop_blocked_request.block_edge_id}').drop()).constant('dropped'),
+            constant('not exist')
+        )
         """
 
         future_result_set = client.submitAsync(query).result().all()
-        await asyncio.wrap_future(future_result_set)
+        results = await asyncio.wrap_future(future_result_set)
 
-        return PopBlockedResponse()
+        print(results)
+
+        if results== ['not exist']:
+            return PopBlockedRequest(message='not exist')
+        else :
+            return PopBlockedRequest(message=f"'{pop_blocked_request.block_edge_id}' dropped")
+    
     except HTTPException as e :
         raise e
     except Exception as e:

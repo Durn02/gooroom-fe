@@ -1,11 +1,8 @@
 from .create_sticker_response import CreateStickerResponse
 from .get_stickers_response import GetStickersResponse
-<<<<<<< HEAD
 from .create_post_response import CreatePostResponse
-=======
-<<<<<<< HEAD
 from .delete_sticker_response import DeleteStickerResponse
-=======
 from .get_my_stickers_response import GetMyStickersResponse
->>>>>>> develop
->>>>>>> develop
+from .get_posts_response import GetPostsResponse
+from .delete_my_post_response import DeleteMyPostResponse
+from .send_cast_response import SendCastResponse
