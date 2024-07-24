@@ -252,11 +252,10 @@ async def signout(
 async def get_nodes(client=Depends(create_gremlin_client)):
     logger.info("노드 정보 조회")
     try:
-        query = "g.V().hasLabel('User').valueMap(true)"
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-        print(type(results[0]['concern']))
-        return results[0]
+        query = "g.V()"
+        result = client.submit(query).all().result()
+        logger.info("/nodes 200 ok")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
