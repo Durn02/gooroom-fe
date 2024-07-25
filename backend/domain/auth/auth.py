@@ -60,6 +60,9 @@ async def signup(
                 .property('username', '{signup_request.username}')
                 .property('concern', '{concern_json}')
                 .property('my_memo', '')
+                .property('grant', 'member')
+                .property('link_info', '')
+                .property('verification_info', '')
                 .as('user')
                 .addE('is_info').from('private').to('user')
                 .select('private', 'user')
@@ -69,15 +72,15 @@ async def signup(
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
+        print(f"Results: {results}")
 
         if results:
-            private_node = results[0]["private"]
             user_node = results[0]["user"]
-            uuid = private_node.id
             user_node_id = user_node.id
+            print(f"User Node ID: {user_node_id}")
 
             token = create_access_token(user_node_id)
-            response.set_cookie(key=access_token, value=token, httponly=True)
+            response.set_cookie(key="access_token", value=token, httponly=True)
             return SignUpResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to create user")
@@ -98,29 +101,25 @@ async def signin(
     # auth api logger에 유저정보도 남기는 게 좋을 것 같음
     logger.info("login")
     try:
-        query = f"""g.V().hasLabel('PrivateData').has('email','{signin_request.email}').as('privateNode')
-        .outE('is_info').inV().hasLabel('User').as('userNode')
-        .select('privateNode', 'userNode').by(valueMap(true))"""
+        query = f"""g.V().hasLabel('PrivateData').has('email','{signin_request.email}').as('p')
+        .outE('is_info').inV().as('u')
+        .project('password', 'id')
+        .by(select('p').values('password')).by(select('u').id())"""
 
         future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-
-        result = results[0]
-        privateNode = result["privateNode"]
-        userNode = result["userNode"]
+        result = await asyncio.wrap_future(future_result_set)
 
         if not result:
             raise HTTPException(status_code=400, detail="not registered email")
 
-        # result.get('password', ['default_value'])는 ['실제 pw value']를 반환
-        # 유효한 데이터가 없으면 ['default_Value'] 설정한 기본값 반환
-        # ['실제 pw value'][0]는 'my_password'를 반환
-        password = privateNode.get("password", [""])[0]
+        password = result[0]["password"]
+
         if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
-        user_node_id = userNode.get(T.id)
+
+        user_node_id = result[0]["id"]
         token = create_access_token(user_node_id)
-        response.set_cookie(key=access_token, value=token, httponly=True)
+        response.set_cookie(key="access_token", value=token, httponly=True)
         return SignInResponse()
     except HTTPException as e:
         raise e
@@ -133,6 +132,7 @@ async def signin(
 @router.post("/logout")
 async def logout(request: Request, response: Response):
     token = request.cookies.get(access_token)
+    print("token :", token)
 
     if token:
         response.delete_cookie(key=access_token)
@@ -173,15 +173,15 @@ async def pw_change(
 
     try:
         query = f"""
-        g.V('{user_node_id}').inE('is_info').outV().as('u').select('u')
-        .by(valueMap(true))
+        g.V('{user_node_id}').inE('is_info').outV().as('u').project('password').by(select('u').values('password'))
             """
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
 
         if not result:
             raise HTTPException(status_code=400, detail="User not found")
-        password = result[0]["password"][0]
+
+        password = result[0]["password"]
 
         new_pw = pw_change_req.changepw
 
@@ -271,11 +271,10 @@ async def signout(
 async def get_nodes(client=Depends(create_gremlin_client)):
     logger.info("노드 정보 조회")
     try:
-        query = "g.V().hasLabel('User').valueMap(true)"
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-        print(type(results[0]["concern"]))
-        return results[0]
+        query = "g.V()"
+        result = client.submit(query).all().result()
+        logger.info("/nodes 200 ok")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
