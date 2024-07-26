@@ -7,7 +7,7 @@ from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
 from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest,DeleteMyPostRequest,SendCastRequest
-from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse,SendCastResponse
+from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse,SendCastResponse,GetCastsResponse
 
 logger = Logger(__file__)
 router = APIRouter()
@@ -83,7 +83,7 @@ async def get_contents(
     finally:
         client.close()
 
-@router.post("/sticker/get-my-content",response_model = List[GetMyStickersResponse])
+@router.get("/sticker/get-my-content",response_model = List[GetMyStickersResponse])
 async def get_my_contents(
     request: Request,
     client=Depends(create_gremlin_client)
@@ -242,7 +242,7 @@ async def get_posts(
     finally:
         client.close()
 
-@router.post("/post/get-my-content",response_model = List[GetPostsResponse])
+@router.get("/post/get-my-content",response_model = List[GetPostsResponse])
 async def get_my_posts(
     request: Request,
     client=Depends(create_gremlin_client),
@@ -379,6 +379,59 @@ async def send_cast(
             raise HTTPException(status_code=404, detail="there's invalid friend in friends")
         
         return SendCastResponse()
+
+    except HTTPException as e :
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+
+async def delete_old_casts():
+    current_time = datetime.now(timezone.utc)
+    delete_before = current_time - timedelta(hours=1)
+    delete_before_timestamp = delete_before.isoformat()
+
+    client = create_gremlin_client()
+
+    try:
+        print("delete_before_timestamp : ",delete_before_timestamp)
+        query = f"""
+        g.V().hasLabel('cast').has('created_at', lte('{delete_before_timestamp}')).as('old_casts')
+        .sideEffect(store('old_casts').by(valueMap(true))).drop().cap('old_casts')
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        logger.info(f"delete_old_casts : '{results}'")
+
+    except Exception as e:
+        raise e
+    finally:
+        client.close()
+
+@router.get("/cast/get-contents",response_model=List[GetCastsResponse])
+async def get_casts(
+    request: Request,
+    client=Depends(create_gremlin_client),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V('{user_node_id}').inE('cast').where(not(outV().outE('block'))).valueMap(true)
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        print(results)
+        
+        response = [GetCastsResponse.from_data(result) for result in results]
+        return response
 
     except HTTPException as e :
         raise e
