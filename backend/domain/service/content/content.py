@@ -387,16 +387,16 @@ async def send_cast(
     finally:
         client.close()
 
-
 async def delete_old_casts():
     current_time = datetime.now(timezone.utc)
     delete_before = current_time - timedelta(hours=1)
     delete_before_timestamp = delete_before.isoformat()
 
     client = create_gremlin_client()
+    
+    print("delete_old_casts")
 
     try:
-        print("delete_before_timestamp : ",delete_before_timestamp)
         query = f"""
         g.V().hasLabel('cast').has('created_at', lte('{delete_before_timestamp}')).as('old_casts')
         .sideEffect(store('old_casts').by(valueMap(true))).drop().cap('old_casts')

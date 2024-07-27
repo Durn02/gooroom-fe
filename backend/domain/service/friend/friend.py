@@ -1,14 +1,17 @@
 # backend/domain/service/friend/friend.py
 import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
-from utils import verify_access_token
+from utils import verify_access_token,Logger
 from config.connection import create_gremlin_client
 from .request import SendKnockRequest,RejectKnockRequest,AcceptKnockRequest,GetFriendRequest,DeleteFriendRequest,GetMemoRequest,ModifyMemoRequest
 from .response import ListKnockResponse,SendKnockResponse,AcceptKnockResponse,GetFriendResponse,DeleteFriendResponse,GetMemoResponse, ModifyMemoResponse
 from gremlin_python.process.traversal import T
+from datetime import datetime, timedelta, timezone
+import uuid
 
 router = APIRouter()
 access_token = "access_token"
+logger = Logger(__file__)
 
 @router.post("/knock/send",  response_model=SendKnockResponse)
 async def send_knock(
@@ -126,6 +129,106 @@ async def accept_knock(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.get("/knock/create_link")
+async def create_knock_by_link(
+    request: Request,
+    client=Depends(create_gremlin_client),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    current_time = datetime.now(timezone.utc)
+    expired = current_time + timedelta(hours=24)
+    expired = expired.strftime('%Y-%m-%d %H')
+
+    knock_id = str(uuid.uuid4())
+    knock_data = f"({knock_id},{expired})"
+    print(knock_data)
+
+    try:
+        query = f"g.V('{user_node_id}').property('knock_links','{knock_data}')"
+        future_result_set = client.submitAsync(query).result().all()
+        await asyncio.wrap_future(future_result_set)
+
+        return "https://gooroom/domain/friend/knock/accept_by_link:"+knock_id
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+@router.post("/knock/accept_by_link/{knock_id}")
+async def accept_knock_by_link(
+    knock_id:str,
+    request: Request,
+    client=Depends(create_gremlin_client),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)['user_node_id']
+
+    try:
+        query = f"""
+        g.V().hasLabel('User').has('knock_links',TextP.startingWith('({knock_id}')).as('from_user')
+        .choose(
+            coalesce(
+                V('{user_node_id}').outE('is_roommate').where(inV().as('from_user')),
+                V('{user_node_id}').inE('is_roommate').where(outV().as('from_user')),
+                V('{user_node_id}').outE('knock').where(inV().as('from_user')),
+                V('{user_node_id}').inE('knock').where(inV().as('from_user'))
+            ),
+            constant('is_roommate or knock already exists'),
+            addE('is_roommate').from(V('{user_node_id}')).to('from_user')
+            .addE('is_roommate').from('from_user').to(V('{user_node_id}'))
+        )
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        print("results : ", results)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+async def delete_knock_links():
+    current_time = datetime.now(timezone.utc)
+    delete_before = current_time
+    delete_before_timestamp = delete_before.strftime('%Y-%m-%d %H')
+    logger.info(f"delete_old_casts with TextP.containing({delete_before_timestamp})")
+
+    client = create_gremlin_client()
+
+    print("delete_knock_links")
+
+    try:
+        query = f"""
+        g.V().hasLabel('User').has('knock_links', TextP.containing('{delete_before_timestamp}'))
+        .properties('knock_links').hasValue(TextP.notContaining('{delete_before_timestamp}')).value()
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+        print("results : ", results)
+
+        query = f"""
+        g.V().hasLabel('User').has('knock_links', TextP.containing('{delete_before_timestamp}'))
+        .sideEffect(properties('knock_links').drop())
+        """
+        for result in results:
+            query += f".property('knock_links','{result}')"
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+        print("results : ", results)
+
+        logger.info(f"delete_old_links in Node {results}. TextP.containing({delete_before_timestamp}")
+
+    except Exception as e:
+        raise e
     finally:
         client.close()
 
