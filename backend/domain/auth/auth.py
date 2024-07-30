@@ -1,6 +1,8 @@
 # backend/domain/auth/auth.py
 import os, sys, json, asyncio, re
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
+import random, string
+from datetime import datetime, timedelta
 from config.connection import create_gremlin_client
 from utils import (
     hash_password,
@@ -8,11 +10,21 @@ from utils import (
     create_access_token,
     verify_access_token,
     Logger,
+    send_verification_email,
 )
 from gremlin_python.driver.client import Client
 from gremlin_python.process.traversal import T
-from .request import SignInRequest, SignUpRequest, PwChangeRequest
-from .response import SignUpResponse, SignInResponse, SignOutResponse, PwChangeResponse
+from .request import SignInRequest, SignUpRequest, PwChangeRequest, VerificationRequest
+from .response import (
+    SignUpResponse,
+    SignInResponse,
+    SignOutResponse,
+    PwChangeResponse,
+    VerificationResponse,
+)
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = Logger(__file__)
 
@@ -22,6 +34,56 @@ sys.path.append(
 
 router = APIRouter()
 access_token = "access_token"
+
+
+@router.post("/verify-code")
+async def verify_code(
+    response: Response,
+    client: Client = Depends(create_gremlin_client),
+    verification_request: VerificationRequest = Body(...),
+):
+    logger.info("verify code")
+
+    try:
+        query = f"""
+            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}').outE('is_info').inV()
+            .as('u').project('verification_info')
+            .by(select('u').values('verification_info'))
+        """
+        future_result_set = client.submitAsync(query).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+        verification_info = result[0]["verification_info"]
+
+        if not result:
+            raise HTTPException(status_code=400, detail="User not found")
+
+        if verification_info:
+            verification_info = json.loads(verification_info)
+            if verification_request.verifycode not in verification_info:
+                raise HTTPException(status_code=400, detail="Invalid verification code")
+            if datetime.now() > datetime.fromisoformat(
+                verification_info[verification_request.verifycode]
+            ):
+                raise HTTPException(status_code=400, detail="Verification code expired")
+
+        query2 = f"""
+            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}').outE('is_info').inV()
+            .fold()
+            .coalesce(
+                unfold().property(single, 'grant', 'user').constant('Verified successfully'),
+                constant('Error occurred')
+            )
+        """
+        future_result_set = client.submitAsync(query2).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+
+        if result[0] == "Error occured":
+            raise HTTPException(status_code=400, detail="Error occured")
+        return VerificationResponse(message="Verified successfully")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
 
 
 @router.post("/signup")
@@ -45,6 +107,14 @@ async def signup(
         encrypted_password = hash_password(signup_request.password)
         concern_json = json.dumps(signup_request.concern)
 
+        verification_code = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=6)
+        )
+        expiration_time = datetime.now() + timedelta(minutes=30)
+        verification_info = json.dumps({verification_code: expiration_time.isoformat()})
+
+        send_verification_email(signup_request.email, verification_info)
+
         query = f"""
         g.V().hasLabel('PrivateData').has('email', '{signup_request.email}')
         .fold()
@@ -60,9 +130,9 @@ async def signup(
                 .property('username', '{signup_request.username}')
                 .property('concern', '{concern_json}')
                 .property('my_memo', '')
-                .property('grant', 'member')
+                .property('grant', 'not-verified')
                 .property('link_info', '')
-                .property('verification_info', '')
+                .property('verification_info', '{verification_info}')
                 .as('user')
                 .addE('is_info').from('private').to('user')
                 .select('private', 'user')
@@ -75,12 +145,6 @@ async def signup(
         print(f"Results: {results}")
 
         if results:
-            user_node = results[0]["user"]
-            user_node_id = user_node.id
-            print(f"User Node ID: {user_node_id}")
-
-            token = create_access_token(user_node_id)
-            response.set_cookie(key="access_token", value=token, httponly=True)
             return SignUpResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to create user")
@@ -103,8 +167,8 @@ async def signin(
     try:
         query = f"""g.V().hasLabel('PrivateData').has('email','{signin_request.email}').as('p')
         .outE('is_info').inV().as('u')
-        .project('password', 'id')
-        .by(select('p').values('password')).by(select('u').id())"""
+        .project('password', 'grant', 'id')
+        .by(select('p').values('password')).by(select('u').values('grant')).by(select('u').id())"""
 
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
@@ -113,9 +177,13 @@ async def signin(
             raise HTTPException(status_code=400, detail="not registered email")
 
         password = result[0]["password"]
+        grant = result[0]["grant"]
 
         if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
+
+        if grant == "not-verified":
+            raise HTTPException(status_code=400, detail="not verified email")
 
         user_node_id = result[0]["id"]
         token = create_access_token(user_node_id)
