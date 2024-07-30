@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
-class PopBlockedResponse(BaseModel):
+class DeleteMyPostResponse(BaseModel):
     message:str
     

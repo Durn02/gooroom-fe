@@ -1,6 +1,8 @@
 # backend/domain/auth/auth.py
 import os, sys, json, asyncio, re
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
+import random, string
+from datetime import datetime, timedelta
 from config.connection import create_gremlin_client
 from utils import (
     hash_password,
@@ -8,11 +10,21 @@ from utils import (
     create_access_token,
     verify_access_token,
     Logger,
+    send_verification_email,
 )
 from gremlin_python.driver.client import Client
 from gremlin_python.process.traversal import T
-from .request import SignInRequest, SignUpRequest, PwChangeRequest
-from .response import SignUpResponse, SignInResponse, SignOutResponse, PwChangeResponse
+from .request import SignInRequest, SignUpRequest, PwChangeRequest, VerificationRequest
+from .response import (
+    SignUpResponse,
+    SignInResponse,
+    SignOutResponse,
+    PwChangeResponse,
+    VerificationResponse,
+)
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = Logger(__file__)
 
@@ -22,6 +34,56 @@ sys.path.append(
 
 router = APIRouter()
 access_token = "access_token"
+
+
+@router.post("/verify-code")
+async def verify_code(
+    response: Response,
+    client: Client = Depends(create_gremlin_client),
+    verification_request: VerificationRequest = Body(...),
+):
+    logger.info("verify code")
+
+    try:
+        query = f"""
+            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}').outE('is_info').inV()
+            .as('u').project('verification_info')
+            .by(select('u').values('verification_info'))
+        """
+        future_result_set = client.submitAsync(query).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+        verification_info = result[0]["verification_info"]
+
+        if not result:
+            raise HTTPException(status_code=400, detail="User not found")
+
+        if verification_info:
+            verification_info = json.loads(verification_info)
+            if verification_request.verifycode not in verification_info:
+                raise HTTPException(status_code=400, detail="Invalid verification code")
+            if datetime.now() > datetime.fromisoformat(
+                verification_info[verification_request.verifycode]
+            ):
+                raise HTTPException(status_code=400, detail="Verification code expired")
+
+        query2 = f"""
+            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}').outE('is_info').inV()
+            .fold()
+            .coalesce(
+                unfold().property(single, 'grant', 'user').constant('Verified successfully'),
+                constant('Error occurred')
+            )
+        """
+        future_result_set = client.submitAsync(query2).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+
+        if result[0] == "Error occured":
+            raise HTTPException(status_code=400, detail="Error occured")
+        return VerificationResponse(message="Verified successfully")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
 
 
 @router.post("/signup")
@@ -45,6 +107,14 @@ async def signup(
         encrypted_password = hash_password(signup_request.password)
         concern_json = json.dumps(signup_request.concern)
 
+        verification_code = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=6)
+        )
+        expiration_time = datetime.now() + timedelta(minutes=30)
+        verification_info = json.dumps({verification_code: expiration_time.isoformat()})
+
+        send_verification_email(signup_request.email, verification_info)
+
         query = f"""
         g.V().hasLabel('PrivateData').has('email', '{signup_request.email}')
         .fold()
@@ -60,6 +130,9 @@ async def signup(
                 .property('username', '{signup_request.username}')
                 .property('concern', '{concern_json}')
                 .property('my_memo', '')
+                .property('grant', 'not-verified')
+                .property('link_info', '')
+                .property('verification_info', '{verification_info}')
                 .as('user')
                 .addE('is_info').from('private').to('user')
                 .select('private', 'user')
@@ -80,13 +153,9 @@ async def signup(
             print(f"Private Node ID: {uuid}")
             print(f"User Node ID: {user_node_id}")
 
-            token = create_access_token(uuid)
-            response.set_cookie(key="access_token", value=token, httponly=True)
-            return SignUpResponse()
-        else:
-            raise HTTPException(status_code=500, detail="Failed to create user")
-    except HTTPException as e:
-        raise e
+        token = create_access_token(uuid)
+        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        return SignUpResponse()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -102,31 +171,29 @@ async def signin(
     # auth api logger에 유저정보도 남기는 게 좋을 것 같음
     logger.info("login")
     try:
-        query = f"""g.V().hasLabel('PrivateData').has('email','{signin_request.email}').as('privateNode')
-        .outE('is_info').inV().hasLabel('User').as('userNode')
-        .select('privateNode', 'userNode').by(valueMap(true))"""
+        query = f"""g.V().hasLabel('PrivateData').has('email','{signin_request.email}').as('p')
+        .outE('is_info').inV().as('u')
+        .project('password', 'grant', 'id')
+        .by(select('p').values('password')).by(select('u').values('grant')).by(select('u').id())"""
 
         future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-        print("result : ", results)
-        result = results[0]
-        privateNode = result["privateNode"]
-        userNode = result["userNode"]
-        print("privateNode : ", privateNode)
-        print("userNode : ", userNode)
+        result = await asyncio.wrap_future(future_result_set)
 
         if not result:
             raise HTTPException(status_code=400, detail="not registered email")
 
-        # result.get('password', ['default_value'])는 ['실제 pw value']를 반환
-        # 유효한 데이터가 없으면 ['default_Value'] 설정한 기본값 반환
-        # ['실제 pw value'][0]는 'my_password'를 반환
-        password = privateNode.get("password", [""])[0]
+        password = result[0]["password"]
+        grant = result[0]["grant"]
+
         if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
-        user_node_id = userNode.get(T.id)
+
+        if grant == "not-verified":
+            raise HTTPException(status_code=400, detail="not verified email")
+
+        user_node_id = result[0]["id"]
         token = create_access_token(user_node_id)
-        response.set_cookie(key="access_token", value=token, httponly=True)
+        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
         return SignInResponse()
     except HTTPException as e:
         raise e
@@ -167,36 +234,63 @@ async def pw_change(
     client=Depends(create_gremlin_client),
     pw_change_req: PwChangeRequest = Body(...),
 ):
-    token = request.cookies.get("access_token")
+    token = request.cookies.get(access_token)
 
     if not token:
         raise HTTPException(status_code=401, detail="Access token missing")
 
     token_payload = verify_access_token(token)
-    uuid = token_payload.get("uuid")
+    user_node_id = token_payload.get("user_node_id")
 
-    if not uuid:
+    if not user_node_id:
         raise HTTPException(status_code=400, detail="Invalid input")
 
     try:
-        input_password_hashed = hash_password(pw_change_req.currentpw)
-        new_password_hashed = hash_password(pw_change_req.changepw)
-        print(input_password_hashed, new_password_hashed)
         query = f"""
-        g.V('{uuid}').fold().coalesce(unfold().choose(
-            values('password').is(eq('{input_password_hashed}')),
-            __.property(single, 'password', '{new_password_hashed}')
-            .constant('Password changed successfully'), constant('Incorrect current password')
-            ), constant('User not found')
-        )
-        """
+        g.V('{user_node_id}').inE('is_info').outV().as('u').project('password').by(select('u').values('password'))
+            """
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
-        print(result)
-        if result[0] == "Incorrect current password":
-            raise HTTPException(status_code=400, detail="Incorrect current password")
-        elif result[0] == "User not found":
+
+        if not result:
             raise HTTPException(status_code=400, detail="User not found")
+
+        password = result[0]["password"]
+
+        new_pw = pw_change_req.changepw
+
+        if not re.match(
+            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$', new_pw
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="New password must contain at least one lowercase letter, one uppercase letter, one number, and one special character, and must be at least 8 characters long",
+            )
+
+        if verify_password(pw_change_req.changepw, password):
+            raise HTTPException(
+                status_code=400,
+                detail="Changed password should not be same with current password",
+            )
+
+        hashed_new_pw = hash_password(new_pw)
+
+        if not verify_password(pw_change_req.currentpw, password):
+            raise HTTPException(status_code=400, detail="Incorrect current password")
+
+        query2 = f"""
+            g.V('{user_node_id}').inE('is_info').outV().as('u')
+            .fold()
+            .coalesce(
+                unfold().property(single, 'password', '{hashed_new_pw}').constant('Password changed successfully'),
+                constant('Error occurred')
+            )
+        """
+        future_result_set = client.submitAsync(query2).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+
+        if result[0] == "Error occured":
+            raise HTTPException(status_code=400, detail="Error occured")
 
         return PwChangeResponse(message="Password changed successfully")
     except HTTPException as e:
@@ -213,21 +307,20 @@ async def signout(
 ):
     logger.info("signout")
     try:
-        token = request.cookies.get("access_token")
-        print("token :", token)
+        token = request.cookies.get(access_token)
+
         if not access_token:
             raise HTTPException(status_code=401, detail="Access token missing")
 
         token_payload = verify_access_token(token)
-        uuid = token_payload.get("uuid")
-        print(uuid)
+        user_node_id = token_payload.get("user_node_id")
 
-        if not uuid:
+        if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
 
         delete_user_query = f"""
-            g.V('{uuid}').fold().coalesce(
-                unfold().as('p').out('is_info').hasLabel('User').as('u')
+            g.V('{user_node_id}').fold().coalesce(
+                unfold().as('p').inE('is_info').outV().as('u')
                 .sideEffect(select('u').unfold().drop()).sideEffect(select('p').unfold().drop())
                 .constant('User deleted successfully'), constant('User not found')
             )
@@ -235,11 +328,11 @@ async def signout(
 
         future_result_set = client.submitAsync(delete_user_query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        print(results)
+
         if results[0] == "User not found":
             raise HTTPException(status_code=404, detail="User not found")
         if results[0] == "User deleted successfully":
-            response.delete_cookie(key="access_token")
+            response.delete_cookie(key=access_token)
             return SignOutResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to sign out")
