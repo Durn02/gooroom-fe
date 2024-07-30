@@ -50,9 +50,4 @@ dmypy.json
 #env
 .env
 *.env
-<<<<<<< HEAD
-=======
-
-#secret
->>>>>>> develop
 secret.txt
