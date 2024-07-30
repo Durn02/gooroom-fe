@@ -112,8 +112,8 @@ async def accept_knock(
         .coalesce(
         unfold().as('knock').inV().as('from_user_node')
         .select('knock').outV().as('current_user_node')
-        .addE('is_roommate').from('from_user_node').to('current_user_node')
-        .addE('is_roommate').from('current_user_node').to('from_user_node')
+        .addE('is_roommate').from('from_user_node').to('current_user_node').property('memo','')
+        .addE('is_roommate').from('current_user_node').to('from_user_node').property('memo','')
         .sideEffect(__.select('knock').drop()),
         constant('Edge not found'))
         """
@@ -179,8 +179,8 @@ async def accept_knock_by_link(
                 V('{user_node_id}').inE('knock').where(inV().as('from_user'))
             ),
             constant('is_roommate or knock already exists'),
-            addE('is_roommate').from(V('{user_node_id}')).to('from_user')
-            .addE('is_roommate').from('from_user').to(V('{user_node_id}'))
+            addE('is_roommate').from(V('{user_node_id}')).to('from_user').property('memo','')
+            .addE('is_roommate').from('from_user').to(V('{user_node_id}')).property('memo','')
         )
         """
 
@@ -239,28 +239,34 @@ async def get_members(
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)['user_node_id']
-    
+
     try:
         query = f"""g.V('{user_node_id}').out('is_roommate')
         .where(not(__.inE('block').outV().hasId('{user_node_id}')))
         .group().by(id())
-        .by(
-        project('roommate', 'posts', 'stickers')
-        .by(valueMap(true))
-        .by(out('is_post').id().fold())
-        .by(out('is_sticker').id().fold())
-        )
+            .by(
+                project('roommate','memo','posts', 'stickers','is_roommate')
+                .by(valueMap('username','nickname','concern','memo'))
+                .by(outE('is_roommate').properties('memo').value())
+                .by(out('is_post').id().fold())
+                .by(out('is_sticker').id().fold())
+                .by(
+                    out('is_roommate').where(not(hasId('{user_node_id}')))
+                    .id().fold()
+                )
+            )
         .aggregate('roommates')
         .V('{user_node_id}').out('is_roommate').out('is_roommate')
         .where(not(__.inE('block').outV().hasId('{user_node_id}')))
         .where(not(hasId('{user_node_id}'))).dedup()
         .group().by(id())
-        .by(
-        project('neighbor', 'posts', 'stickers')
-        .by(valueMap(true))
-        .by(out('is_post').id().fold())
-        .by(out('is_sticker').id().fold())
-        ).aggregate('neighbors').cap('roommates', 'neighbors')
+            .by(
+                project('neighbor','posts', 'stickers')
+                .by(valueMap('username','nickname','concern','memo'))
+                .by(out('is_post').id().fold())
+                .by(out('is_sticker').id().fold())
+            )
+        .aggregate('neighbors').cap('roommates', 'neighbors')
         """
 
         friend_result_set = client.submitAsync(query).result().all()

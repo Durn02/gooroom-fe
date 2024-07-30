@@ -154,7 +154,7 @@ async def signup(
             print(f"User Node ID: {user_node_id}")
 
         token = create_access_token(uuid)
-        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignUpResponse()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -193,7 +193,7 @@ async def signin(
 
         user_node_id = result[0]["id"]
         token = create_access_token(user_node_id)
-        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignInResponse()
     except HTTPException as e:
         raise e
