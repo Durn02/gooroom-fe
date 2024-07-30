@@ -145,11 +145,27 @@ async def signup(
         print(f"Results: {results}")
 
         if results:
+            private_node = results[0]["private"]
+            user_node = results[0]["user"]
+            uuid = private_node.id
+            user_node_id = user_node.id
+
+            print(f"Private Node ID: {uuid}")
+            print(f"User Node ID: {user_node_id}")
+
+<<<<<<< HEAD
+        token = create_access_token(uuid)
+        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
+        return SignUpResponse()
+=======
+            token = create_access_token(uuid)
+            response.set_cookie(key="access_token", value=token, httponly=True)
             return SignUpResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to create user")
     except HTTPException as e:
         raise e
+>>>>>>> 9394de8da1bb6aaee9728b1985aaaa18eedc379a
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -187,7 +203,7 @@ async def signin(
 
         user_node_id = result[0]["id"]
         token = create_access_token(user_node_id)
-        response.set_cookie(key="access_token", value=token, httponly=True)
+        response.set_cookie(key=access_token, value=f"Bearer {token}", httponly=True)
         return SignInResponse()
     except HTTPException as e:
         raise e

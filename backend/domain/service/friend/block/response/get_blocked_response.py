@@ -9,9 +9,6 @@ class GetBlockedResponse(BaseModel):
 
     @classmethod
     def from_data(cls, edge: Dict[T,str], node: Dict[str,str]):
-        print(edge.get(T.id,''))
-        print(node.get(T.id,''))
-        print(node.get('nickname')[0] if node.get('nickname','') else '')
         return cls(
             block_edge=edge.get(T.id, ''),
             user_id=node.get(T.id, ''),
