@@ -239,30 +239,36 @@ async def get_members(
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)['user_node_id']
-
     try:
         query = f"""g.V('{user_node_id}').out('is_roommate')
         .where(not(__.inE('block').outV().hasId('{user_node_id}')))
         .group().by(id())
             .by(
                 project('roommate','memo','posts', 'stickers','is_roommate')
-                .by(valueMap('username','nickname','concern','memo'))
+                .by(valueMap('username','nickname','concern','my_memo'))
                 .by(outE('is_roommate').properties('memo').value())
                 .by(out('is_post').id().fold())
                 .by(out('is_sticker').id().fold())
                 .by(
-                    out('is_roommate').where(not(hasId('{user_node_id}')))
-                    .id().fold()
+                    as('roommate')
+                    .out('is_roommate')
+                    .where(
+                        and(
+                            not(hasId('{user_node_id}')),
+                            not(__.inE('block').outV().where(eq('roommate')))
+                        )
+                    ).id().fold()
                 )
             )
         .aggregate('roommates')
-        .V('{user_node_id}').out('is_roommate').out('is_roommate')
+        .V('{user_node_id}').out('is_roommate').as('first_level')
+        .out('is_roommate').where(not(__.inE('block').outV().where(eq('first_level'))))
         .where(not(__.inE('block').outV().hasId('{user_node_id}')))
         .where(not(hasId('{user_node_id}'))).dedup()
         .group().by(id())
             .by(
                 project('neighbor','posts', 'stickers')
-                .by(valueMap('username','nickname','concern','memo'))
+                .by(valueMap('username','nickname','concern'))
                 .by(out('is_post').id().fold())
                 .by(out('is_sticker').id().fold())
             )
