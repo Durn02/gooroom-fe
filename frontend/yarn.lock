@@ -2195,6 +2195,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/cytoscape@*", "@types/cytoscape@^3.21.5":
+  version "3.21.5"
+  resolved "https://registry.yarnpkg.com/@types/cytoscape/-/cytoscape-3.21.5.tgz#43ea460b2809ff424225377f270750f674c27f75"
+  integrity sha512-fzYT3vqY5J4gxVXDOsCgDpm0ZdU8bQq+wCv0ucS0MSTtvQdjs3lcb2VetJiUSAd4WBgouqizI+JT1f8Yc6eY7Q==
+
 "@types/eslint-scope@^3.7.3":
   version "3.7.7"
   resolved "https://registry.yarnpkg.com/@types/eslint-scope/-/eslint-scope-3.7.7.tgz#3108bd5f18b0cdb277c867b3dd449c9ed7079ac5"
@@ -2363,6 +2368,14 @@
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.7.tgz#50ae4353eaaddc04044279812f52c8c65857dbcb"
   integrity sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==
+
+"@types/react-cytoscapejs@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@types/react-cytoscapejs/-/react-cytoscapejs-1.2.5.tgz#6648bbcc0f243b08b65a8753225b541068764653"
+  integrity sha512-G9VcGQOlER3njklOu5D0FDGHYfkQJ3yEL95kGbgI/MR08N5dQ7IbLSZI8WqaB4fG0zOURIg0BUtOCrbE5HRZEQ==
+  dependencies:
+    "@types/cytoscape" "*"
+    "@types/react" "*"
 
 "@types/react-dom@^18.0.0":
   version "18.3.0"
