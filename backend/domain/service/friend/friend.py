@@ -142,14 +142,13 @@ async def create_knock_by_link(
 
     current_time = datetime.now(timezone.utc)
     expired = current_time + timedelta(hours=24)
-    expired = expired.strftime('%Y-%m-%d %H')
 
     knock_id = str(uuid.uuid4())
-    knock_data = f"({knock_id},{expired})"
+    knock_data = f"{knock_id},{expired}"
     print(knock_data)
 
     try:
-        query = f"g.V('{user_node_id}').property('knock_links','{knock_data}')"
+        query = f"g.V('{user_node_id}').in('is_info').property(single,'invite_info','{knock_data}')"
         future_result_set = client.submitAsync(query).result().all()
         await asyncio.wrap_future(future_result_set)
 
@@ -159,7 +158,7 @@ async def create_knock_by_link(
     finally:
         client.close()
 
-@router.post("/knock/accept_by_link/{knock_id}")
+@router.post("/knock/accept_by_link/{knock_id}",response_model=AcceptKnockResponse)
 async def accept_knock_by_link(
     knock_id:str,
     request: Request,
@@ -170,7 +169,22 @@ async def accept_knock_by_link(
 
     try:
         query = f"""
-        g.V().hasLabel('User').has('knock_links',TextP.startingWith('({knock_id}')).as('from_user')
+        g.V().hasLabel('PrivateData').has('invite_info',TextP.startingWith('{knock_id}')).values('invite_info')
+        """
+
+        future_result_set = client.submitAsync(query).result().all()
+        results = await asyncio.wrap_future(future_result_set)
+
+        if not results:
+            HTTPException(status_code=404, detail="no corresponding data")
+
+        expired = (results[0].split(","))[1]
+        current_time = datetime.now(timezone.utc).isoformat()
+        if expired < current_time :
+            HTTPException(status_code=403, detail="expired link")
+
+        query = f"""
+        g.V().hasLabel('PrivateData').has('invite_info',TextP.startingWith('{knock_id}')).out('is_info').as('from_user')
         .choose(
             coalesce(
                 V('{user_node_id}').outE('is_roommate').where(inV().as('from_user')),
@@ -181,54 +195,22 @@ async def accept_knock_by_link(
             constant('is_roommate or knock already exists'),
             addE('is_roommate').from(V('{user_node_id}')).to('from_user').property('memo','')
             .addE('is_roommate').from('from_user').to(V('{user_node_id}')).property('memo','')
+            .constant('knock accepted successfully')
         )
         """
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
-        print("results : ", results)
+        if not results:
+            HTTPException(status_code=404, detail='no corresponding data')
 
+        return AcceptKnockResponse(message=results[0])
+
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        client.close()
-
-async def delete_knock_links():
-    current_time = datetime.now(timezone.utc)
-    delete_before = current_time
-    delete_before_timestamp = delete_before.strftime('%Y-%m-%d %H')
-    logger.info(f"delete_old_casts with TextP.containing({delete_before_timestamp})")
-
-    client = create_gremlin_client()
-
-    print("delete_knock_links")
-
-    try:
-        query = f"""
-        g.V().hasLabel('User').has('knock_links', TextP.containing('{delete_before_timestamp}'))
-        .properties('knock_links').hasValue(TextP.notContaining('{delete_before_timestamp}')).value()
-        """
-
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-        print("results : ", results)
-
-        query = f"""
-        g.V().hasLabel('User').has('knock_links', TextP.containing('{delete_before_timestamp}'))
-        .sideEffect(properties('knock_links').drop())
-        """
-        for result in results:
-            query += f".property('knock_links','{result}')"
-
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-        print("results : ", results)
-
-        logger.info(f"delete_old_links in Node {results}. TextP.containing({delete_before_timestamp}")
-
-    except Exception as e:
-        raise e
     finally:
         client.close()
 

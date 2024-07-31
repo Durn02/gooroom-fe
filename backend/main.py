@@ -5,7 +5,6 @@ from domain.api import router as domain_api_router
 from utils import Logger
 from config.connection import create_ssh_tunnel
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from domain.service.friend.friend import delete_knock_links
 from domain.service.content.content import delete_old_stickers, delete_old_casts
 
 scheduler = AsyncIOScheduler()
@@ -23,7 +22,6 @@ async def lifespan(app: FastAPI):
     logger.info("스케줄러가 실행되었습니다.")
     scheduler.add_job(func=delete_old_stickers, trigger="cron", hour=0, minute=0)
     scheduler.add_job(func=delete_old_casts, trigger="cron", minute="*/30")
-    scheduler.add_job(func=delete_knock_links, trigger="cron", hour="*/1")
     yield
     tunnel.stop()
     logger.info("SSH 터널이 종료되었습니다.")
