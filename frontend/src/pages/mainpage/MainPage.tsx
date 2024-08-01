@@ -59,7 +59,7 @@ export default function MainPage() {
   }, [container, nodes, edges]);
   return (
     <div>
-      <div ref={container} style={{ height: "500px", width: "100%" }} />
+      <div ref={container} style={{ height: "100vh", width: "100%" }} />
     </div>
   );
 }
