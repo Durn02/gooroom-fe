@@ -1,13 +1,8 @@
 # backend/domain/admin/admin.py
-import os, sys, json, asyncio, re
+import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from config.connection import create_gremlin_client
-from gremlin_python.driver.client import Client
-from gremlin_python.process.traversal import T
 from utils import (
-    hash_password,
-    verify_password,
-    create_access_token,
     verify_access_token,
     Logger,
 )

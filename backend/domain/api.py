@@ -9,7 +9,7 @@ from domain import (
     mute_router as mute,
     content_router as content,
     user_router as user,
-    friend_router as friend
+    friend_router as friend,
 )
 
 router = APIRouter()

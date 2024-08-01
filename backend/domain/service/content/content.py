@@ -1,26 +1,45 @@
 # backend/domain/service/content/content.py
-import asyncio,json
+import asyncio, json
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
 from config.connection import create_gremlin_client
-from gremlin_python.process.traversal import T
 from typing import List
 from datetime import datetime, timedelta, timezone
-from .request import CreateStickerRequest,GetStickersRequest,DeleteStickerRequest,CreatePostRequest,GetPostsRequest,ModifyMyPostRequest,DeleteMyPostRequest,SendCastRequest
-from .response import CreateStickerResponse,GetStickersResponse,GetMyStickersResponse,DeleteStickerResponse,CreatePostResponse,GetPostsResponse,DeleteMyPostResponse,SendCastResponse,GetCastsResponse
+from .request import (
+    CreateStickerRequest,
+    GetStickersRequest,
+    DeleteStickerRequest,
+    CreatePostRequest,
+    GetPostsRequest,
+    ModifyMyPostRequest,
+    DeleteMyPostRequest,
+    SendCastRequest,
+)
+from .response import (
+    CreateStickerResponse,
+    GetStickersResponse,
+    GetMyStickersResponse,
+    DeleteStickerResponse,
+    CreatePostResponse,
+    GetPostsResponse,
+    DeleteMyPostResponse,
+    SendCastResponse,
+    GetCastsResponse,
+)
 
 logger = Logger(__file__)
 router = APIRouter()
 access_token = "access_token"
 
-@router.post("/sticker/create",response_model=CreateStickerResponse)
+
+@router.post("/sticker/create", response_model=CreateStickerResponse)
 async def create_sticker(
     request: Request,
     client=Depends(create_gremlin_client),
     create_sticker_request: CreateStickerRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -36,26 +55,27 @@ async def create_sticker(
         results = await asyncio.wrap_future(future_result_set)
 
         if not results:
-            raise HTTPException(status_code=404, detail='results is empty')
+            raise HTTPException(status_code=404, detail="results is empty")
 
         print(results[0])
         return CreateStickerResponse()
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.post("/sticker/get-content",response_model = List[GetStickersResponse])
+
+@router.post("/sticker/get-content", response_model=List[GetStickersResponse])
 async def get_contents(
     request: Request,
     client=Depends(create_gremlin_client),
     get_sticker_request: GetStickersRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -70,26 +90,24 @@ async def get_contents(
         results = await asyncio.wrap_future(future_result_set)
 
         print(results)
-        if not (results) or results==["empty stickers"]:
+        if not (results) or results == ["empty stickers"]:
             return []
 
         response = [GetStickersResponse.from_data(result) for result in results]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.get("/sticker/get-my-content",response_model = List[GetMyStickersResponse])
-async def get_my_contents(
-    request: Request,
-    client=Depends(create_gremlin_client)
-):
+
+@router.get("/sticker/get-my-content", response_model=List[GetMyStickersResponse])
+async def get_my_contents(request: Request, client=Depends(create_gremlin_client)):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -104,12 +122,13 @@ async def get_my_contents(
         response = [GetMyStickersResponse.from_data(result) for result in results]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
+
 
 @router.delete("/sticker/delete")
 async def delete_sticker(
@@ -118,7 +137,7 @@ async def delete_sticker(
     delete_sticker_request: DeleteStickerRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -134,17 +153,20 @@ async def delete_sticker(
 
         print(results)
 
-        if results== ['not exist']:
-            return DeleteStickerResponse(message='not exist')
-        else :
-            return DeleteStickerResponse(message=f"'{delete_sticker_request.sticker_node_id}' dropped")
+        if results == ["not exist"]:
+            return DeleteStickerResponse(message="not exist")
+        else:
+            return DeleteStickerResponse(
+                message=f"'{delete_sticker_request.sticker_node_id}' dropped"
+            )
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
+
 
 async def delete_old_stickers():
     current_time = datetime.now(timezone.utc)
@@ -154,7 +176,7 @@ async def delete_old_stickers():
     client = create_gremlin_client()
 
     try:
-        print("delete_before_timestamp : ",delete_before_timestamp)
+        print("delete_before_timestamp : ", delete_before_timestamp)
         query = f"""
         g.V().hasLabel('sticker').has('created_at', lte('{delete_before_timestamp}')).as('old_stickers')
             .sideEffect(store('old_stickers').by(valueMap(true))).drop().cap('old_stickers')
@@ -170,14 +192,15 @@ async def delete_old_stickers():
     finally:
         client.close()
 
-@router.post("/post/create",response_model = CreatePostResponse)
+
+@router.post("/post/create", response_model=CreatePostResponse)
 async def create_post(
     request: Request,
     client=Depends(create_gremlin_client),
     create_post_request: CreatePostRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -197,25 +220,26 @@ async def create_post(
 
         print(results)
         if not results:
-            raise HTTPException(status_code=404, detail='results is empty')
+            raise HTTPException(status_code=404, detail="results is empty")
 
         return CreatePostResponse
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.post("/post/get-content",response_model = List[GetPostsResponse])
+
+@router.post("/post/get-content", response_model=List[GetPostsResponse])
 async def get_posts(
     request: Request,
     client=Depends(create_gremlin_client),
     create_post_request: GetPostsRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -229,26 +253,27 @@ async def get_posts(
         results = await asyncio.wrap_future(future_result_set)
 
         print(results)
-        if not (results) or results==["empty posts"]:
+        if not (results) or results == ["empty posts"]:
             return []
 
         response = [GetPostsResponse.from_data(result) for result in results]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.get("/post/get-my-content",response_model = List[GetPostsResponse])
+
+@router.get("/post/get-my-content", response_model=List[GetPostsResponse])
 async def get_my_posts(
     request: Request,
     client=Depends(create_gremlin_client),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -263,21 +288,22 @@ async def get_my_posts(
         response = [GetPostsResponse.from_data(result) for result in results]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.post("/post/modify-my-content",response_model = GetPostsResponse)
+
+@router.post("/post/modify-my-content", response_model=GetPostsResponse)
 async def modify_my_post(
     request: Request,
     client=Depends(create_gremlin_client),
-    modify_my_post_request: ModifyMyPostRequest = Body(...)
+    modify_my_post_request: ModifyMyPostRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
     post_node_id = modify_my_post_request.post_node_id
     new_content = modify_my_post_request.new_content
     new_image_url = modify_my_post_request.new_image_url
@@ -302,27 +328,31 @@ async def modify_my_post(
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
-        print("results :" ,results)
+        print("results :", results)
         if not results:
-            raise HTTPException(status_code=404, detail=f"no such post '{post_node_id}' in user '{user_node_id}'")
+            raise HTTPException(
+                status_code=404,
+                detail=f"no such post '{post_node_id}' in user '{user_node_id}'",
+            )
         response = GetPostsResponse.from_data(results[0])
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.delete("/post/delete-my-content",response_model = DeleteMyPostResponse)
+
+@router.delete("/post/delete-my-content", response_model=DeleteMyPostResponse)
 async def delete_my_post(
     request: Request,
     client=Depends(create_gremlin_client),
-    delete_my_post_request : DeleteMyPostRequest = Body(...)
+    delete_my_post_request: DeleteMyPostRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -338,12 +368,14 @@ async def delete_my_post(
 
         print(results)
 
-        if results== ['not exist']:
-            return DeleteMyPostResponse(message='not exist')
-        else :
-            return DeleteMyPostResponse(message=f"'{delete_my_post_request.post_node_id}' dropped")
+        if results == ["not exist"]:
+            return DeleteMyPostResponse(message="not exist")
+        else:
+            return DeleteMyPostResponse(
+                message=f"'{delete_my_post_request.post_node_id}' dropped"
+            )
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -351,14 +383,14 @@ async def delete_my_post(
         client.close()
 
 
-@router.post("/cast/send",response_model=SendCastResponse)
+@router.post("/cast/send", response_model=SendCastResponse)
 async def send_cast(
     request: Request,
     client=Depends(create_gremlin_client),
-    send_cast_request : SendCastRequest = Body(...)
+    send_cast_request: SendCastRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -370,22 +402,25 @@ async def send_cast(
             .property(single,'created_at','{datetime.now(timezone.utc)}'))
             """
 
-        print("query :" , query)
+        print("query :", query)
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if not results:
-            raise HTTPException(status_code=404, detail="there's invalid friend in friends")
-        
+            raise HTTPException(
+                status_code=404, detail="there's invalid friend in friends"
+            )
+
         return SendCastResponse()
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
+
 
 async def delete_old_casts():
     current_time = datetime.now(timezone.utc)
@@ -393,7 +428,7 @@ async def delete_old_casts():
     delete_before_timestamp = delete_before.isoformat()
 
     client = create_gremlin_client()
-    
+
     print("delete_old_casts")
 
     try:
@@ -412,13 +447,14 @@ async def delete_old_casts():
     finally:
         client.close()
 
-@router.get("/cast/get-contents",response_model=List[GetCastsResponse])
+
+@router.get("/cast/get-contents", response_model=List[GetCastsResponse])
 async def get_casts(
     request: Request,
     client=Depends(create_gremlin_client),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -429,11 +465,11 @@ async def get_casts(
         results = await asyncio.wrap_future(future_result_set)
 
         print(results)
-        
+
         response = [GetCastsResponse.from_data(result) for result in results]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

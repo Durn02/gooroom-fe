@@ -1,10 +1,9 @@
-import jwt
+import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import HTTPException
-import os
-
-from pathlib import Path
+import jwt
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)

@@ -1,19 +1,23 @@
 # backend/domain/auth/auth.py
-import os, sys, json, asyncio, re
-from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
-import random, string
+import os
+import sys
+import json
+import asyncio
+import re
+import random
+import string
 from datetime import datetime, timedelta
+from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from config.connection import create_gremlin_client
 from utils import (
+    Logger,
     hash_password,
     verify_password,
     create_access_token,
     verify_access_token,
-    Logger,
     send_verification_email,
 )
 from gremlin_python.driver.client import Client
-from gremlin_python.process.traversal import T
 from .request import SignInRequest, SignUpRequest, PwChangeRequest, VerificationRequest
 from .response import (
     SignUpResponse,
@@ -22,9 +26,6 @@ from .response import (
     PwChangeResponse,
     VerificationResponse,
 )
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 logger = Logger(__file__)
 

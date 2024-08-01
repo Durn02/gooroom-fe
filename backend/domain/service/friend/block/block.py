@@ -1,24 +1,24 @@
 # backend/domain/service/friend/block/block.py
 import asyncio
-from fastapi import APIRouter,HTTPException, APIRouter, Depends, Body, Request
+from typing import List
+from fastapi import APIRouter, HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token
 from config.connection import create_gremlin_client
-from gremlin_python.process.traversal import T
-from .request import BlockFriendRequest,PopBlockedRequest
-from .response import BlockFriendResponse,GetBlockedResponse, PopBlockedResponse
-from typing import List
+from .request import BlockFriendRequest, PopBlockedRequest
+from .response import BlockFriendResponse, GetBlockedResponse
 
 router = APIRouter()
 access_token = "access_token"
 
+
 @router.post("/add-member")
 async def block_friend(
     request: Request,
-    client = Depends(create_gremlin_client),
+    client=Depends(create_gremlin_client),
     block_friend_request: BlockFriendRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""g.V('{user_node_id}')
@@ -33,26 +33,30 @@ async def block_friend(
         results = await asyncio.wrap_future(future_result_set)
 
         if results:
-            if results[0] == 'already knock exists':
+            if results[0] == "already knock exists":
                 raise HTTPException(status_code=400, detail="already knock exists")
             return BlockFriendResponse()
         else:
-            raise HTTPException(status_code=404, detail=f'no such user {block_friend_request.user_node_id}')
+            raise HTTPException(
+                status_code=404,
+                detail=f"no such user {block_friend_request.user_node_id}",
+            )
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
-@router.post("/get-members",response_model = List[GetBlockedResponse])
+
+@router.post("/get-members", response_model=List[GetBlockedResponse])
 async def get_blocked(
     request: Request,
-    client = Depends(create_gremlin_client),
+    client=Depends(create_gremlin_client),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -61,24 +65,28 @@ async def get_blocked(
 
         future_result_set = client.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
-        response =  [GetBlockedResponse.from_data(result['block_edge'], result['blocked_user']) for result in results]
+        response = [
+            GetBlockedResponse.from_data(result["block_edge"], result["blocked_user"])
+            for result in results
+        ]
         return response
 
-    except HTTPException as e :
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         client.close()
 
+
 @router.delete("/pop-members")
 async def pop_blocked(
     request: Request,
-    client = Depends(create_gremlin_client),
+    client=Depends(create_gremlin_client),
     pop_blocked_request: PopBlockedRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
-    user_node_id = verify_access_token(token)['user_node_id']
+    user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
@@ -94,12 +102,14 @@ async def pop_blocked(
 
         print(results)
 
-        if results== ['not exist']:
-            return PopBlockedRequest(message='not exist')
-        else :
-            return PopBlockedRequest(message=f"'{pop_blocked_request.block_edge_id}' dropped")
-    
-    except HTTPException as e :
+        if results == ["not exist"]:
+            return PopBlockedRequest(message="not exist")
+        else:
+            return PopBlockedRequest(
+                message=f"'{pop_blocked_request.block_edge_id}' dropped"
+            )
+
+    except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
