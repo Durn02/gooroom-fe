@@ -10,12 +10,18 @@ export default function MainPage() {
     { id: 3, label: "Jeju" },
     { id: 4, label: "Busan" },
     { id: 5, label: "Incheon" },
+    { id: 6, label: "Gwangju" },
+    { id: 7, label: "Daejeon" },
   ];
   const edges = [
     { from: 2, to: 1, label: "label1" },
     { from: 3, to: 1, label: "label2" },
     { from: 4, to: 1, label: "label3" },
     { from: 5, to: 1, label: "label4" },
+    { from: 6, to: 5, label: "label5" },
+    { from: 7, to: 5, label: "label6" },
+    { from: 6, to: 7, label: "label7" },
+    { from: 6, to: 4, label: "label8" },
   ];
 
   // network topology options.
@@ -46,7 +52,7 @@ export default function MainPage() {
       ? new Network(container.current, { nodes, edges }, options)
       : null;
     // Use `network` here to configure events, etc
-    network?.on("doubleClick", (event: any) => {
+    network?.on("doubleClick", (event: { nodes: number[] }) => {
       const { nodes: clickedNodes } = event;
       alert(`id ${clickedNodes} node is clicked.`);
     });
