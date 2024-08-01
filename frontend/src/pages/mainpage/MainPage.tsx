@@ -1,28 +1,59 @@
-import React from "react";
-import CytoscapeComponent from "react-cytoscapejs";
+import React, { useEffect, useRef } from "react";
+import { Network } from "vis-network";
 
-const elements = [
-  { data: { id: "a" } },
-  { data: { id: "b" } },
-  { data: { id: "c" } },
-  { data: { id: "d" } },
-  { data: { id: "e" } },
-  { data: { source: "a", target: "b" } },
-  { data: { source: "a", target: "c" } },
-  { data: { source: "b", target: "d" } },
-  { data: { source: "c", target: "e" } },
-];
+export default function MainPage() {
+  const container = useRef(null);
 
-export default function Main() {
+  const nodes = [
+    { id: 1, label: "South Korea", size: 20, shape: "square" },
+    { id: 2, label: "Seoul" },
+    { id: 3, label: "Jeju" },
+    { id: 4, label: "Busan" },
+    { id: 5, label: "Incheon" },
+  ];
+  const edges = [
+    { from: 2, to: 1, label: "label1" },
+    { from: 3, to: 1, label: "label2" },
+    { from: 4, to: 1, label: "label3" },
+    { from: 5, to: 1, label: "label4" },
+  ];
+
+  // network topology options.
+  const options = {
+    nodes: {
+      shape: "dot",
+      size: 12,
+      shadow: true,
+      color: {
+        border: "white",
+        background: "skyblue",
+      },
+      font: {
+        color: "#000",
+      },
+    },
+    edges: {
+      color: "gray",
+    },
+    interaction: {
+      hover: true,
+    },
+  };
+
+  // create topology using edges, nodes, options
+  useEffect(() => {
+    const network: Network | null | undefined = container.current
+      ? new Network(container.current, { nodes, edges }, options)
+      : null;
+    // Use `network` here to configure events, etc
+    network?.on("doubleClick", (event: any) => {
+      const { nodes: clickedNodes } = event;
+      alert(`id ${clickedNodes} node is clicked.`);
+    });
+  }, [container, nodes, edges]);
   return (
-    <>
-      <div>main 페이지입니다.</div>
-      <div style={{ height: "100vh", width: "100%" }}>
-        <CytoscapeComponent
-          elements={elements}
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
-    </>
+    <div>
+      <div ref={container} style={{ height: "500px", width: "100%" }} />
+    </div>
   );
 }
