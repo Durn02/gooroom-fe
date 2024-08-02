@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Network } from "vis-network";
+import DefaultButton from "../../components/Button/DefaultButton";
+import { Link } from "react-router-dom";
+import style from "./MainPage.module.css";
 
 export default function MainPage() {
   const container = useRef(null);
@@ -57,8 +60,14 @@ export default function MainPage() {
       alert(`id ${clickedNodes} node is clicked.`);
     });
   }, [container, nodes, edges]);
+
   return (
     <div>
+      <div className={style.toMainPageButtonContainer}>
+        <Link to={"/"}>
+          <DefaultButton placeholder="메인화면으로" />
+        </Link>
+      </div>
       <div ref={container} style={{ height: "100vh", width: "100%" }} />
     </div>
   );
