@@ -1,0 +1,19 @@
+.toMainPageButtonContainer {
+  width: 150px;
+  height: 40px;
+}
+
+.idInputContainer {
+  width: 300px;
+  height: 30px;
+}
+
+.pwInputContainer {
+  width: 300px;
+  height: 30px;
+}
+
+.signInButtonContainer {
+  width: 300px;
+  height: 40px;
+}
