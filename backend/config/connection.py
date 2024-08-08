@@ -1,13 +1,16 @@
 import ssl
 import os
 from pathlib import Path
+from fastapi import Depends, HTTPException
 from dotenv import load_dotenv
 from gremlin_python.driver import serializer
 from gremlin_python.driver.client import Client
 from sshtunnel import SSHTunnelForwarder
 import nest_asyncio
+from utils import Logger
 
 nest_asyncio.apply()
+logger = Logger("connection.py")
 
 # .env 파일 경로 설정
 env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -43,9 +46,39 @@ def create_ssh_tunnel():
 # Gremlin 클라이언트 설정
 def create_gremlin_client():
     client = Client(
-        "wss://localhost:8182/gremlin",
+        "ws://localhost:8182/gremlin",
+        # "wss://localhost:8182/gremlin",
         "g",
         message_serializer=serializer.GraphSONSerializersV3d0(),
         ssl_context=ssl_context,  # SSL 인증서 검증 비활성화
     )
     return client
+
+
+async def load_data():
+    try:
+        logger.info("test.json 데이터를 불러옵니다")
+        client = create_gremlin_client()
+        query = """graph = TinkerGraph.open()\ngraph.io(IoCore.graphson()).readGraph("test.json")\ng.V()"""
+        result = client.submit(query).all().result()
+        logger.info("test.json 데이터를 성공적으로 불러왔습니다")
+        print(result)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
+
+
+async def save_data():
+    try:
+        logger.info("test.json에 데이터를 저장합니다")
+        client = create_gremlin_client()
+        query = """graph.io(IoCore.graphson()).writeGraph("test.json")"""
+        result = client.submit(query).all().result()
+        logger.info("test.json에 데이터를 성공적으로 저장했습니다")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
