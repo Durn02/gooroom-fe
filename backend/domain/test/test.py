@@ -1,6 +1,6 @@
 from utils import Logger
 from config.connection import create_gremlin_client
-from fastapi import APIRouter, HTTPException, Depends, Request, Response
+from fastapi import APIRouter, HTTPException, Depends
 
 router = APIRouter()
 logger = Logger(__file__)
