@@ -1,5 +1,5 @@
 import React from "react";
-import DefaultButton from "../../components/button/DefaultButton";
+import DefaultButton from "../../components/Button/DefaultButton";
 import { Link } from "react-router-dom";
 
 export default function NoPage() {

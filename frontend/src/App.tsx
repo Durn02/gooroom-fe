@@ -1,6 +1,7 @@
 import React from "react";
 import Landing from "./pages/landingpage/LandingPage";
 import Signin from "./pages/signinpage/SigninPage";
+import Signup from "./pages/signuppage/SignupPage";
 import NoPage from "./pages/nopage/NoPage";
 import Main from "./pages/mainpage/MainPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/main" element={<Main />} />
         <Route path="/*" element={<NoPage />} />
       </Routes>
