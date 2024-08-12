@@ -4,36 +4,35 @@ import DefaultButton from "../../components/Button/DefaultButton";
 import { Link } from "react-router-dom";
 import style from "./MainPage.module.css";
 
+interface Roommate {
+  roommate: {
+    username: string[];
+    nickname: string[];
+    concern: string[];
+    my_memo: string[];
+  };
+  memo: string;
+  posts: string[];
+  stickers: string[];
+  is_roommate: string[];
+}
+interface NeighBor {
+  neighbor: {
+    username: string[];
+    nickname: string[];
+    concern: string[];
+  };
+  posts: string[];
+  stickers: string[];
+}
+interface Friends {
+  roommates: Record<string, Roommate>;
+  neighbors: Record<string, NeighBor>;
+}
+
 export default function MainPage() {
-  const container = useRef(null);
-
-  interface Roommate {
-    roommate: {
-      username: string[];
-      nickname: string[];
-      concern: string[];
-      my_memo: string[];
-    };
-    memo: string;
-    posts: string[];
-    stickers: string[];
-    is_roommate: string[];
-  }
-
-  interface NeighBor {
-    neighbor: {
-      username: string[];
-      nickname: string[];
-      concern: string[];
-    };
-    posts: string[];
-    stickers: string[];
-  }
-
-  interface Friends {
-    roommates: Record<string, Roommate>;
-    neighbors: Record<string, NeighBor>;
-  }
+  const networkContainer = useRef(null);
+  const networkInstance = useRef<Network | null>(null);
 
   const friends: Friends = {
     roommates: {
@@ -167,27 +166,72 @@ export default function MainPage() {
       hover: true,
     },
   };
-
+  const data = {
+    nodes,
+    edges,
+  };
   // create topology using edges, nodes, options
   useEffect(() => {
-    const network: Network | null | undefined = container.current
-      ? new Network(container.current, { nodes, edges }, options)
+    const network: Network | null | undefined = networkContainer.current
+      ? new Network(networkContainer.current, { nodes, edges }, options)
       : null;
     // Use `network` here to configure events, etc
     network?.on("doubleClick", (event: { nodes: number[] }) => {
       const { nodes: clickedNodes } = event;
       alert(`id ${clickedNodes} node is clicked.`);
     });
-  }, [container, nodes, edges]);
+    if (networkContainer.current) {
+      networkInstance.current = new Network(
+        networkContainer.current,
+        data,
+        options
+      );
+    }
+    return () => {
+      // 컴포넌트 언마운트 시 네트워크 인스턴스 정리
+      if (networkInstance.current) {
+        networkInstance.current.destroy();
+      }
+    };
+  }, [networkContainer, nodes, edges]);
+
+  const zoomIn = () => {
+    if (networkInstance.current) {
+      const scale = networkInstance.current.getScale();
+      networkInstance.current.moveTo({
+        scale: scale * 1.2, // 1.2배 확대
+      });
+    }
+  };
+  const zoomOut = () => {
+    if (networkInstance.current) {
+      const scale = networkInstance.current.getScale();
+      networkInstance.current.moveTo({
+        scale: scale * 0.8, // 0.8배 축소
+      });
+    }
+  };
+  const resetPosition = () => {
+    if (networkInstance.current) {
+      networkInstance.current.fit(); // 초기 위치로 리셋
+    }
+  };
 
   return (
     <div>
+      <div className={style.magnifyButtonContainer}>
+        <DefaultButton placeholder="+" onClick={() => zoomIn()} />
+        <DefaultButton placeholder="O" onClick={() => resetPosition()} />
+        <DefaultButton placeholder="-" onClick={() => zoomOut()} />
+      </div>
       <div className={style.toMainPageButtonContainer}>
         <Link to={"/"}>
           <DefaultButton placeholder="메인화면으로" />
         </Link>
       </div>
-      <div ref={container} style={{ height: "100vh", width: "100%" }} />
+      <div className={style.visNetContainer}>
+        <div ref={networkContainer} style={{ height: "100%", width: "100%" }} />
+      </div>
     </div>
   );
 }
