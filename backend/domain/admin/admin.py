@@ -1,7 +1,6 @@
 # backend/domain/admin/admin.py
 import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
-from config.connection import create_gremlin_client
 from utils import (
     verify_access_token,
     Logger,
