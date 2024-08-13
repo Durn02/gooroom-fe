@@ -1,31 +1,37 @@
 # backend/domain/auth/auth.py
-import os
-import sys
-import json
-import asyncio
-import re
-import random
-import string
-from datetime import datetime, timedelta
+import os, sys, json, asyncio, re
 from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
+import random, string
+from datetime import datetime, timedelta
 from config.connection import create_gremlin_client
 from utils import (
-    Logger,
     hash_password,
     verify_password,
     create_access_token,
     verify_access_token,
+    Logger,
     send_verification_email,
 )
 from gremlin_python.driver.client import Client
-from .request import SignInRequest, SignUpRequest, PwChangeRequest, VerificationRequest
+from gremlin_python.process.traversal import T
+from .request import (
+    SignInRequest,
+    SignUpRequest,
+    PwChangeRequest,
+    VerificationRequest,
+    SendVerificationCodeRequest,
+)
 from .response import (
     SignUpResponse,
     SignInResponse,
     SignOutResponse,
     PwChangeResponse,
     VerificationResponse,
+    SendVerificationCodeResponse,
 )
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = Logger(__file__)
 
@@ -35,6 +41,66 @@ sys.path.append(
 
 router = APIRouter()
 access_token = "access_token"
+
+
+@router.post("/send-verification-code")
+async def send_verification_code(
+    response: Response,
+    client: Client = Depends(create_gremlin_client),
+    send_verification_code_request: SendVerificationCodeRequest = Body(...),
+):
+    logger.info("send verify code")
+
+    try:
+        query = f""" 
+            g.V().hasLabel('PrivateData').has('email', '{send_verification_code_request.email}')
+            .as('p').project('verification_count')
+            .by(select('p').values('verification_count'))
+        """
+        future_result_set = client.submitAsync(query).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+        verification_count = result[0]["verification_count"]
+
+        if not result:
+            raise HTTPException(status_code=400, detail="User not found")
+
+        if verification_count >= 5:
+            raise HTTPException(
+                status_code=400,
+                detail="Exceeded the number of verification code requests",
+            )
+
+        new_verification_count = verification_count + 1
+
+        verification_code = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=6)
+        )
+        expiration_time = datetime.now() + timedelta(minutes=30)
+        verification_info = json.dumps({verification_code: expiration_time.isoformat()})
+
+        send_verification_email(send_verification_code_request.email, verification_info)
+
+        query2 = f"""
+            g.V().hasLabel('PrivateData').has('email', '{send_verification_code_request.email}').as('p')
+            .fold()
+            .coalesce(
+                unfold().property(single, 'verification_count', '{new_verification_count}').property(single, 'verification_info', '{verification_info}').
+                constant('verification code sent'),
+                constant('Error occurred')
+            )
+        """
+        future_result_set = client.submitAsync(query2).result().all()
+        result = await asyncio.wrap_future(future_result_set)
+
+        if result[0] == "Error occured":
+            raise HTTPException(status_code=400, detail="Error occured")
+
+        return SendVerificationCodeResponse(message="verification code sent")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
 
 
 @router.post("/verify-code")
@@ -47,16 +113,20 @@ async def verify_code(
 
     try:
         query = f"""
-            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}').outE('is_info').inV()
-            .as('u').project('verification_info')
-            .by(select('u').values('verification_info'))
+            g.V().hasLabel('PrivateData').has('email', '{verification_request.email}')
+            .as('p').project('verification_info', 'grant')
+            .by(select('p').values('verification_info')).by(select('p').values('grant'))
         """
         future_result_set = client.submitAsync(query).result().all()
         result = await asyncio.wrap_future(future_result_set)
         verification_info = result[0]["verification_info"]
+        grant = result[0]["grant"]
 
         if not result:
             raise HTTPException(status_code=400, detail="User not found")
+
+        if grant != "not-verified":
+            raise HTTPException(status_code=400, detail="Already verified email")
 
         if verification_info:
             verification_info = json.loads(verification_info)
@@ -108,14 +178,6 @@ async def signup(
         encrypted_password = hash_password(signup_request.password)
         concern_json = json.dumps(signup_request.concern)
 
-        verification_code = "".join(
-            random.choices(string.ascii_uppercase + string.digits, k=6)
-        )
-        expiration_time = datetime.now() + timedelta(minutes=30)
-        verification_info = json.dumps({verification_code: expiration_time.isoformat()})
-
-        send_verification_email(signup_request.email, verification_info)
-
         query = f"""
         g.V().hasLabel('PrivateData').has('email', '{signup_request.email}')
         .fold()
@@ -125,15 +187,17 @@ async def signup(
                 .property('email', '{signup_request.email}')
                 .property('password', '{encrypted_password}')
                 .property('username', '{signup_request.username}')
+                .property('link_info', '')
+                .property('verification_info', '')
+                .property('link_count', '0')
+                .property('verification_count', '0')
+                .property('grant', 'not-verified')
                 .as('private')
                 .addV('User')
                 .property('nickname', '{signup_request.nickname}')
                 .property('username', '{signup_request.username}')
                 .property('concern', '{concern_json}')
                 .property('my_memo', '')
-                .property('grant', 'not-verified')
-                .property('link_info', '')
-                .property('verification_info', '{verification_info}')
                 .as('user')
                 .addE('is_info').from('private').to('user')
                 .select('private', 'user')
@@ -339,3 +403,19 @@ async def signout(
             raise HTTPException(status_code=500, detail="Failed to sign out")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# 노드 정보 조회(테스트용)
+@router.get("/")
+async def get_nodes(client=Depends(create_gremlin_client)):
+    logger.info("노드 정보 조회")
+    try:
+        query = "g.V()"
+        result = client.submit(query).all().result()
+        logger.info("/nodes 200 ok")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        logger.info("완료")
+        client.close()
