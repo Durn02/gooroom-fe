@@ -172,19 +172,27 @@ async def signup(
         concern_json = json.dumps(signup_request.concern)
 
         query = """
-        MATCH (t:PrivateData {email: $email})
-        WITH t
-        WHERE t IS NULL
-        CREATE (p:PrivateData {email: $email, password: $password, username: $username, 
-                               link_info: "", verification_info: "", link_count: 0, 
-                               verification_count: 0, grant: "not-verified"})
-        CREATE (u:User {username: $username, nickname: $nickname, concern: $concern, my_memo: ""})
+        MATCH (p:PrivateData {email: $email})
+        RETURN p
+        """
+        result = session.run(query, email=signup_request.email)
+        record = result.single()
+
+        if record:
+            return {"message": "Email already exists. Please use a different email."}
+
+
+        create_query = """
+        CREATE (p:PrivateData {email: $email, password: $password, username: $username,
+                               link_info: '', verification_info: '', link_count: 0,
+                               verification_count: 0, grant: 'not-verified'})
+        CREATE (u:User {username: $username, nickname: $nickname, concern: $concern, my_memo: ''})
         MERGE (p)-[:is_info]->(u)
         RETURN p, u
         """
 
         result = session.run(
-            query,
+            create_query,
             email=signup_request.email,
             password=encrypted_password,
             username=signup_request.username,
@@ -234,7 +242,6 @@ async def signin(
 
         password = record["password"]
         grant = record["grant"]
-        print(password, grant, record["id"])
         if not verify_password(signin_request.password, password):
             raise HTTPException(status_code=400, detail="inconsistent password")
 
