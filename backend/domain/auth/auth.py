@@ -28,6 +28,7 @@ from .response import (
     VerificationResponse,
     SendVerificationCodeResponse,
 )
+import uuid
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -58,20 +59,17 @@ async def send_verification_code(
         expiration_time = datetime.now() + timedelta(minutes=30)
         verification_info = json.dumps({verification_code: expiration_time.isoformat()})
 
-        update_query = """
-        MATCH (p:PrivateData {email: $email})
+        update_query = f"""
+        MATCH (p:PrivateData {{email: {send_verification_code_request.email}}})
         WITH p
         WHERE p.verification_count < 5
         SET p.verification_count = p.verification_count + 1, 
-            p.verification_info = $verification_info
+            p.verification_info = {verification_info}
         RETURN 'verification code sent' AS message
         """
 
-        result = session.run(
-            update_query,
-            email=send_verification_code_request.email,
-            verification_info=verification_info,
-        )
+        result = session.run(update_query)
+
         update_record = result.single()
         print(update_record)
 
@@ -105,11 +103,11 @@ async def verify_code(
 
     try:
         # Verification 정보 및 grant 상태 조회
-        query = """
-        MATCH (p:PrivateData {email: $email})
+        query = f"""
+        MATCH (p:PrivateData {{email: {verification_request.email}}})
         RETURN p.verification_info AS verification_info, p.grant AS grant
         """
-        result = session.run(query, email=verification_request.email)
+        result = session.run(query)
         record = result.single()
 
         if not record:
@@ -132,12 +130,12 @@ async def verify_code(
                 raise HTTPException(status_code=400, detail="Verification code expired")
 
         # Verification 상태 업데이트
-        update_query = """
-        MATCH (p:PrivateData {email: $email})
+        update_query = f"""
+        MATCH (p:PrivateData {{email: {verification_request.email}}})
         SET p.grant = 'user'
         RETURN 'Verified successfully' AS message
         """
-        result = session.run(update_query, email=verification_request.email)
+        result = session.run(update_query)
         update_record = result.single()
 
         if update_record["message"] != "Verified successfully":
@@ -169,10 +167,9 @@ async def signup(
 
     try:
         encrypted_password = hash_password(signup_request.password)
-        concern_json = json.dumps(signup_request.concern)
 
-        query = """
-        MATCH (p:PrivateData {email: $email})
+        query = f"""
+        MATCH (p:PrivateData {{email: '{signup_request.email}'}})
         RETURN p
         """
         result = session.run(query, email=signup_request.email)
@@ -181,36 +178,23 @@ async def signup(
         if record:
             return {"message": "Email already exists. Please use a different email."}
 
-
-        create_query = """
-        CREATE (p:PrivateData {email: $email, password: $password, username: $username,
+        private_node_id = str(uuid.uuid4())
+        user_node_id = str(uuid.uuid4())
+        create_query = f"""
+        CREATE (p:PrivateData {{email: '{signup_request.email}', password: '{encrypted_password}', username: '{signup_request.username}',
                                link_info: '', verification_info: '', link_count: 0,
-                               verification_count: 0, grant: 'not-verified'})
-        CREATE (u:User {username: $username, nickname: $nickname, concern: $concern, my_memo: ''})
+                               verification_count: 0, grant: 'not-verified', node_id: '{private_node_id}'}})
+        CREATE (u:User {{username: '{signup_request.username}', nickname: '{signup_request.nickname}', concern: {signup_request.concern}, my_memo: '',node_id: '{user_node_id}'}})
         MERGE (p)-[:is_info]->(u)
         RETURN p, u
         """
 
-        result = session.run(
-            create_query,
-            email=signup_request.email,
-            password=encrypted_password,
-            username=signup_request.username,
-            nickname=signup_request.nickname,
-            concern=concern_json,
-        )
+        result = session.run(create_query)
+        print("result : ", result)
         record = result.single()
+        print("record: ", record)
 
-        if record:
-            private_node = record["p"]
-            user_node = record["u"]
-            uuid = private_node.id
-            user_node_id = user_node.id
-
-            print(f"Private Node ID: {uuid}")
-            print(f"User Node ID: {user_node_id}")
-
-        token = create_access_token(uuid)
+        token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignUpResponse()
     except Exception as e:
@@ -227,14 +211,14 @@ async def signin(
 ):
     logger.info("login")
 
-    query = """
-    MATCH (p:PrivateData {email: $email})
+    query = f"""
+    MATCH (p:PrivateData {{email: '{signin_request.email}'}})
     MATCH (p)-[:is_info]->(u)
     RETURN p.password AS password, p.grant AS grant, ID(u) AS id
     """
 
     try:
-        result = session.run(query, email=signin_request.email)
+        result = session.run(query)
         record = result.single()
 
         if not record:
@@ -293,12 +277,12 @@ async def pw_change(
 
     try:
         # 현재 비밀번호 가져오기
-        query = """
+        query = f"""
         MATCH (u:User)<-[:is_info]-(p:PrivateData)
-        WHERE ID(u) = $user_node_id
+        WHERE ID(u) = '{user_node_id}'
         RETURN p.password AS password
         """
-        result = session.run(query, user_node_id=int(user_node_id))
+        result = session.run(query)
         record = result.single()
 
         if not record:
@@ -327,15 +311,13 @@ async def pw_change(
         if not verify_password(pw_change_req.currentpw, password):
             raise HTTPException(status_code=400, detail="Incorrect current password")
 
-        update_query = """
+        update_query = f"""
         MATCH (u:User)<-[:is_info]-(p:PrivateData)
-        WHERE ID(u) = $user_node_id
-        SET p.password = $new_password
+        WHERE ID(u) = '{user_node_id}'
+        SET p.password = '{hashed_new_pw}'
         RETURN 'Password changed successfully' AS message
         """
-        result = session.run(
-            update_query, user_node_id=int(user_node_id), new_password=hashed_new_pw
-        )
+        result = session.run(update_query)
         update_record = result.single()
 
         if update_record["message"] != "Password changed successfully":
@@ -369,14 +351,14 @@ async def signout(
         if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
 
-        delete_user_query = """
+        delete_user_query = f"""
             MATCH (p:PrivateData)<-[:is_info]-(u:User)
-            WHERE ID(u) = $user_node_id
+            WHERE ID(u) = {user_node_id}
             DETACH DELETE p, u
             RETURN 'User deleted successfully' AS message
         """
 
-        result = session.run(delete_user_query, user_node_id=int(user_node_id))
+        result = session.run(delete_user_query)
         record = result.single()
 
         if record["message"] == "User deleted successfully":
