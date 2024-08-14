@@ -100,7 +100,7 @@ export default function Signup() {
       );
       if (response.ok) {
         alert("Verify successful");
-        <Link to={"/"} />;
+        window.location.href = "/";
       } else {
         alert(`Verify failed: ${response.statusText}`);
       }
