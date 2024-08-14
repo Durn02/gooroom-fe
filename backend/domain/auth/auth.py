@@ -60,18 +60,17 @@ async def send_verification_code(
         verification_info = json.dumps({verification_code: expiration_time.isoformat()})
 
         update_query = f"""
-        MATCH (p:PrivateData {{email: {send_verification_code_request.email}}})
+        MATCH (p:PrivateData {{email: '{send_verification_code_request.email}'}})
         WITH p
         WHERE p.verification_count < 5
         SET p.verification_count = p.verification_count + 1, 
-            p.verification_info = {verification_info}
+            p.verification_info = '{verification_info}'
         RETURN 'verification code sent' AS message
         """
 
         result = session.run(update_query)
 
         update_record = result.single()
-        print(update_record)
 
         if not update_record:
             raise HTTPException(
@@ -104,7 +103,7 @@ async def verify_code(
     try:
         # Verification 정보 및 grant 상태 조회
         query = f"""
-        MATCH (p:PrivateData {{email: {verification_request.email}}})
+        MATCH (p:PrivateData {{email: '{verification_request.email}'}})
         RETURN p.verification_info AS verification_info, p.grant AS grant
         """
         result = session.run(query)
@@ -124,14 +123,12 @@ async def verify_code(
             verification_info = json.loads(verification_info)
             if verification_request.verifycode not in verification_info:
                 raise HTTPException(status_code=400, detail="Invalid verification code")
-            if datetime.now() > datetime.fromisoformat(
-                verification_info[verification_request.verifycode]
-            ):
+            if datetime.now() > datetime.fromisoformat(verification_info[verification_request.verifycode]):
                 raise HTTPException(status_code=400, detail="Verification code expired")
 
         # Verification 상태 업데이트
         update_query = f"""
-        MATCH (p:PrivateData {{email: {verification_request.email}}})
+        MATCH (p:PrivateData {{email: '{verification_request.email}'}})
         SET p.grant = 'user'
         RETURN 'Verified successfully' AS message
         """
@@ -353,7 +350,7 @@ async def signout(
 
         delete_user_query = f"""
             MATCH (p:PrivateData)<-[:is_info]-(u:User)
-            WHERE ID(u) = {user_node_id}
+            WHERE ID(u) = '{user_node_id}'
             DETACH DELETE p, u
             RETURN 'User deleted successfully' AS message
         """
