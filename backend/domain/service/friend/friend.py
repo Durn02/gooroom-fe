@@ -2,8 +2,7 @@
 import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
-from config.connection import create_gremlin_client
-from gremlin_python.process.traversal import T
+from config.connection import get_session
 from .request import (
     SendKnockRequest,
     RejectKnockRequest,
@@ -33,7 +32,7 @@ logger = Logger(__file__)
 @router.post("/knock/send", response_model=SendKnockResponse)
 async def send_knock(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     send_knock_request: SendKnockRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -49,7 +48,7 @@ async def send_knock(
         )
         """
 
-        edge_result_set = client.submitAsync(query).result().all()
+        edge_result_set = session.submitAsync(query).result().all()
         edge_result = await asyncio.wrap_future(edge_result_set)
         print("edge_result : ", edge_result)
 
@@ -67,13 +66,13 @@ async def send_knock(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/knock/list", response_model=ListKnockResponse)
 async def list_knock(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
@@ -81,7 +80,7 @@ async def list_knock(
 
     try:
         query = f"g.V('{user_node_id}').inE('knock').as('knock').outV().as('from_user_node').select('knock', 'from_user_node').by(valueMap(true))"
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         print(results)
@@ -98,13 +97,13 @@ async def list_knock(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/knock/reject")
 async def reject_knock(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     reject_knock_request: RejectKnockRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -112,18 +111,18 @@ async def reject_knock(
 
     try:
         query = f"g.E('{reject_knock_request.knock_id}').drop()"
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         await asyncio.wrap_future(future_result_set)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/knock/accept", response_model=AcceptKnockResponse)
 async def accept_knock(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     accept_knock_request: AcceptKnockRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -141,7 +140,7 @@ async def accept_knock(
         constant('Edge not found'))
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
         print("solved_future_result_set : ", results[0])
         if results[0] == "Edge not found":
@@ -153,13 +152,13 @@ async def accept_knock(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.get("/knock/create_link")
 async def create_knock_by_link(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
@@ -173,21 +172,21 @@ async def create_knock_by_link(
 
     try:
         query = f"g.V('{user_node_id}').in('is_info').property(single,'invite_info','{knock_data}')"
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         await asyncio.wrap_future(future_result_set)
 
         return "https://gooroom/domain/friend/knock/accept_by_link:" + knock_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/knock/accept_by_link/{knock_id}", response_model=AcceptKnockResponse)
 async def accept_knock_by_link(
     knock_id: str,
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
@@ -197,7 +196,7 @@ async def accept_knock_by_link(
         g.V().hasLabel('PrivateData').has('invite_info',TextP.startingWith('{knock_id}')).values('invite_info')
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if not results:
@@ -224,7 +223,7 @@ async def accept_knock_by_link(
         )
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if not results:
@@ -237,13 +236,13 @@ async def accept_knock_by_link(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/get-members")
 async def get_members(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
@@ -283,7 +282,7 @@ async def get_members(
         .aggregate('neighbors').cap('roommates', 'neighbors')
         """
 
-        friend_result_set = client.submitAsync(query).result().all()
+        friend_result_set = session.submitAsync(query).result().all()
         friend_results = await asyncio.wrap_future(friend_result_set)
 
         friends = friend_results[0]
@@ -313,13 +312,13 @@ async def get_members(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     get_friend_request: GetFriendRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -335,7 +334,7 @@ async def get_member(
         .select('friend_node', 'memo')
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
@@ -353,13 +352,13 @@ async def get_member(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.delete("/delete-member", response_model=DeleteFriendResponse)
 async def delete_member(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     delete_friend_request: DeleteFriendRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -376,7 +375,7 @@ async def delete_member(
         )
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if not len(results):
@@ -392,13 +391,13 @@ async def delete_member(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/memo/get-content", response_model=GetMemoResponse)
 async def get_memo(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     get_memo_request: GetMemoRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -406,34 +405,33 @@ async def get_memo(
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{get_memo_request.user_node_id}'))
-        .properties('memo').value()
+        MATCH (u:User)-[r:is_roommate]->(f:User {{node_id: '{get_memo_request.user_node_id}'}})
+        WHERE f.node_id = '{user_node_id}'
+        RETURN r.memo AS memo
         """
+        result = session.run(query)
+        record = result.single()
 
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
-
-        if not len(results):
+        if not record:
             raise HTTPException(
                 status_code=404,
-                detail=f"no such friend {get_memo_request.user_node_id}",
+                detail=f"No memo found for friend {get_memo_request.user_node_id}",
             )
 
-        print(results[0])
-        return GetMemoResponse(memo=results[0])
+        return GetMemoResponse(memo=record["memo"])
 
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/memo/modify", response_model=ModifyMemoResponse)
 async def modify_memo(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     modify_memo_request: ModifyMemoRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -441,20 +439,21 @@ async def modify_memo(
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{modify_memo_request.user_node_id}'))
-        .property('memo','{modify_memo_request.new_memo}')
+        MATCH (u:User)-[r:is_roommate]->(f:User {{node_id: '{modify_memo_request.user_node_id}'}})
+        WHERE u.node_id = '{user_node_id}'
+        SET r.memo = '{modify_memo_request.new_memo}'
+        RETURN r.memo AS memo
         """
 
-        future_result_set = client.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        if not len(results):
+        if not record:
             raise HTTPException(
                 status_code=404,
-                detail=f"no such friend {modify_memo_request.user_node_id}",
+                detail=f"No such friend {modify_memo_request.user_node_id} to modify memo",
             )
 
-        print(results[0])
         return ModifyMemoResponse()
 
     except HTTPException as e:
@@ -462,4 +461,4 @@ async def modify_memo(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()

@@ -3,7 +3,7 @@ import asyncio
 from typing import List
 from fastapi import APIRouter, HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token
-from config.connection import create_gremlin_client
+from config.connection import get_session
 from .request import BlockFriendRequest, PopBlockedRequest
 from .response import BlockFriendResponse, GetBlockedResponse
 
@@ -14,7 +14,7 @@ access_token = "access_token"
 @router.post("/add-member")
 async def block_friend(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     block_friend_request: BlockFriendRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -29,7 +29,7 @@ async def block_friend(
         )
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         if results:
@@ -47,13 +47,13 @@ async def block_friend(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.post("/get-members", response_model=List[GetBlockedResponse])
 async def get_blocked(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
 ):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
@@ -63,7 +63,7 @@ async def get_blocked(
         g.V('{user_node_id}').outE('block').as('block_edge').inV().as('blocked_user').select('block_edge', 'blocked_user').by(valueMap(true))
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
         response = [
             GetBlockedResponse.from_data(result["block_edge"], result["blocked_user"])
@@ -76,13 +76,13 @@ async def get_blocked(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
 
 
 @router.delete("/pop-members")
 async def pop_blocked(
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     pop_blocked_request: PopBlockedRequest = Body(...),
 ):
     token = request.cookies.get(access_token)
@@ -97,7 +97,7 @@ async def pop_blocked(
         )
         """
 
-        future_result_set = client.submitAsync(query).result().all()
+        future_result_set = session.submitAsync(query).result().all()
         results = await asyncio.wrap_future(future_result_set)
 
         print(results)
@@ -114,4 +114,4 @@ async def pop_blocked(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        client.close()
+        session.close()
