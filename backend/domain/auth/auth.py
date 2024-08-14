@@ -123,7 +123,9 @@ async def verify_code(
             verification_info = json.loads(verification_info)
             if verification_request.verifycode not in verification_info:
                 raise HTTPException(status_code=400, detail="Invalid verification code")
-            if datetime.now() > datetime.fromisoformat(verification_info[verification_request.verifycode]):
+            if datetime.now() > datetime.fromisoformat(
+                verification_info[verification_request.verifycode]
+            ):
                 raise HTTPException(status_code=400, detail="Verification code expired")
 
         # Verification 상태 업데이트
@@ -193,6 +195,60 @@ async def signup(
 
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
+        return SignUpResponse(message="Dummy user created")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
+
+
+@router.post("/dummy_create")
+async def dummy_create(
+    response: Response,
+    session=Depends(get_session),
+    signup_request: SignUpRequest = Body(...),
+):
+    logger.info("signup")
+    pw = signup_request.password
+    if not re.match(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$', pw
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character, and must be at least 8 characters long",
+        )
+
+    try:
+        encrypted_password = hash_password(signup_request.password)
+
+        query = f"""
+        MATCH (p:PrivateData {{email: '{signup_request.email}'}})
+        RETURN p
+        """
+        result = session.run(query, email=signup_request.email)
+        record = result.single()
+
+        if record:
+            return {"message": "Email already exists. Please use a different email."}
+
+        private_node_id = str(uuid.uuid4())
+        user_node_id = str(uuid.uuid4())
+        create_query = f"""
+        CREATE (p:PrivateData {{email: '{signup_request.email}', password: '{encrypted_password}', username: '{signup_request.username}',
+                               link_info: '', verification_info: '', link_count: 0,
+                               verification_count: 0, grant: 'user', node_id: '{private_node_id}'}})
+        CREATE (u:User {{username: '{signup_request.username}', nickname: '{signup_request.nickname}', concern: {signup_request.concern}, my_memo: '',node_id: '{user_node_id}'}})
+        MERGE (p)-[:is_info]->(u)
+        RETURN p, u
+        """
+
+        result = session.run(create_query)
+        print("result : ", result)
+        record = result.single()
+        print("record: ", record)
+
+        token = create_access_token(user_node_id)
+        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignUpResponse()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -211,7 +267,7 @@ async def signin(
     query = f"""
     MATCH (p:PrivateData {{email: '{signin_request.email}'}})
     MATCH (p)-[:is_info]->(u)
-    RETURN p.password AS password, p.grant AS grant, ID(u) AS id
+    RETURN p.password AS password, p.grant AS grant, u.node_id AS user_node_id
     """
 
     try:
@@ -229,7 +285,7 @@ async def signin(
         if grant == "not-verified":
             raise HTTPException(status_code=400, detail="not verified email")
 
-        user_node_id = record["id"]
+        user_node_id = record["user_node_id"]
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignInResponse()
@@ -245,7 +301,6 @@ async def signin(
 @router.post("/logout")
 async def logout(request: Request, response: Response):
     token = request.cookies.get(access_token)
-    print("token :", token)
 
     if token:
         response.delete_cookie(key=access_token)
@@ -273,7 +328,6 @@ async def pw_change(
         raise HTTPException(status_code=400, detail="Invalid input")
 
     try:
-        # 현재 비밀번호 가져오기
         query = f"""
         MATCH (u:User)<-[:is_info]-(p:PrivateData)
         WHERE ID(u) = '{user_node_id}'
