@@ -2,7 +2,7 @@
   width: 120px;
   height: 40px;
 }
-.idInputContainer {
+.emailInputContainer {
   width: 300px;
   height: 30px;
 }
@@ -22,7 +22,17 @@
   height: 30px;
 }
 
-.signUpButtonContainer {
+.verifyInputContainer {
+  width: 300px;
+  height: 30px;
+}
+
+.verifyButtonContainer {
   width: 100px;
+  height: 30px;
+}
+
+.signUpButtonContainer {
+  width: 300px;
   height: 30px;
 }
