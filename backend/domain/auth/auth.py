@@ -12,6 +12,7 @@ from utils import (
     create_refresh_token,
     refresh_access_token,
     verify_access_token,
+    verify_refresh_token,
     Logger,
     send_verification_email,
 )
@@ -60,7 +61,11 @@ async def send_verification_code(
             random.choices(string.ascii_uppercase + string.digits, k=6)
         )
         expiration_time = datetime.now() + timedelta(minutes=30)
-        verification_info = verification_code + " : " +expiration_time.replace(microsecond=0).isoformat()
+        verification_info = (
+            verification_code
+            + " : "
+            + expiration_time.replace(microsecond=0).isoformat()
+        )
         update_query = f"""
         MATCH (p:PrivateData {{email: '{send_verification_code_request.email}'}})
         WITH p
@@ -104,7 +109,7 @@ async def verify_code(
 
     try:
         datetimenow = datetime.now().replace(microsecond=0).isoformat()
-        query=f"""
+        query = f"""
         MATCH (p:PrivateData {{email: '{verification_request.email}'}})
         WHERE p.grant = "not-verified"
         WITH p, right(p.verification_info, 19) AS expiration_time_str
@@ -120,7 +125,10 @@ async def verify_code(
         record = result.single()
 
         if record == None:
-            raise HTTPException(status_code=400, detail="invalid email or request (already verified or expired)")
+            raise HTTPException(
+                status_code=400,
+                detail="invalid email or request (already verified or expired)",
+            )
 
         return VerificationResponse(message="Verified successfully")
 
@@ -167,7 +175,7 @@ async def signup(
         result = session.run(query)
         record = result.single()
 
-        if (record == None):
+        if record == None:
             raise HTTPException(status_code=400, detail="already registered email")
 
         token = create_access_token(user_node_id)
@@ -239,6 +247,8 @@ async def refresh_acc_token(request: Request, response: Response):
 
     if not token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
+    if not verify_refresh_token(token):
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     new_token = refresh_access_token(token)
     response.set_cookie(key=access_token, value=f"{new_token}", httponly=True)
