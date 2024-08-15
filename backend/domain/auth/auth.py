@@ -176,7 +176,7 @@ async def signup(
         session.close()
 
 
-router.post("/dummy_create")
+@router.post("/dummy_create")
 async def dummy_create(
     response: Response,
     session=Depends(get_session),
