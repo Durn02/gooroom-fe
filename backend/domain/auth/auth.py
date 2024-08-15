@@ -241,6 +241,18 @@ async def dummy_create(
         session.close()
 
 
+@router.get("/verify-access-token")
+async def verify_access_token_route(request: Request):
+    token = request.cookies.get(access_token)
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Access token missing")
+    if not verify_access_token(token):
+        raise HTTPException(status_code=401, detail="Invalid access token")
+
+    return {"message": "Access token valid"}
+
+
 @router.post("/refresh-acc-token")
 async def refresh_acc_token(request: Request, response: Response):
     token = request.cookies.get(refresh_token)
@@ -266,7 +278,7 @@ async def signin(
     query = f"""
     MATCH (p:PrivateData {{email: '{signin_request.email}'}})
     MATCH (p)-[:is_info]->(u)
-    RETURN p.password AS password, p.grant AS grant, ID(u) AS id
+    RETURN p.password AS password, p.grant AS grant, u.node_id AS user_node_id
     """
 
     try:
@@ -284,13 +296,14 @@ async def signin(
         if grant == "not-verified":
             raise HTTPException(status_code=400, detail="not verified email")
 
-        user_node_id = record["id"]
+        user_node_id = record["user_node_id"]
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
 
         token = create_refresh_token(user_node_id)
         response.set_cookie(key=refresh_token, value=f"{token}", httponly=True)
         return SignInResponse()
+        # return {"access_token": token1, "refresh_token": token2}
 
     except HTTPException as e:
         raise e
