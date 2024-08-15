@@ -1,7 +1,7 @@
 # domain/__init__.py
 # from .admin import admin_router
 from .auth import auth_router
-from .service import friend_router
+# from .service import friend_router
 
 # from .service import block_router, mute_router, content_router, friend_router
 # from .user import user_router
@@ -14,6 +14,6 @@ __all__ = [
     # "mute_router",
     # "content_router",
     # "user_router",
-    "friend_router",
+    # "friend_router",
     "test_router",
 ]
