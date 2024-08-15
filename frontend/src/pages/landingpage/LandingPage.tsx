@@ -19,8 +19,22 @@ export default function Landing() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.message === "Access token valid") {
+        if (data.message === "access token validation check successfull") {
           // 서버가 보낸 메시지에 따라 조건 수정
+          window.location.href = "/main";
+        }
+      } else {
+        const refresh_response = await fetch(
+          "http://localhost:8000/domain/auth/refresh-acc-token",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+        if (refresh_response.ok) {
           window.location.href = "/main";
         }
       }
