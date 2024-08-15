@@ -9,6 +9,8 @@ from utils import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
+    refresh_access_token,
     verify_access_token,
     Logger,
     send_verification_email,
@@ -21,11 +23,11 @@ from .request import (
     SendVerificationCodeRequest,
 )
 from .response import (
-    SignUpResponse,
     SignInResponse,
-    SignOutResponse,
+    SignUpResponse,
     PwChangeResponse,
     VerificationResponse,
+    SignOutResponse,
     SendVerificationCodeResponse,
 )
 import uuid
@@ -41,6 +43,7 @@ sys.path.append(
 
 router = APIRouter()
 access_token = "access_token"
+refresh_token = "refresh_token"
 
 
 @router.post("/send-verification-code")
@@ -230,6 +233,18 @@ async def dummy_create(
         session.close()
 
 
+@router.post("/refresh-acc-token")
+async def refresh_acc_token(request: Request, response: Response):
+    token = request.cookies.get(refresh_token)
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    new_token = refresh_access_token(token)
+    response.set_cookie(key=access_token, value=f"{new_token}", httponly=True)
+    return {"message": "Access token refreshed"}
+
+
 @router.post("/signin")
 async def signin(
     response: Response,
@@ -262,6 +277,9 @@ async def signin(
         user_node_id = record["id"]
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
+
+        token = create_refresh_token(user_node_id)
+        response.set_cookie(key=refresh_token, value=f"{token}", httponly=True)
         return SignInResponse()
 
     except HTTPException as e:
@@ -279,6 +297,7 @@ async def logout(request: Request, response: Response):
 
     if token:
         response.delete_cookie(key=access_token)
+        response.delete_cookie(key=refresh_token)
         return SignOutResponse(message="logout success")
     else:
         return SignOutResponse(message="not logined")
