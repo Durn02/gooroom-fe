@@ -17,3 +17,17 @@
   width: 300px;
   height: 40px;
 }
+
+.VerifyInputContainer {
+  width: 300px;
+  height: 30px;
+}
+.resendVerificationCodeButtonContainer {
+  width: 300px;
+  height: 40px;
+}
+
+.verifyButtonContainer {
+  width: 300px;
+  height: 40px;
+}

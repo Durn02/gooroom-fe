@@ -6,12 +6,115 @@ import Input from "../../components/Input/DefaultInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import { useState } from "react";
 
+type signinRequestData = {
+  email: string;
+  password: string;
+};
+type VerifyCodeRequestData = {
+  verifycode: string;
+  email: string;
+};
+type VerifyRequestData = {
+  email: string;
+};
+
 export default function Signin() {
-  const onClickHandler = () => {
-    alert(userIdInput + userPwInput);
+  const [emailVerification, setEmailVerification] = useState(false);
+
+  const onSignInButtonClickHandler = () => {
+    const signinRequestData: signinRequestData = {
+      email: userEmailInput,
+      password: userPwInput,
+    };
+
+    try {
+      fetch("http://localhost:8000/domain/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signinRequestData),
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data.message);
+          if (data.detail === "not registered email") {
+            alert("가입되지 않은 이메일입니다");
+          } else if (data.detail === "not verified email") {
+            alert("이메일 인증을 해주세요");
+            setEmailVerification(true);
+          } else if (data.detail === "inconsistent password") {
+            alert("비밀번호가 일치하지 않습니다");
+          } else if (data.message === "login success") {
+            alert("로그인 성공");
+            window.location.href = "/main";
+          } else {
+            alert("알 수 없는 이유로 로그인에 실패했습니다");
+          }
+        });
+    } catch (e) {
+      alert(e);
+    }
   };
-  const [userIdInput, setUserIdInput] = useState("");
+  const onVerifyButtonClickHandler = async () => {
+    const verifyCodeRequest: VerifyCodeRequestData = {
+      verifycode: userVerifyInput,
+      email: userEmailInput,
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/domain/auth/verify-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(verifyCodeRequest),
+        }
+      );
+      if (response.ok) {
+        alert("Verify successful");
+        window.location.href = "/";
+      } else {
+        alert(`Verify failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Verify failed: ${error.message}`);
+      }
+    }
+  };
+  const onResendVerifyButtonClickHandler = async () => {
+    const verifyRequest: VerifyRequestData = {
+      email: userEmailInput,
+    };
+    try {
+      const verifyResponse = await fetch(
+        "http://localhost:8000/domain/auth/send-verification-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(verifyRequest),
+        }
+      );
+      if (!verifyResponse.ok) {
+        throw new Error("server no response");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Verify failed: ${error.message}`);
+      } else {
+        alert("Verify failed: An unknown error occurred.");
+      }
+    }
+  };
+  const [userEmailInput, setUserEmailInput] = useState("");
   const [userPwInput, setUserPwInput] = useState("");
+  const [userVerifyInput, setUserVerifyCodeInput] = useState("");
 
   return (
     <>
@@ -26,8 +129,8 @@ export default function Signin() {
       <div className={style.idInputContainer}>
         <Input
           placeholder="email"
-          value={userIdInput}
-          onChange={(e) => setUserIdInput(e)}
+          value={userEmailInput}
+          onChange={(e) => setUserEmailInput(e)}
         />
       </div>
 
@@ -41,8 +144,40 @@ export default function Signin() {
         />
       </div>
 
+      {emailVerification && (
+        <>
+          <div className={style.VerifyInputContainer}>
+            <Input
+              placeholder="인증번호 입력"
+              value={userVerifyInput}
+              onChange={(e) => {
+                setUserVerifyCodeInput(e);
+              }}
+            />
+          </div>
+          <div className={style.resendVerificationCodeButtonContainer}>
+            <DefaultButton
+              placeholder="인증번호 재전송"
+              onClick={() => {
+                alert("인증번호 재전송");
+                onResendVerifyButtonClickHandler();
+              }}
+            />
+          </div>
+          <div className={style.verifyButtonContainer}>
+            <DefaultButton
+              placeholder="인증하기"
+              onClick={() => onVerifyButtonClickHandler()}
+            />
+          </div>
+        </>
+      )}
+
       <div className={style.signInButtonContainer}>
-        <DefaultButton placeholder="로그인!" onClick={() => onClickHandler()} />
+        <DefaultButton
+          placeholder="로그인!"
+          onClick={() => onSignInButtonClickHandler()}
+        />
       </div>
     </>
   );
