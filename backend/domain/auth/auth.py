@@ -57,8 +57,7 @@ async def send_verification_code(
             random.choices(string.ascii_uppercase + string.digits, k=6)
         )
         expiration_time = datetime.now() + timedelta(minutes=30)
-        verification_info = json.dumps({verification_code: expiration_time.isoformat()})
-
+        verification_info = verification_code + " : " +expiration_time.replace(microsecond=0).isoformat()
         update_query = f"""
         MATCH (p:PrivateData {{email: '{send_verification_code_request.email}'}})
         WITH p
@@ -82,7 +81,7 @@ async def send_verification_code(
             raise HTTPException(status_code=400, detail="Error occurred")
 
         # 이메일로 verification code 전송
-        send_verification_email(send_verification_code_request.email, verification_info)
+        send_verification_email(send_verification_code_request.email, verification_code)
 
         return SendVerificationCodeResponse(message="verification code sent")
 
@@ -101,42 +100,24 @@ async def verify_code(
     logger.info("verify code")
 
     try:
-        # Verification 정보 및 grant 상태 조회
-        query = f"""
+        datetimenow = datetime.now().replace(microsecond=0).isoformat()
+        query=f"""
         MATCH (p:PrivateData {{email: '{verification_request.email}'}})
-        RETURN p.verification_info AS verification_info, p.grant AS grant
-        """
-        result = session.run(query)
-        record = result.single()
-
-        if not record:
-            raise HTTPException(status_code=400, detail="User not found")
-
-        verification_info = record["verification_info"]
-        grant = record["grant"]
-
-        if grant != "not-verified":
-            raise HTTPException(status_code=400, detail="Already verified email")
-
-        # Verification 정보 검증
-        if verification_info:
-            verification_info = json.loads(verification_info)
-            if verification_request.verifycode not in verification_info:
-                raise HTTPException(status_code=400, detail="Invalid verification code")
-            if datetime.now() > datetime.fromisoformat(verification_info[verification_request.verifycode]):
-                raise HTTPException(status_code=400, detail="Verification code expired")
-
-        # Verification 상태 업데이트
-        update_query = f"""
-        MATCH (p:PrivateData {{email: '{verification_request.email}'}})
+        WHERE p.grant = "not-verified"
+        WITH p, right(p.verification_info, 19) AS expiration_time_str
+        WITH p, expiration_time_str, datetime(expiration_time_str) AS expiration_time
+        WHERE expiration_time > datetime("{datetimenow}")
+        WITH p, left(p.verification_info,6) AS verify_code
+        WHERE verify_code = '{verification_request.verifycode}'
         SET p.grant = 'user'
         RETURN 'Verified successfully' AS message
         """
-        result = session.run(update_query)
-        update_record = result.single()
 
-        if update_record["message"] != "Verified successfully":
-            raise HTTPException(status_code=400, detail="Error occurred")
+        result = session.run(query)
+        record = result.single()
+
+        if record == None:
+            raise HTTPException(status_code=400, detail="invalid email or request (already verified or expired)")
 
         return VerificationResponse(message="Verified successfully")
 
