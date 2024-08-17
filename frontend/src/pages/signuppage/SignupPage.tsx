@@ -6,6 +6,7 @@ import Input from "../../components/Input/DefaultInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import style from "./SignupPage.module.css";
 
+// ~RequestData는 python backend에서 요구하는 형식과 맞춰야함
 type SignupRequestData = {
   email: string;
   password: string;
@@ -13,22 +14,24 @@ type SignupRequestData = {
   nickname: string;
   username: string;
 };
-type VerifyRequestData = {
+type VerificationCodeRequestData = {
   email: string;
 };
-type VerifyCodeRequestData = {
+type SendVerificationCodeRequestData = {
   verifycode: string;
   email: string;
 };
 
 export default function Signup() {
-  const [userEmailInput, setEmailInput] = useState("");
-  const [userPwInput, setUserPwInput] = useState("");
-  const [userConcernInput, setUserConcernInput] = useState("");
-  const [userNicknameInput, setUserNicknameInput] = useState("");
-  const [usernameInput, setUsernameInput] = useState("");
-  const [userVerifyInput, setUserVerifyInput] = useState("");
-  const [showVerifyButton, setShowVerifyButton] = useState<boolean>(false);
+  const [userEmailInput, setEmailInput] = useState<string>("");
+  const [userPwInput, setUserPwInput] = useState<string>("");
+  const [userConcernInput, setUserConcernInput] = useState<string>("");
+  const [userNicknameInput, setUserNicknameInput] = useState<string>("");
+  const [usernameInput, setUsernameInput] = useState<string>("");
+  const [userVerificationCodeInput, setUserVerificationCodeInput] =
+    useState<string>("");
+
+  const [showVerifyIntputBox, setShowVerifyInputBox] = useState<boolean>(false);
 
   const onSignupClickHandler = async () => {
     const signupRequestData: SignupRequestData = {
@@ -38,7 +41,7 @@ export default function Signup() {
       nickname: userNicknameInput,
       username: usernameInput,
     };
-    const verifyRequest: VerifyRequestData = {
+    const verificationCodeRequest: VerificationCodeRequestData = {
       email: userEmailInput,
     };
     try {
@@ -49,7 +52,7 @@ export default function Signup() {
         },
         body: JSON.stringify(signupRequestData),
       }).then(async () => {
-        setShowVerifyButton(true);
+        setShowVerifyInputBox(true);
 
         try {
           const verifyResponse = await fetch(
@@ -59,7 +62,7 @@ export default function Signup() {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify(verifyRequest),
+              body: JSON.stringify(verificationCodeRequest),
             }
           );
           if (!verifyResponse.ok) {
@@ -81,9 +84,10 @@ export default function Signup() {
       }
     }
   };
+
   const onVerifyClickHandler = async () => {
-    const verifyCodeRequest: VerifyCodeRequestData = {
-      verifycode: userVerifyInput,
+    const sendVerificationCodeRequest: SendVerificationCodeRequestData = {
+      verifycode: userVerificationCodeInput,
       email: userEmailInput,
     };
 
@@ -95,7 +99,7 @@ export default function Signup() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(verifyCodeRequest),
+          body: JSON.stringify(sendVerificationCodeRequest),
         }
       );
       if (response.ok) {
@@ -159,14 +163,14 @@ export default function Signup() {
           onChange={(e) => setUsernameInput(e)}
         />
       </div>
-      {showVerifyButton && (
+      {showVerifyIntputBox && (
         <div>
           <div className={style.verifyInputContainer}>
             <Input
               placeholder="인증번호"
-              value={userVerifyInput}
+              value={userVerificationCodeInput}
               onChange={(e) => {
-                setUserVerifyInput(e);
+                setUserVerificationCodeInput(e);
               }}
             />
           </div>
