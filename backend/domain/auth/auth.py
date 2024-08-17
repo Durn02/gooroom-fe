@@ -322,6 +322,10 @@ async def signin(
 async def logout(request: Request, response: Response):
     logger.info("logout")
     token = request.cookies.get(access_token)
+
+    if not token:
+        raise HTTPException(status_code=401, detail="access token missing")
+
     verify_access_token(token)
 
     if token:
@@ -423,22 +427,20 @@ async def signout(
 
         token_payload = verify_access_token(token)
         user_node_id = token_payload.get("user_node_id")
-
         if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
 
         delete_user_query = f"""
-            MATCH (p:PrivateData)<-[:is_info]-(u:User)
-            WHERE ID(u) = '{user_node_id}'
+            MATCH (u:User {{node_id: '{user_node_id}'}})<-[r:is_info]-(p: PrivateData)
             DETACH DELETE p, u
             RETURN 'User deleted successfully' AS message
         """
-
         result = session.run(delete_user_query)
         record = result.single()
 
         if record["message"] == "User deleted successfully":
             response.delete_cookie(key=access_token)
+            response.delete_cookie(key=refresh_token)
             return SignOutResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to sign out")
