@@ -6,11 +6,11 @@ router = APIRouter()
 logger = Logger(__file__)
 
 
-@router.get("/nodes/")
+@router.get("/nodes")
 async def read_nodes(session=Depends(get_session)):
-
     try:
-        result = session.run("MATCH (n) RETURN n LIMIT 10")
+        logger.info("get nodes - test")
+        result = session.run("MATCH (n) RETURN n")
         nodes = []
         for record in result:
             nodes.append(record["n"])
