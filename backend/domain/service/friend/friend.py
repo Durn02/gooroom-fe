@@ -2,6 +2,7 @@
 import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
+import random, string
 from config.connection import get_session
 from .request import (
     SendKnockRequest,
@@ -13,13 +14,14 @@ from .request import (
     ModifyMemoRequest,
 )
 from .response import (
-    # ListKnockResponse,
-    # SendKnockResponse,
-    # AcceptKnockResponse,
+    ListKnockResponse,
+    SendKnockResponse,
+    AcceptKnockResponse,
     GetFriendResponse,
-    # DeleteFriendResponse,
+    DeleteFriendResponse,
     GetMemoResponse,
     ModifyMemoResponse,
+    RejectKnockResponse,
 )
 from datetime import datetime, timedelta, timezone
 import uuid
@@ -29,215 +31,247 @@ access_token = "access_token"
 logger = Logger(__file__)
 
 
-# @router.post("/knock/send", response_model=SendKnockResponse)
-# async def send_knock(
-#     request: Request,
-#     session=Depends(get_session),
-#     send_knock_request: SendKnockRequest = Body(...),
-# ):
-#     token = request.cookies.get(access_token)
-#     from_user_node_id = (verify_access_token(token))["user_node_id"]
-#     to_user_node_id = send_knock_request.to_user_node_id
+@router.post("/knock/send", response_model=SendKnockResponse)
+async def send_knock(
+    request: Request,
+    session=Depends(get_session),
+    send_knock_request: SendKnockRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    from_user_node_id = verify_access_token(token)["user_node_id"]
+    to_user_node_id = send_knock_request.to_user_node_id
+    knock_edge_id = str(uuid.uuid4())
+    print(knock_edge_id)
 
-#     try:
-#         query = f"""g.V('{from_user_node_id}')
-#         .outE('knock').where(inV().hasId('{to_user_node_id}')).fold()
-#         .coalesce(
-#             unfold().constant('already knock exists'),
-#             addE('knock').from(V('{from_user_node_id}')).to(V('{to_user_node_id}'))
-#         )
-#         """
+    try:
+        # Cypher 쿼리를 사용하여 knock 관계를 생성하거나 확인합니다.
+        query = f"""
+        MATCH (from_user:User {{node_id: '{from_user_node_id}'}})
+        MATCH (to_user:User {{node_id: '{to_user_node_id}'}})
+        WHERE from_user.node_id <> to_user.node_id
+        OPTIONAL MATCH (from_user)-[r:is_roommate]->(to_user)
+        WITH from_user, to_user, r
+        WHERE r IS NULL
+        OPTIONAL MATCH (from_user)-[k:knock]->(to_user)
+        WITH from_user, to_user, k
+        WHERE k IS NULL AND NOT (from_user)-[:is_blocked]-(to_user) AND NOT (to_user)-[:is_blocked]-(from_user)
+        CREATE (from_user)-[nk:knock]->(to_user)
+        SET nk.edge_id = '{knock_edge_id}'
+        RETURN "knock created" AS message, nk.edge_id AS knock_edge_id
 
-#         edge_result_set = session.submitAsync(query).result().all()
-#         edge_result = await asyncio.wrap_future(edge_result_set)
-#         print("edge_result : ", edge_result)
+        """
 
-#         if edge_result:
-#             if edge_result[0] == "already knock exists":
-#                 raise HTTPException(status_code=400, detail="already knock exists")
-#             return SendKnockResponse()
-#         else:
-#             raise HTTPException(
-#                 status_code=404,
-#                 detail=f"no such user {send_knock_request.to_user_node_id}",
-#             )
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No such user {to_user_node_id} or already sent.",
+            )
 
+        return SendKnockResponse()
 
-# @router.post("/knock/list", response_model=ListKnockResponse)
-# async def list_knock(
-#     request: Request,
-#     session=Depends(get_session),
-# ):
-#     token = request.cookies.get(access_token)
-#     user_node_id = verify_access_token(token)["user_node_id"]
-#     print("user_node_id : ", user_node_id)
-
-#     try:
-#         query = f"g.V('{user_node_id}').inE('knock').as('knock').outV().as('from_user_node').select('knock', 'from_user_node').by(valueMap(true))"
-#         future_result_set = session.submitAsync(query).result().all()
-#         results = await asyncio.wrap_future(future_result_set)
-
-#         print(results)
-
-#         result_list = ListKnockResponse(knocks=[])
-#         for result in results:
-#             edge_id = result["knock"][T.id]
-#             nickname = ""
-#             if result["from_user_node"]["nickname"]:
-#                 nickname = result["from_user_node"]["nickname"][0]
-#             result_list.append_knock(edge_id, nickname)
-
-#         return result_list
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 
-# @router.post("/knock/reject")
-# async def reject_knock(
-#     request: Request,
-#     session=Depends(get_session),
-#     reject_knock_request: RejectKnockRequest = Body(...),
-# ):
-#     token = request.cookies.get(access_token)
-#     verify_access_token(token)["user_node_id"]
+@router.post("/knock/list", response_model=ListKnockResponse)
+async def list_knock(
+    request: Request,
+    session=Depends(get_session),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
+    print("user_node_id : ", user_node_id)
+    try:
+        query = f"""
+        MATCH (u:User {{node_id: '{user_node_id}'}})<-[k:knock]-(from_user:User)
+        RETURN k.edge_id AS knock_edge_id, from_user.nickname AS nickname
+        """
 
-#     try:
-#         query = f"g.E('{reject_knock_request.knock_id}').drop()"
-#         future_result_set = session.submitAsync(query).result().all()
-#         await asyncio.wrap_future(future_result_set)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+        result = session.run(query)
+        records = result.data()
 
+        print(records)
 
-# @router.post("/knock/accept", response_model=AcceptKnockResponse)
-# async def accept_knock(
-#     request: Request,
-#     session=Depends(get_session),
-#     accept_knock_request: AcceptKnockRequest = Body(...),
-# ):
-#     token = request.cookies.get(access_token)
-#     verify_access_token(token)["user_node_id"]
+        result_list = ListKnockResponse(knocks=[])
+        for record in records:
+            edge_id = record["knock_edge_id"]
+            nickname = record.get("nickname", "")
+            result_list.append_knock(edge_id, nickname)
 
-#     try:
-#         query = f"""
-#         g.E('{accept_knock_request.knock_id}').fold()
-#         .coalesce(
-#         unfold().as('knock').inV().as('from_user_node')
-#         .select('knock').outV().as('current_user_node')
-#         .addE('is_roommate').from('from_user_node').to('current_user_node').property('memo','')
-#         .addE('is_roommate').from('current_user_node').to('from_user_node').property('memo','')
-#         .sideEffect(__.select('knock').drop()),
-#         constant('Edge not found'))
-#         """
+        return result_list
 
-#         future_result_set = session.submitAsync(query).result().all()
-#         results = await asyncio.wrap_future(future_result_set)
-#         print("solved_future_result_set : ", results[0])
-#         if results[0] == "Edge not found":
-#             raise HTTPException(status_code=400, detail="no such knock_edge")
-#         else:
-#             return AcceptKnockResponse()
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 
-# @router.get("/knock/create_link")
-# async def create_knock_by_link(
-#     request: Request,
-#     session=Depends(get_session),
-# ):
-#     token = request.cookies.get(access_token)
-#     user_node_id = verify_access_token(token)["user_node_id"]
+@router.post("/knock/reject")
+async def reject_knock(
+    request: Request,
+    session=Depends(get_session),
+    reject_knock_request: RejectKnockRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
 
-#     current_time = datetime.now(timezone.utc)
-#     expired = current_time + timedelta(hours=24)
+    try:
+        query = f"""
+        MATCH (from_user:User)-[k:knock]->(to_user:User {{node_id: '{user_node_id}'}})
+        WHERE k.edge_id = '{reject_knock_request.knock_id}'
+        DELETE k
+        RETURN "knock deleted successfully" AS message
+        """
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(status_code=400, detail="no such knock_edge")
 
-#     knock_id = str(uuid.uuid4())
-#     knock_data = f"{knock_id},{expired}"
-#     print(knock_data)
-
-#     try:
-#         query = f"g.V('{user_node_id}').in('is_info').property(single,'invite_info','{knock_data}')"
-#         future_result_set = session.submitAsync(query).result().all()
-#         await asyncio.wrap_future(future_result_set)
-
-#         return "https://gooroom/domain/friend/knock/accept_by_link:" + knock_id
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+        return RejectKnockResponse(message=record["message"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 
-# @router.post("/knock/accept_by_link/{knock_id}", response_model=AcceptKnockResponse)
-# async def accept_knock_by_link(
-#     knock_id: str,
-#     request: Request,
-#     session=Depends(get_session),
-# ):
-#     token = request.cookies.get(access_token)
-#     user_node_id = verify_access_token(token)["user_node_id"]
+@router.post("/knock/accept", response_model=AcceptKnockResponse)
+async def accept_knock(
+    request: Request,
+    session=Depends(get_session),
+    accept_knock_request: AcceptKnockRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
 
-#     try:
-#         query = f"""
-#         g.V().hasLabel('PrivateData').has('invite_info',TextP.startingWith('{knock_id}')).values('invite_info')
-#         """
+    try:
+        edge_id_1 = str(uuid.uuid4())
+        edge_id_2 = str(uuid.uuid4())
 
-#         future_result_set = session.submitAsync(query).result().all()
-#         results = await asyncio.wrap_future(future_result_set)
+        # Cypher 쿼리
+        query = f"""
+        MATCH (to_user:User {{node_id: '{user_node_id}'}})<-[k1:knock]-(from_user:User)
+        WHERE k1.edge_id = '{accept_knock_request.knock_id}'
+        WITH from_user, to_user, k1
+        OPTIONAL MATCH (from_user)-[r:is_roommate]->(to_user)
+        WITH from_user, to_user, r, k1
+        WHERE r IS NULL
+        OPTIONAL MATCH (from_user)<-[k2:knock]-(to_user)
+        WITH from_user, to_user, k1, k2
+        WHERE from_user <> to_user
+        CREATE (from_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_1}'}}]->(to_user)
+        CREATE (to_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_2}'}}]->(from_user)
+        DELETE k1, k2
+        RETURN "Roommate relationship created" AS message
+        """
 
-#         if not results:
-#             HTTPException(status_code=404, detail="no corresponding data")
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(status_code=400, detail="no such knock_edge")
 
-#         expired = (results[0].split(","))[1]
-#         current_time = datetime.now(timezone.utc).isoformat()
-#         if expired < current_time:
-#             HTTPException(status_code=403, detail="expired link")
+        return AcceptKnockResponse(message=record["message"])
 
-#         query = f"""
-#         g.V().hasLabel('PrivateData').has('invite_info',TextP.startingWith('{knock_id}')).out('is_info').as('from_user')
-#         .choose(
-#             coalesce(
-#                 V('{user_node_id}').outE('is_roommate').where(inV().as('from_user')),
-#                 V('{user_node_id}').inE('is_roommate').where(outV().as('from_user')),
-#                 V('{user_node_id}').outE('knock').where(inV().as('from_user')),
-#                 V('{user_node_id}').inE('knock').where(inV().as('from_user'))
-#             ),
-#             constant('is_roommate or knock already exists'),
-#             addE('is_roommate').from(V('{user_node_id}')).to('from_user').property('memo','')
-#             .addE('is_roommate').from('from_user').to(V('{user_node_id}')).property('memo','')
-#             .constant('knock accepted successfully')
-#         )
-#         """
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
-#         future_result_set = session.submitAsync(query).result().all()
-#         results = await asyncio.wrap_future(future_result_set)
 
-#         if not results:
-#             HTTPException(status_code=404, detail="no corresponding data")
+@router.get("/knock/create_link")
+async def create_knock_by_link(
+    request: Request,
+    session=Depends(get_session),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
 
-#         return AcceptKnockResponse(message=results[0])
+    link_code = str(uuid.uuid4())
 
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
+    expiration_time = datetime.now() + timedelta(hours=24)
+    link_info = link_code + " : " + expiration_time.replace(microsecond=0).isoformat()
 
+    try:
+        query = f"""
+        MATCH (u:User {{node_id: '{user_node_id}'}})<-[:is_info]-(p:PrivateData)
+        WITH p
+        WHERE p.link_count < 5
+        SET p.link_count = p.link_count + 1, 
+            p.link_info = '{link_info}'
+        RETURN 'knock link created' AS message
+
+        """
+
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(status_code=400, detail="failed to create link")
+
+        return f"https://gooroom/domain/friend/knock/accept_by_link:{link_code}"
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
+
+
+@router.post("/knock/accept_by_link/{knock_id}", response_model=AcceptKnockResponse)
+async def accept_knock_by_link(
+    knock_id: str,
+    request: Request,
+    session=Depends(get_session),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
+
+    try:
+        datetimenow = datetime.now().replace(microsecond=0).isoformat()
+        edge_id_1 = str(uuid.uuid4())
+        edge_id_2 = str(uuid.uuid4())
+        print(datetimenow)
+        query = f"""
+            MATCH (u:User)<-[:is_info]-(p:PrivateData)
+            WHERE left(p.link_info, 36) = '{knock_id}'
+            WITH p, u, right(p.link_info, 19) AS expiration_time_str
+            WITH p, u, expiration_time_str, datetime(expiration_time_str) AS expiration_time
+            WHERE expiration_time > datetime("{datetimenow}")
+            MATCH (from_user:User {{node_id: u.node_id}}), (to_user:User {{node_id: '{user_node_id}'}})
+            WHERE NOT (from_user)-[:is_roommate]-(to_user)
+            AND NOT (from_user)-[:knock]-(to_user)
+            AND NOT (from_user)-[:is_blocked]-(to_user)
+            AND NOT (to_user)-[:is_blocked]-(from_user)
+            CREATE (from_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_1}'}}]->(to_user)
+            CREATE (to_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_2}'}}]->(from_user)
+            RETURN 'Knock accepted successfully' AS message, expiration_time_str, expiration_time
+            """
+
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(
+                status_code=400, detail="Cannot create is_roommate relationship"
+            )
+
+        return AcceptKnockResponse(message=record["message"])
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 
 @router.post("/get-members")
@@ -273,7 +307,7 @@ async def get_members(
             is_roommate_with: is_roommate_with
         }}) AS roommates_info
         """
-        
+
         result = session.run(query)
         record = result.data()
 
@@ -286,6 +320,7 @@ async def get_members(
     finally:
         session.close()
 
+
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
     request: Request,
@@ -296,6 +331,7 @@ async def get_member(
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
+
         query = f"""
         OPTIONAL MATCH (friend:User {{node_id: '{get_friend_request.user_node_id}'}})
         OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
@@ -328,44 +364,43 @@ async def get_member(
         session.close()
 
 
-# @router.delete("/delete-member", response_model=DeleteFriendResponse)
-# async def delete_member(
-#     request: Request,
-#     session=Depends(get_session),
-#     delete_friend_request: DeleteFriendRequest = Body(...),
-# ):
-#     token = request.cookies.get(access_token)
-#     user_node_id = verify_access_token(token)["user_node_id"]
+@router.delete("/delete-member", response_model=DeleteFriendResponse)
+async def delete_member(
+    request: Request,
+    session=Depends(get_session),
+    delete_friend_request: DeleteFriendRequest = Body(...),
+):
+    token = request.cookies.get(access_token)
+    user_node_id = verify_access_token(token)["user_node_id"]
+    print(user_node_id)
+    try:
+        query = f"""
+        MATCH (u:User)-[r:is_roommate]->(f:User {{node_id: '{delete_friend_request.user_node_id}'}})
+        WHERE u.node_id = '{user_node_id}'
+        DELETE r
+        WITH u, f
+        MATCH (f)-[r2:is_roommate]->(u)
+        DELETE r2
+        RETURN 'Edge deleted' AS message
+        """
 
-#     try:
-#         query = f"""
-#         g.V('{user_node_id}').outE('is_roommate').where(inV().hasId('{delete_friend_request.user_node_id}')).fold()
-#         .coalesce(
-#             unfold().sideEffect(drop())
-#             .V('{delete_friend_request.user_node_id}').outE('is_roommate').where(inV().hasId('{user_node_id}')).sideEffect(drop())
-#             .constant('Edge deleted'),
-#             constant('{delete_friend_request.user_node_id} is not roommate')
-#         )
-#         """
+        result = session.run(query)
+        record = result.single()
+        print(record)
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No such friend {delete_friend_request.user_node_id} to delete relationship",
+            )
 
-#         future_result_set = session.submitAsync(query).result().all()
-#         results = await asyncio.wrap_future(future_result_set)
+        return DeleteFriendResponse(message=record["message"])
 
-#         if not len(results):
-#             raise HTTPException(
-#                 status_code=404,
-#                 detail=f"no such friend {delete_friend_request.user_node_id}",
-#             )
-
-#         return DeleteFriendResponse(message=results[0])
-
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         session.close()
-
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 @router.post("/memo/get-content", response_model=GetMemoResponse)
 async def get_memo(
