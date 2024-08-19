@@ -66,7 +66,7 @@ async def send_knock(
         if not record:
             raise HTTPException(
                 status_code=404,
-                detail=f"No such user {to_user_node_id} or already sent.",
+                detail=f"Cannot send.",
             )
 
         return SendKnockResponse()
@@ -238,7 +238,7 @@ async def accept_knock_by_link(
         datetimenow = datetime.now().replace(microsecond=0).isoformat()
         edge_id_1 = str(uuid.uuid4())
         edge_id_2 = str(uuid.uuid4())
-        print(datetimenow)
+
         query = f"""
             MATCH (u:User)<-[:is_info]-(p:PrivateData)
             WHERE left(p.link_info, 36) = '{knock_id}'
@@ -350,10 +350,10 @@ async def get_member(
         record = result.single()
         print(record)
 
-        if record['message'] != 'welcome my friend':
-            raise HTTPException(status_code=404,detail=record['message'])
-        
-        return GetFriendResponse.from_data(dict(record['friend']),dict(record['r']))
+        if record["message"] != "welcome my friend":
+            raise HTTPException(status_code=404, detail=record["message"])
+
+        return GetFriendResponse.from_data(dict(record["friend"]), dict(record["r"]))
 
     except HTTPException as e:
         raise e
@@ -400,6 +400,7 @@ async def delete_member(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         session.close()
+
 
 @router.post("/memo/get-content", response_model=GetMemoResponse)
 async def get_memo(
