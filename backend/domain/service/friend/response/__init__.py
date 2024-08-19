@@ -5,3 +5,4 @@ from .get_friend_response import GetFriendResponse
 from .delete_friend_response import DeleteFriendResponse
 from .get_memo_response import GetMemoResponse
 from .modify_memo_request import ModifyMemoResponse
+from .reject_knock_response import RejectKnockResponse

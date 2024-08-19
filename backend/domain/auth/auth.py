@@ -266,7 +266,7 @@ async def signin(
     query = f"""
     MATCH (p:PrivateData {{email: '{signin_request.email}'}})
     MATCH (p)-[:is_info]->(u)
-    RETURN p.password AS password, p.grant AS grant, ID(u) AS id
+    RETURN p.password AS password, p.grant AS grant, u.node_id AS user_node_id
     """
 
     try:
@@ -284,7 +284,7 @@ async def signin(
         if grant == "not-verified":
             raise HTTPException(status_code=400, detail="not verified email")
 
-        user_node_id = record["id"]
+        user_node_id = record["user_node_id"]
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
 
