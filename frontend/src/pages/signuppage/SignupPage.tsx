@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import Input from "../../components/Input/DefaultInput";
+import VerifyInput from "../../components/Input/VerifyInput/VerifyInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import style from "./SignupPage.module.css";
 
@@ -166,28 +167,25 @@ export default function Signup() {
       {showVerifyIntputBox && (
         <div>
           <div className={style.verifyInputContainer}>
-            <Input
+            <VerifyInput
               placeholder="인증번호"
               value={userVerificationCodeInput}
               onChange={(e) => {
                 setUserVerificationCodeInput(e);
               }}
-            />
-          </div>
-          <div className={style.verifyButtonContainer}>
-            <DefaultButton
-              placeholder="인증하기"
               onClick={() => onVerifyClickHandler()}
             />
           </div>
         </div>
       )}
-      <div className={style.signUpButtonContainer}>
-        <DefaultButton
-          placeholder="회원가입!"
-          onClick={() => onSignupClickHandler()}
-        />
-      </div>
+      {!showVerifyIntputBox && (
+        <div className={style.signUpButtonContainer}>
+          <DefaultButton
+            placeholder="회원가입!"
+            onClick={() => onSignupClickHandler()}
+          />
+        </div>
+      )}
     </>
   );
 }
