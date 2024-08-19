@@ -48,7 +48,7 @@ export default function Signin() {
             alert("비밀번호가 일치하지 않습니다");
           } else if (data.message === "login success") {
             alert("로그인 성공");
-            window.location.href = "/main";
+            window.location.href = "/";
           } else {
             alert("알 수 없는 이유로 로그인에 실패했습니다");
           }
@@ -120,7 +120,7 @@ export default function Signin() {
     <>
       <div className={style.toMainPageButtonContainer}>
         <Link to={"/"}>
-          <DefaultButton placeholder="메인화면으로" />
+          <DefaultButton placeholder="랜딩화면으로" />
         </Link>
       </div>
 

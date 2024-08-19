@@ -120,7 +120,7 @@ export default function Signup() {
     <>
       <div className={style.goHomeButtonContainer}>
         <Link to={"/"}>
-          <DefaultButton placeholder="메인화면으로" />
+          <DefaultButton placeholder="랜딩화면으로" />
         </Link>
       </div>
       <div>로그인 페이지</div>

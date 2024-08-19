@@ -8,7 +8,24 @@
   height: 40px;
 }
 
-.toMainPageButtonContainer {
+.magnifyButtonContainer {
+  position: absolute;
+  right: 10px; /* 오른쪽에서 10px 떨어진 위치에 배치 */
+  bottom: 15px; /* 하단에서 10px 떨어진 위치에 배치 */
+  z-index: 10; /* 네트워크 그래프 위에 표시되도록 z-index 설정 */
+  display: flex;
+  flex-direction: column; /* 버튼을 세로로 정렬 */
+  gap: 10px; /* 버튼 간의 간격 */
+  width: 40px;
+}
+
+.logoutButtonContainer {
   width: 160px;
   height: 40px;
+}
+
+.visNetContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
 }
