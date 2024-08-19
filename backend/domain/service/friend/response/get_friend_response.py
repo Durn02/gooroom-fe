@@ -14,7 +14,7 @@ class GetFriendResponse(BaseModel):
 
     @classmethod
     def from_data(cls, friend_node: Dict[str, Union[str, List[str]]], memo: Dict[str,str]):
-        friend_detail = FriendDetail(
+        return cls(
             my_memo = friend_node.get('my_memo', ''),
             nickname = friend_node.get('nickname',''),
             username = friend_node.get('username',''),
@@ -22,4 +22,3 @@ class GetFriendResponse(BaseModel):
             node_id = friend_node.get('node_id', ''),
             about_friend_memo = memo.get('memo',''),
         )
-        return cls(friend_detail=friend_detail)

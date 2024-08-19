@@ -1,5 +1,4 @@
 # backend/domain/service/friend/friend.py
-import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
 import random, string
