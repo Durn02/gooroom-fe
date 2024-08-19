@@ -123,7 +123,7 @@ export default function Signup() {
           <DefaultButton placeholder="랜딩화면으로" />
         </Link>
       </div>
-      <div>로그인 페이지</div>
+      <div>회원가입 페이지</div>
       <div className={style.emailInputContainer}>
         <Input
           placeholder="email"

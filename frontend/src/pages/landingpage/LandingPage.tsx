@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Network, Node } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
+import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import style from "./LandingPage.module.css";
 
 interface Roommate {
@@ -216,26 +217,6 @@ export default function Landing() {
     });
   });
 
-  const options = {
-    nodes: {
-      shape: "dot",
-      size: 12,
-      shadow: true,
-      color: {
-        border: "white",
-        background: "skyblue",
-      },
-      font: {
-        color: "#000",
-      },
-    },
-    edges: {
-      color: "gray",
-    },
-    interaction: {
-      hover: true,
-    },
-  };
   const data = {
     nodes,
     edges,
@@ -243,7 +224,7 @@ export default function Landing() {
   // create topology using edges, nodes, options
   useEffect(() => {
     const network: Network | null | undefined = networkContainer.current
-      ? new Network(networkContainer.current, { nodes, edges }, options)
+      ? new Network(networkContainer.current, { nodes, edges }, visnet_options)
       : null;
     // Use `network` here to configure events, etc
     network?.on("doubleClick", (event: { nodes: number[] }) => {
@@ -254,7 +235,7 @@ export default function Landing() {
       networkInstance.current = new Network(
         networkContainer.current,
         data,
-        options
+        visnet_options
       );
     }
     return () => {
