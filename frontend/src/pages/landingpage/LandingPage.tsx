@@ -72,6 +72,30 @@ export default function Landing() {
       alert("unknown error occurred");
     }
   };
+  const onSignoutButtonClickHandler = async () => {
+    alert("회원탈퇴를 진행합니다.");
+    try {
+      const response = await fetch(
+        "http://localhost:8000/domain/auth/signout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.message === "signout success") {
+          alert("회원탈퇴가 완료되었습니다.");
+          window.location.href = "/";
+        }
+      }
+    } catch (error) {
+      alert("unknown error occurred");
+    }
+  };
 
   useEffect(() => {
     verifyAccessToken();
@@ -314,6 +338,12 @@ export default function Landing() {
               <DefaultButton
                 placeholder="로그아웃"
                 onClick={() => onLogoutButtonClickHandler()}
+              />
+            </div>
+            <div className={style.signoutButtonContainer}>
+              <DefaultButton
+                placeholder="회원탈퇴"
+                onClick={() => onSignoutButtonClickHandler()}
               />
             </div>
             <div className={style.visNetContainer}>
