@@ -196,6 +196,17 @@ export default function MainPage() {
     };
   }, [networkContainer, nodes, edges]);
 
+  useEffect(() => {
+    // alert("MainPage is loaded");
+    /*
+    쿠키에서 토큰 가져오기
+    백엔드로 
+    if(토큰이 부재하면) {
+      window.location.href = "/*";
+    }
+    */
+  }, []);
+
   const zoomIn = () => {
     if (networkInstance.current) {
       const scale = networkInstance.current.getScale();
@@ -217,6 +228,27 @@ export default function MainPage() {
       networkInstance.current.fit(); // 초기 위치로 리셋
     }
   };
+  const onLogoutButtonClickHandler = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/domain/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.message === "logout success") {
+          // 서버가 보낸 메시지에 따라 조건 수정
+          alert("로그아웃합니다.");
+          window.location.href = "/";
+        }
+      }
+    } catch (error) {
+      alert("unknown error occurred");
+    }
+  };
 
   return (
     <div>
@@ -227,8 +259,14 @@ export default function MainPage() {
       </div>
       <div className={style.toMainPageButtonContainer}>
         <Link to={"/"}>
-          <DefaultButton placeholder="메인화면으로" />
+          <DefaultButton placeholder="랜딩페이지로" />
         </Link>
+      </div>
+      <div className={style.logoutButtonContainer}>
+        <DefaultButton
+          placeholder="로그아웃"
+          onClick={() => onLogoutButtonClickHandler()}
+        />
       </div>
       <div className={style.visNetContainer}>
         <div ref={networkContainer} style={{ height: "100%", width: "100%" }} />

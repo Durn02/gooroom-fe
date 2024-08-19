@@ -1,16 +1,18 @@
 # backend/domain/auth/auth.py
-import os, sys, json, asyncio, re
-from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
-import random, string
 from datetime import datetime, timedelta
+import os
+import sys
+import re
+import uuid
+import random
+import string
+from fastapi import HTTPException, APIRouter, Depends, Body, Request, Response
 from config.connection import get_session
-from neo4j import GraphDatabase
 from utils import (
     hash_password,
     verify_password,
     create_access_token,
     create_refresh_token,
-    refresh_access_token,
     verify_access_token,
     verify_refresh_token,
     Logger,
@@ -30,11 +32,9 @@ from .response import (
     VerificationResponse,
     SignOutResponse,
     SendVerificationCodeResponse,
+    VerifyAccessTokenResponse,
+    RefreshAccTokenResponse,
 )
-import uuid
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 logger = Logger(__file__)
 
@@ -193,7 +193,7 @@ async def dummy_create(
     session=Depends(get_session),
     signup_request: SignUpRequest = Body(...),
 ):
-    logger.info("signup")
+    logger.info("signup-dummy-create")
     pw = signup_request.password
     if not re.match(
         r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$', pw
@@ -241,18 +241,36 @@ async def dummy_create(
         session.close()
 
 
+@router.get("/verify-access-token")
+async def verify_access_token_api(request: Request, response: Response):
+    logger.info("verify access token(api)")
+    token = request.cookies.get(access_token)
+
+    if not token:
+        raise HTTPException(status_code=401, detail="access token missing")
+    if not verify_access_token(token):
+        raise HTTPException(status_code=401, detail="invalid access token")
+
+    return VerifyAccessTokenResponse()
+
+
 @router.post("/refresh-acc-token")
 async def refresh_acc_token(request: Request, response: Response):
+    logger.info("refresh access token")
     token = request.cookies.get(refresh_token)
 
     if not token:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
-    if not verify_refresh_token(token):
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        raise HTTPException(status_code=401, detail="refresh token missing")
+    # verify_access_token(token)
 
-    new_token = refresh_access_token(token)
+    token = verify_refresh_token(token)
+
+    new_token = create_access_token(token.get("user_node_id"))
+    if not new_token:
+        raise HTTPException(status_code=400, detail="failed to refresh access token")
+
     response.set_cookie(key=access_token, value=f"{new_token}", httponly=True)
-    return {"message": "Access token refreshed"}
+    return RefreshAccTokenResponse()
 
 
 @router.post("/signin")
@@ -261,7 +279,7 @@ async def signin(
     session=Depends(get_session),
     signin_request: SignInRequest = Body(...),
 ):
-    logger.info("login")
+    logger.info("signin")
 
     query = f"""
     MATCH (p:PrivateData {{email: '{signin_request.email}'}})
@@ -302,8 +320,13 @@ async def signin(
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
+    logger.info("logout")
     token = request.cookies.get(access_token)
-    print("token :", token)
+
+    if not token:
+        raise HTTPException(status_code=401, detail="access token missing")
+
+    verify_access_token(token)
 
     if token:
         response.delete_cookie(key=access_token)
@@ -320,6 +343,7 @@ async def pw_change(
     session=Depends(get_session),
     pw_change_req: PwChangeRequest = Body(...),
 ):
+    logger.info("pw change")
     token = request.cookies.get(access_token)
 
     if not token:
@@ -403,22 +427,20 @@ async def signout(
 
         token_payload = verify_access_token(token)
         user_node_id = token_payload.get("user_node_id")
-
         if not user_node_id:
             raise HTTPException(status_code=400, detail="Invalid input")
 
         delete_user_query = f"""
-            MATCH (p:PrivateData)<-[:is_info]-(u:User)
-            WHERE ID(u) = '{user_node_id}'
+            MATCH (u:User {{node_id: '{user_node_id}'}})<-[r:is_info]-(p: PrivateData)
             DETACH DELETE p, u
             RETURN 'User deleted successfully' AS message
         """
-
         result = session.run(delete_user_query)
         record = result.single()
 
         if record["message"] == "User deleted successfully":
             response.delete_cookie(key=access_token)
+            response.delete_cookie(key=refresh_token)
             return SignOutResponse()
         else:
             raise HTTPException(status_code=500, detail="Failed to sign out")

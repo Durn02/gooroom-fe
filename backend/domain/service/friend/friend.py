@@ -275,6 +275,7 @@ async def accept_knock_by_link(
         session.close()
 
 
+
 @router.post("/get-members")
 async def get_members(
     request: Request,
@@ -283,65 +284,36 @@ async def get_members(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     try:
-        query = f"""g.V('{user_node_id}').out('is_roommate')
-        .where(not(__.inE('block').outV().hasId('{user_node_id}')))
-        .group().by(id())
-            .by(
-                project('roommate','memo','posts', 'stickers','is_roommate')
-                .by(valueMap('username','nickname','concern','my_memo'))
-                .by(outE('is_roommate').properties('memo').value())
-                .by(out('is_post').id().fold())
-                .by(out('is_sticker').id().fold())
-                .by(
-                    as('roommate')
-                    .out('is_roommate')
-                    .where(
-                        and(
-                            not(hasId('{user_node_id}')),
-                            not(__.inE('block').outV().where(eq('roommate')))
-                        )
-                    ).id().fold()
-                )
-            )
-        .aggregate('roommates')
-        .V('{user_node_id}').out('is_roommate').as('first_level')
-        .out('is_roommate').where(not(__.inE('block').outV().where(eq('first_level'))))
-        .where(not(__.inE('block').outV().hasId('{user_node_id}')))
-        .where(not(hasId('{user_node_id}'))).dedup()
-        .group().by(id())
-            .by(
-                project('neighbor','posts', 'stickers')
-                .by(valueMap('username','nickname','concern'))
-                .by(out('is_post').id().fold())
-                .by(out('is_sticker').id().fold())
-            )
-        .aggregate('neighbors').cap('roommates', 'neighbors')
+
+        query = f"""
+        MATCH (u:User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (u)-[:is_roommate]->(roommates:User)
+        WHERE NOT (u)-[:block]->(roommates)
+        WITH collect(DISTINCT roommates) AS roommate_list, u 
+        OPTIONAL MATCH (roommates)-[:is_roommate]->(all_neighbors:User)
+        WHERE NOT (roommates)-[:block]->(all_neighbors)
+        AND NOT (u)-[:block]->(all_neighbors)
+        AND all_neighbors <> u
+        AND NOT all_neighbors IN roommate_list
+
+        WITH u, roommates, all_neighbors,roommate_list
+        OPTIONAL MATCH (roommates)-[:is_roommate]->(neighbors:User)
+        WHERE NOT (roommates)-[:block]->(neighbors)
+        AND neighbors <> u
+        WITH roommates,roommate_list, all_neighbors,collect(DISTINCT neighbors) AS is_roommate_with
+        RETURN
+        roommate_list AS roommates,
+        collect(DISTINCT all_neighbors) AS neighbors,
+        collect(DISTINCT {{
+            roommate_node: roommates {{.*}},
+            is_roommate_with: is_roommate_with
+        }}) AS roommates_info
         """
+        
+        result = session.run(query)
+        record = result.data()
 
-        friend_result_set = session.submitAsync(query).result().all()
-        friend_results = await asyncio.wrap_future(friend_result_set)
-
-        friends = friend_results[0]
-        print("friends : ", friends)
-        print("len(friends['roommates']) : ", len(friends["roommates"]))
-        if not len(friends["roommates"]):
-            roommates = {}
-        else:
-            roommates = friends["roommates"][0]
-        if not len(friends["neighbors"]):
-            neighbors = {}
-        else:
-            neighbors = friends["neighbors"][0]
-
-        print("roommates : ", roommates)
-        print("neighbors : ", neighbors)
-        for k in roommates.keys():
-            neighbors.pop(k, None)
-
-        print("pure_neighbors : ", neighbors)
-
-        response = {"roommates": roommates, "neighbors": neighbors}
-        return response
+        return record
 
     except HTTPException as e:
         raise e
@@ -349,7 +321,6 @@ async def get_members(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         session.close()
-
 
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(

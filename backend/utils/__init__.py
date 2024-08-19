@@ -3,7 +3,6 @@ from .jwt_utils import (
     create_access_token,
     verify_access_token,
     create_refresh_token,
-    refresh_access_token,
     verify_refresh_token,
 )
 from .logger import Logger
@@ -16,7 +15,6 @@ __all__ = [
     "verify_access_token",
     "verify_refresh_token",
     "create_refresh_token",
-    "refresh_access_token",
     "Logger",
     "send_verification_email",
 ]

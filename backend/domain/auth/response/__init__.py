@@ -4,3 +4,5 @@ from .signout_response import SignOutResponse
 from .pwchange_response import PwChangeResponse
 from .verification_response import VerificationResponse
 from .send_verification_code_response import SendVerificationCodeResponse
+from .verify_access_token_response import VerifyAccessTokenResponse
+from .refresh_acc_token_response import RefreshAccTokenResponse
