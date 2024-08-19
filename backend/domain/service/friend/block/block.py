@@ -11,7 +11,7 @@ router = APIRouter()
 access_token = "access_token"
 
 
-@router.post("/add-member")
+@router.post("/add_member", response_model=BlockFriendResponse)
 async def block_friend(
     request: Request,
     session=Depends(get_session),
@@ -21,26 +21,20 @@ async def block_friend(
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
-        query = f"""g.V('{user_node_id}')
-        .outE('block').where(inV().hasId('{block_friend_request.user_node_id}')).fold()
-        .coalesce(
-            unfold().constant('already block exist'),
-            addE('block').from(V('{user_node_id}')).to(V('{block_friend_request.user_node_id}'))
-        )
+        query = f"""
+        MATCH (from_user:User {{node_id: '{user_node_id}'}}), (to_user:User {{node_id: '{block_friend_request.user_node_id}'}})
+        OPTIONAL MATCH (from_user)<-[r:is_roommate]-(to_user)
+        DELETE r
+        MERGE (from_user)-[:is_blocked {{edge_id: randomUUID()}}]->(to_user)
+        RETURN 'User blocked successfully' AS message
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        if results:
-            if results[0] == "already knock exists":
-                raise HTTPException(status_code=400, detail="already knock exists")
-            return BlockFriendResponse()
-        else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"no such user {block_friend_request.user_node_id}",
-            )
+        if not record:
+            raise HTTPException(status_code=400, detail="User not found")
+        return BlockFriendResponse(message=record["message"])
 
     except HTTPException as e:
         raise e
@@ -60,14 +54,16 @@ async def get_blocked(
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('block').as('block_edge').inV().as('blocked_user').select('block_edge', 'blocked_user').by(valueMap(true))
+        MATCH (u:User {{node_id: '{user_node_id}'}})-[block:is_blocked]->(blocked_user:User)
+        RETURN block, blocked_user
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        records = result.data()
+        print(records)
         response = [
-            GetBlockedResponse.from_data(result["block_edge"], result["blocked_user"])
-            for result in results
+            GetBlockedResponse.from_data(record["block"], record["blocked_user"])
+            for record in records
         ]
         return response
 

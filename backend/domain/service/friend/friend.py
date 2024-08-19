@@ -239,7 +239,7 @@ async def accept_knock_by_link(
         datetimenow = datetime.now().replace(microsecond=0).isoformat()
         edge_id_1 = str(uuid.uuid4())
         edge_id_2 = str(uuid.uuid4())
-        print(datetimenow)
+
         query = f"""
             MATCH (u:User)<-[:is_info]-(p:PrivateData)
             WHERE left(p.link_info, 36) = '{knock_id}'
