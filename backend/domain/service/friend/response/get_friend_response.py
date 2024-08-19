@@ -1,26 +1,25 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Union
 from pydantic import BaseModel
-from gremlin_python.process.traversal import T
 
 class FriendDetail(BaseModel):
-    my_memo : List[str]
+    node_id : str
+    my_memo : str
     nickname : str
     username : str
-    concern : List
-    node_id : str
-    memo : str
+    concern : List[str]
+    about_friend_memo : str
 
 class GetFriendResponse(BaseModel):
     friend_detail: FriendDetail
 
     @classmethod
-    def from_data(cls, friend_node: Dict[str, List], memo: str):
+    def from_data(cls, friend_node: Dict[str, Union[str, List[str]]], memo: Dict[str,str]):
         friend_detail = FriendDetail(
-            my_memo = friend_node.get('my_memo', []),
-            nickname = friend_node.get('nickname')[0] if friend_node.get('nickname', []) else '',
-            username = friend_node.get('username')[0] if friend_node.get('username', []) else '',
+            my_memo = friend_node.get('my_memo', ''),
+            nickname = friend_node.get('nickname',''),
+            username = friend_node.get('username',''),
             concern = friend_node.get('concern', []),
             node_id = friend_node.get('node_id', ''),
-            memo = memo
+            about_friend_memo = memo.get('memo',''),
         )
         return cls(friend_detail=friend_detail)

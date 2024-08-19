@@ -332,26 +332,29 @@ async def get_member(
 
     try:
 
-        query = f"""g.V('{get_friend_request.user_node_id}').valueMap(true).as('friend_node')
-        .coalesce(
-        V('{get_friend_request.user_node_id}').inE('is_roommate').where(outV().hasId('{user_node_id}')).properties('memo').value(),
-        __.constant(''))
-        .as('memo')
-        .select('friend_node', 'memo')
+        query = f"""
+        OPTIONAL MATCH (friend:User {{node_id: '{get_friend_request.user_node_id}'}})
+        OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (friend)<-[b:is_blocked]->(me)
+        OPTIONAL MATCH (me)-[r:is_roommate]->(friend)
+        WITH friend, me, b, r
+        RETURN 
+        CASE 
+            WHEN friend IS NULL THEN "no such node {get_friend_request.user_node_id}"
+            WHEN b IS NOT NULL THEN "is_blocked exists"
+            ELSE "welcome my friend"
+        END AS message,
+        friend, r
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
+        print(record)
 
-        if not len(results):
-            raise HTTPException(
-                status_code=404,
-                detail=f"no such friend {get_friend_request.user_node_id}",
-            )
-
-        return GetFriendResponse.from_data(
-            results[0]["friend_node"], results[0]["memo"]
-        )
+        if record['message'] != 'welcome my friend':
+            raise HTTPException(status_code=404,detail=record['message'])
+        
+        return GetFriendResponse.from_data(dict(record['friend']),dict(record['r']))
 
     except HTTPException as e:
         raise e
@@ -398,7 +401,6 @@ async def delete_member(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         session.close()
-
 
 @router.post("/memo/get-content", response_model=GetMemoResponse)
 async def get_memo(
