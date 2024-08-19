@@ -2,6 +2,7 @@
 import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
+import random, string
 from config.connection import get_session
 from .request import (
     SendKnockRequest,
@@ -195,12 +196,10 @@ async def create_knock_by_link(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
-    current_time = datetime.now(timezone.utc)
-    expired = current_time + timedelta(hours=24)
+    link_code = str(uuid.uuid4())
 
-    knock_id = str(uuid.uuid4())
-    knock_data = f"{knock_id},{expired}"
-    print(knock_data)
+    expiration_time = datetime.now() + timedelta(hours=24)
+    link_info = link_code + " : " + expiration_time.replace(microsecond=0).isoformat()
 
     try:
         query = f"""
@@ -208,7 +207,7 @@ async def create_knock_by_link(
         WITH p
         WHERE p.link_count < 5
         SET p.link_count = p.link_count + 1, 
-            p.link_info = '{knock_data}'
+            p.link_info = '{link_info}'
         RETURN 'knock link created' AS message
 
         """
@@ -219,7 +218,7 @@ async def create_knock_by_link(
         if not record:
             raise HTTPException(status_code=400, detail="failed to create link")
 
-        return f"https://gooroom/domain/friend/knock/accept_by_link:{knock_id}"
+        return f"https://gooroom/domain/friend/knock/accept_by_link:{link_code}"
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -237,16 +236,16 @@ async def accept_knock_by_link(
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
-        current_time = datetime.now(timezone.utc).isoformat()
+        datetimenow = datetime.now().replace(microsecond=0).isoformat()
         edge_id_1 = str(uuid.uuid4())
         edge_id_2 = str(uuid.uuid4())
-        print(current_time)
+        print(datetimenow)
         query = f"""
             MATCH (u:User)<-[:is_info]-(p:PrivateData)
             WHERE left(p.link_info, 36) = '{knock_id}'
-            WITH p, u, right(p.link_info, 32) AS expiration_time_str
+            WITH p, u, right(p.link_info, 19) AS expiration_time_str
             WITH p, u, expiration_time_str, datetime(expiration_time_str) AS expiration_time
-            WHERE expiration_time > '{current_time}'
+            WHERE expiration_time > datetime("{datetimenow}")
             MATCH (from_user:User {{node_id: u.node_id}}), (to_user:User {{node_id: '{user_node_id}'}})
             WHERE NOT (from_user)-[:is_roommate]-(to_user)
             AND NOT (from_user)-[:knock]-(to_user)
@@ -273,7 +272,6 @@ async def accept_knock_by_link(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         session.close()
-
 
 
 @router.post("/get-members")
@@ -309,7 +307,7 @@ async def get_members(
             is_roommate_with: is_roommate_with
         }}) AS roommates_info
         """
-        
+
         result = session.run(query)
         record = result.data()
 
@@ -321,6 +319,7 @@ async def get_members(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         session.close()
+
 
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
