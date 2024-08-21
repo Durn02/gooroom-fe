@@ -45,43 +45,60 @@ export default function Signup() {
     const verificationCodeRequest: VerificationCodeRequestData = {
       email: userEmailInput,
     };
-    try {
-      await fetch("http://localhost:8000/domain/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signupRequestData),
-      }).then(async () => {
-        setShowVerifyInputBox(true);
 
-        try {
-          const verifyResponse = await fetch(
-            "http://localhost:8000/domain/auth/send-verification-code",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(verificationCodeRequest),
+    if (
+      userEmailInput === "" ||
+      userPwInput === "" ||
+      userNicknameInput === "" ||
+      usernameInput === ""
+    ) {
+      alert("모든 항목을 입력해주세요");
+    } else {
+      try {
+        const signupResponse = await fetch(
+          "http://localhost:8000/domain/auth/signup",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(signupRequestData),
+          }
+        );
+
+        if (signupResponse.ok) {
+          setShowVerifyInputBox(true);
+
+          try {
+            const verifyResponse = await fetch(
+              "http://localhost:8000/domain/auth/send-verification-code",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(verificationCodeRequest),
+              }
+            );
+            if (!verifyResponse.ok) {
+              throw new Error("server no response");
             }
-          );
-          if (!verifyResponse.ok) {
-            throw new Error("server no response");
+          } catch (error) {
+            if (error instanceof Error) {
+              alert(`Verify failed: ${error.message}`);
+            } else {
+              alert("Verify failed: unknown error occurred.");
+            }
           }
-        } catch (error) {
-          if (error instanceof Error) {
-            alert(`Verify failed: ${error.message}`);
-          } else {
-            alert("Verify failed: An unknown error occurred.");
-          }
+        } else {
+          alert("회원가입 실패");
         }
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Signup failed: ${error.message}`);
-      } else {
-        alert("Signup failed: An unknown error occurred.");
+      } catch (error) {
+        if (error instanceof Error) {
+          alert(`Signup failed: ${error.message}`);
+        } else {
+          alert("Signup failed: unknown error occurred.");
+        }
       }
     }
   };
