@@ -41,23 +41,27 @@ async def create_sticker(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
+    datetimenow = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
     try:
         query = f"""
-        g.addV('sticker')
-            .property('content','{create_sticker_request.content}')
-            .property('image_url','{create_sticker_request.image_url}')
-            .property('created_at','{datetime.now(timezone.utc)}')
-            .as('new_sticker')
-        .addE('is_sticker').from(V('{user_node_id}')).to('new_sticker')
+        MATCH (u:User {{node_id: '{user_node_id}'}})
+        CREATE (s:Sticker {{
+                content : '{create_sticker_request.content}',
+                image_url : {create_sticker_request.image_url},
+                created_at : '{datetimenow}',
+                node_id : randomUUID()
+            }})
+        CREATE (s)-[is_sticker:is_sticker]->(u)
+        RETURN is_sticker
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        if not results:
-            raise HTTPException(status_code=404, detail="results is empty")
+        if not record:
+            raise HTTPException(status_code=404, detail=f"no such user {user_node_id}")
 
-        print(results[0])
         return CreateStickerResponse()
 
     except HTTPException as e:
@@ -68,7 +72,8 @@ async def create_sticker(
         session.close()
 
 
-@router.post("/sticker/get-content", response_model=List[GetStickersResponse])
+# @router.post("/sticker/get-contents", response_model=List[GetStickersResponse])
+@router.post("/sticker/get-contents")
 async def get_contents(
     request: Request,
     session=Depends(get_session),
@@ -79,22 +84,33 @@ async def get_contents(
 
     try:
         query = f"""
-        g.V('{get_sticker_request.user_node_id}').outE('block').where(inV().hasId('{user_node_id}')).fold()
-        .coalesce(
-            unfold().constant("empty stickers"),
-            V('{get_sticker_request.user_node_id}').outE('is_sticker').inV().valueMap(true)
-        )
+        OPTIONAL MATCH (me: User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (friend:User {{node_id: '{get_sticker_request.user_node_id}'}})
+        OPTIONAL MATCH (me)<-[b:is_blocked]->(friend)
+        OPTIONAL MATCH (me)-[m:mute]->(friend)
+        OPTIONAL MATCH (friend)<-[:is_sticker]-(sticker)
+        WITH friend, me, b, m, collect(sticker) AS stickers
+        RETURN 
+        CASE 
+            WHEN me IS NULL THEN "no such node {user_node_id}"
+            WHEN friend IS NULL THEN "no such node {get_sticker_request.user_node_id}"
+            WHEN b IS NOT NULL THEN "is_blocked exists"
+            WHEN m IS NOT NULL THEN "mute exists"
+            ELSE "get stickers"
+        END AS message, 
+        stickers
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        print(results)
-        if not (results) or results == ["empty stickers"]:
-            return []
+        if record['message'] != "get stickers":
+            raise HTTPException(status_code=404, detail=record['message'])
 
-        response = [GetStickersResponse.from_data(result) for result in results]
-        return response
+        print(record['stickers'])
+        for sticker in record['stickers']:
+            print(dict(sticker))
+        return [GetStickersResponse.from_data(dict(sticker)) for sticker in record['stickers']]
 
     except HTTPException as e:
         raise e
@@ -104,23 +120,25 @@ async def get_contents(
         session.close()
 
 
-@router.get("/sticker/get-my-content", response_model=List[GetMyStickersResponse])
+@router.get("/sticker/get-my-contents", response_model=List[GetMyStickersResponse])
 async def get_my_contents(request: Request, session=Depends(get_session)):
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('is_sticker').inV().valueMap(true)
+        MATCH (me: User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (me)<-[:is_sticker]-(sticker)
+        RETURN collect(sticker) AS stickers
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        print(results)
+        if not record:
+            raise HTTPException(status_code=404, detail=f"invalid user_node_id {user_node_id}")
 
-        response = [GetMyStickersResponse.from_data(result) for result in results]
-        return response
+        return [GetMyStickersResponse.from_data(dict(sticker)) for sticker in record['stickers']]
 
     except HTTPException as e:
         raise e
@@ -129,8 +147,7 @@ async def get_my_contents(request: Request, session=Depends(get_session)):
     finally:
         session.close()
 
-
-@router.delete("/sticker/delete")
+@router.delete("/sticker/delete",response_model=DeleteStickerResponse)
 async def delete_sticker(
     request: Request,
     session=Depends(get_session),
@@ -141,24 +158,32 @@ async def delete_sticker(
 
     try:
         query = f"""
-        g.V('{user_node_id}').outE('is_sticker').inV().hasId('{delete_sticker_request.sticker_node_id}').fold()
-        .coalesce(
-            unfold().sideEffect(V('{delete_sticker_request.sticker_node_id}').drop()).constant('dropped'),
-            constant('not exist')
-        )
+        OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (s:Sticker {{node_id: '{delete_sticker_request.sticker_node_id}'}})
+        OPTIONAL MATCH (s)-[r:is_sticker]->(me)
+        WITH me, s, r
+        CALL apoc.do.case(
+        [
+            me is NULL, 'RETURN "User does not exist" As message',
+            s IS NULL, 'RETURN "Sticker does not exist" AS message',
+            r IS NULL, 'RETURN "Relationship does not exist" AS message'
+        ],
+        'DETACH DELETE s RETURN "Sticker and relationship deleted" AS message',
+        {{s: s, r: r}}
+        ) YIELD value
+        RETURN value.message AS message
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
 
-        print(results)
+        print(record)
 
-        if results == ["not exist"]:
-            return DeleteStickerResponse(message="not exist")
-        else:
-            return DeleteStickerResponse(
-                message=f"'{delete_sticker_request.sticker_node_id}' dropped"
-            )
+        if record['message']!='Sticker and relationship deleted':        
+            raise HTTPException(status_code=500, detail=record['message'])
+        
+        return DeleteStickerResponse(message=record['message'])
+            
 
     except HTTPException as e:
         raise e

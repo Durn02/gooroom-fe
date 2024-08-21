@@ -1,7 +1,7 @@
 # backend/domain/service/friend/friend.py
-import asyncio
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
+import random, string
 from config.connection import get_session
 from .request import (
     SendKnockRequest,
@@ -66,7 +66,7 @@ async def send_knock(
         if not record:
             raise HTTPException(
                 status_code=404,
-                detail=f"No such user {to_user_node_id} or already sent.",
+                detail=f"Cannot send.",
             )
 
         return SendKnockResponse()
@@ -195,12 +195,10 @@ async def create_knock_by_link(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
-    current_time = datetime.now(timezone.utc)
-    expired = current_time + timedelta(hours=24)
+    link_code = str(uuid.uuid4())
 
-    knock_id = str(uuid.uuid4())
-    knock_data = f"{knock_id},{expired}"
-    print(knock_data)
+    expiration_time = datetime.now() + timedelta(hours=24)
+    link_info = link_code + " : " + expiration_time.replace(microsecond=0).isoformat()
 
     try:
         query = f"""
@@ -208,7 +206,7 @@ async def create_knock_by_link(
         WITH p
         WHERE p.link_count < 5
         SET p.link_count = p.link_count + 1, 
-            p.link_info = '{knock_data}'
+            p.link_info = '{link_info}'
         RETURN 'knock link created' AS message
 
         """
@@ -219,7 +217,7 @@ async def create_knock_by_link(
         if not record:
             raise HTTPException(status_code=400, detail="failed to create link")
 
-        return f"https://gooroom/domain/friend/knock/accept_by_link:{knock_id}"
+        return f"https://gooroom/domain/friend/knock/accept_by_link:{link_code}"
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -237,21 +235,20 @@ async def accept_knock_by_link(
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
-        current_time = datetime.now(timezone.utc).isoformat()
+        datetimenow = datetime.now().replace(microsecond=0).isoformat()
         edge_id_1 = str(uuid.uuid4())
         edge_id_2 = str(uuid.uuid4())
-        print(current_time)
+
         query = f"""
             MATCH (u:User)<-[:is_info]-(p:PrivateData)
             WHERE left(p.link_info, 36) = '{knock_id}'
-            WITH p, u, right(p.link_info, 32) AS expiration_time_str
+            WITH p, u, right(p.link_info, 19) AS expiration_time_str
             WITH p, u, expiration_time_str, datetime(expiration_time_str) AS expiration_time
-            WHERE expiration_time > '{current_time}'
+            WHERE expiration_time > datetime("{datetimenow}")
             MATCH (from_user:User {{node_id: u.node_id}}), (to_user:User {{node_id: '{user_node_id}'}})
             WHERE NOT (from_user)-[:is_roommate]-(to_user)
-            AND NOT (from_user)-[:knock]-(to_user)
-            AND NOT (from_user)-[:is_blocked]-(to_user)
-            AND NOT (to_user)-[:is_blocked]-(from_user)
+            AND NOT (from_user)-[:block]-(to_user)
+            AND NOT (to_user)-[:block]-(from_user)
             CREATE (from_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_1}'}}]->(to_user)
             CREATE (to_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_2}'}}]->(from_user)
             RETURN 'Knock accepted successfully' AS message, expiration_time_str, expiration_time
@@ -275,7 +272,6 @@ async def accept_knock_by_link(
         session.close()
 
 
-
 @router.post("/get-members")
 async def get_members(
     request: Request,
@@ -291,14 +287,12 @@ async def get_members(
         WHERE NOT (u)-[:block]->(roommates)
         WITH collect(DISTINCT roommates) AS roommate_list, u 
         OPTIONAL MATCH (roommates)-[:is_roommate]->(all_neighbors:User)
-        WHERE NOT (roommates)-[:block]->(all_neighbors)
-        AND NOT (u)-[:block]->(all_neighbors)
+        WHERE NOT (u)-[:block]->(all_neighbors)
         AND all_neighbors <> u
         AND NOT all_neighbors IN roommate_list
 
         WITH u, roommates, all_neighbors,roommate_list
         OPTIONAL MATCH (roommates)-[:is_roommate]->(neighbors:User)
-        WHERE NOT (roommates)-[:block]->(neighbors)
         AND neighbors <> u
         WITH roommates,roommate_list, all_neighbors,collect(DISTINCT neighbors) AS is_roommate_with
         RETURN
@@ -309,7 +303,7 @@ async def get_members(
             is_roommate_with: is_roommate_with
         }}) AS roommates_info
         """
-        
+
         result = session.run(query)
         record = result.data()
 
@@ -322,6 +316,7 @@ async def get_members(
     finally:
         session.close()
 
+
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
     request: Request,
@@ -333,26 +328,29 @@ async def get_member(
 
     try:
 
-        query = f"""g.V('{get_friend_request.user_node_id}').valueMap(true).as('friend_node')
-        .coalesce(
-        V('{get_friend_request.user_node_id}').inE('is_roommate').where(outV().hasId('{user_node_id}')).properties('memo').value(),
-        __.constant(''))
-        .as('memo')
-        .select('friend_node', 'memo')
+        query = f"""
+        OPTIONAL MATCH (friend:User {{node_id: '{get_friend_request.user_node_id}'}})
+        OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
+        OPTIONAL MATCH (friend)<-[b:is_blocked]->(me)
+        OPTIONAL MATCH (me)-[r:is_roommate]->(friend)
+        WITH friend, me, b, r
+        RETURN 
+        CASE 
+            WHEN friend IS NULL THEN "no such node {get_friend_request.user_node_id}"
+            WHEN b IS NOT NULL THEN "is_blocked exists"
+            ELSE "welcome my friend"
+        END AS message,
+        friend, r
         """
 
-        future_result_set = session.submitAsync(query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        result = session.run(query)
+        record = result.single()
+        print(record)
 
-        if not len(results):
-            raise HTTPException(
-                status_code=404,
-                detail=f"no such friend {get_friend_request.user_node_id}",
-            )
+        if record["message"] != "welcome my friend":
+            raise HTTPException(status_code=404, detail=record["message"])
 
-        return GetFriendResponse.from_data(
-            results[0]["friend_node"], results[0]["memo"]
-        )
+        return GetFriendResponse.from_data(dict(record["friend"]), dict(record["r"]))
 
     except HTTPException as e:
         raise e
