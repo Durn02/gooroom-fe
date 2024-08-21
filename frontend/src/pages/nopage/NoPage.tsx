@@ -7,7 +7,7 @@ export default function NoPage() {
     <div>
       <h1>404 not found</h1>
       <Link to={"/"}>
-        <DefaultButton placeholder="go to main page" />
+        <DefaultButton placeholder="go to landing page" />
       </Link>
     </div>
   );
