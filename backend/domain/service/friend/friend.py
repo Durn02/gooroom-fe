@@ -247,9 +247,8 @@ async def accept_knock_by_link(
             WHERE expiration_time > datetime("{datetimenow}")
             MATCH (from_user:User {{node_id: u.node_id}}), (to_user:User {{node_id: '{user_node_id}'}})
             WHERE NOT (from_user)-[:is_roommate]-(to_user)
-            AND NOT (from_user)-[:knock]-(to_user)
-            AND NOT (from_user)-[:is_blocked]-(to_user)
-            AND NOT (to_user)-[:is_blocked]-(from_user)
+            AND NOT (from_user)-[:block]-(to_user)
+            AND NOT (to_user)-[:block]-(from_user)
             CREATE (from_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_1}'}}]->(to_user)
             CREATE (to_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_2}'}}]->(from_user)
             RETURN 'Knock accepted successfully' AS message, expiration_time_str, expiration_time
@@ -288,14 +287,12 @@ async def get_members(
         WHERE NOT (u)-[:block]->(roommates)
         WITH collect(DISTINCT roommates) AS roommate_list, u 
         OPTIONAL MATCH (roommates)-[:is_roommate]->(all_neighbors:User)
-        WHERE NOT (roommates)-[:block]->(all_neighbors)
-        AND NOT (u)-[:block]->(all_neighbors)
+        WHERE NOT (u)-[:block]->(all_neighbors)
         AND all_neighbors <> u
         AND NOT all_neighbors IN roommate_list
 
         WITH u, roommates, all_neighbors,roommate_list
         OPTIONAL MATCH (roommates)-[:is_roommate]->(neighbors:User)
-        WHERE NOT (roommates)-[:block]->(neighbors)
         AND neighbors <> u
         WITH roommates,roommate_list, all_neighbors,collect(DISTINCT neighbors) AS is_roommate_with
         RETURN

@@ -23,13 +23,13 @@ async def block_friend(
     try:
         query = f"""
             MATCH (from_user:User {{node_id: '{user_node_id}'}}), (to_user:User {{node_id: '{block_friend_request.user_node_id}'}})
-            OPTIONAL MATCH (from_user)-[r:is_roommate]->(to_user)
-            DELETE r
-            WITH from_user, to_user
-            OPTIONAL MATCH (from_user)-[b:is_blocked]->(to_user)
-            WITH from_user, to_user, b
+            OPTIONAL MATCH (from_user)-[b:block]->(to_user)
             WHERE b IS NULL
-            MERGE (from_user)-[:is_blocked {{edge_id: randomUUID()}}]->(to_user)
+            MERGE (from_user)-[:block {{edge_id: randomUUID()}}]->(to_user)
+            WITH from_user, to_user, b
+            OPTIONAL MATCH (from_user)<-[r:is_roommate]->(to_user)
+            OPTIONAL MATCH (from_user)<-[m:mute]->(to_user)
+            DELETE r, m
             RETURN 
                 CASE WHEN b IS NULL THEN 'User blocked successfully' ELSE 'User was already blocked' END AS message
             """
@@ -59,17 +59,15 @@ async def get_blocked(
 
     try:
         query = f"""
-        MATCH (u:User {{node_id: '{user_node_id}'}})-[block:is_blocked]->(blocked_user:User)
-        RETURN block.edge_id, blocked_user
+        MATCH (u:User {{node_id: '{user_node_id}'}})-[b:block]->(blocked_user:User)
+        RETURN b.edge_id, blocked_user
         """
 
         result = session.run(query)
         records = result.data()
         print(records)
         response = [
-            GetBlockedResponse.from_data(
-                record["block.edge_id"], record["blocked_user"]
-            )
+            GetBlockedResponse.from_data(record["b.edge_id"], record["blocked_user"])
             for record in records
         ]
         return response
@@ -93,9 +91,9 @@ async def pop_blocked(
 
     try:
         query = f"""
-        MATCH (from_user:User {{node_id: '{user_node_id}'}})-[r:is_blocked {{edge_id: '{pop_blocked_request.block_edge_id}'}}]->(to_user:User)
-        DELETE r
-        RETURN r
+        MATCH (from_user:User {{node_id: '{user_node_id}'}})-[b:block {{edge_id: '{pop_blocked_request.block_edge_id}'}}]->(to_user:User)
+        DELETE b
+        RETURN b
         """
 
         result = session.run(query)
