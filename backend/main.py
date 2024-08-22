@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from domain.api import router as domain_api_router
 from utils import Logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-# from domain.service.content.content import delete_old_stickers, delete_old_casts
+from domain.service.content.content import delete_old_stickers, delete_old_casts
 
 scheduler = AsyncIOScheduler()
 logger = Logger("main.py")
@@ -12,16 +12,13 @@ logger = Logger("main.py")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("서버 실행")
-    # scheduler.start()
-    # logger.info("스케줄러가 실행되었습니다.")
-    # scheduler.add_job(func=delete_old_stickers, trigger="cron", hour=0, minute=0)
-    # scheduler.add_job(func=delete_old_casts, trigger="cron", minute="*/30")
+    scheduler.start()
+    logger.info("스케줄러가 실행되었습니다.")
+    scheduler.add_job(func=delete_old_stickers, trigger="cron", hour=0, minute=0)
+    scheduler.add_job(func=delete_old_casts, trigger="cron", minute="*/30")
     yield
-    # await save_data()
-    # tunnel.stop()
-    # logger.info("SSH 터널이 종료되었습니다.")
-    # scheduler.shutdown()
-    # logger.info("스케줄러가 종료되었습니다. 안녕~")
+    scheduler.shutdown()
+    logger.info("스케줄러가 종료되었습니다. 안녕~")
     logger.info("서버 종료")
 
 
