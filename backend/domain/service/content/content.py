@@ -50,6 +50,7 @@ async def create_sticker(
                 content : '{create_sticker_request.content}',
                 image_url : {create_sticker_request.image_url},
                 created_at : '{datetimenow}',
+                deleted_at : ''
                 node_id : randomUUID()
             }})
         CREATE (s)-[is_sticker:is_sticker {{edge_id : randomUUID()}}]->(u)
@@ -88,6 +89,7 @@ async def get_stickers(
         OPTIONAL MATCH (me)<-[b:block]->(friend)
         OPTIONAL MATCH (me)-[m:mute]->(friend)
         OPTIONAL MATCH (friend)<-[:is_sticker]-(sticker:Sticker)
+        WHERE sticker.delete_at IS NULL 
         WITH friend, me, b, m, collect(sticker) AS stickers
         RETURN 
         CASE 
@@ -125,6 +127,7 @@ async def get_my_stickers(request: Request, session=Depends(get_session)):
         query = f"""
         MATCH (me: User {{node_id: '{user_node_id}'}})
         OPTIONAL MATCH (me)<-[:is_sticker]-(sticker:Sticker)
+        WHERE sticker.delete_at IS NULL 
         RETURN collect(sticker) AS stickers
         """
 
@@ -152,6 +155,8 @@ async def delete_sticker(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
+    datetimenow = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
     try:
         query = f"""
         OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
@@ -164,7 +169,7 @@ async def delete_sticker(
             s IS NULL, 'RETURN "Sticker does not exist" AS message',
             r IS NULL, 'RETURN "Relationship does not exist" AS message'
         ],
-        'DETACH DELETE s RETURN "Sticker and relationship deleted" AS message',
+        'SET s.delete_at = "{datetimenow}"  RETURN "Sticker and relationship deleted" AS message',
         {{s: s}}
         ) YIELD value
         RETURN value.message AS message
@@ -188,19 +193,19 @@ async def delete_sticker(
 
 async def delete_old_stickers():
     session = get_session()
+    datetimenow = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     try:
         query = f"""
         MATCH (s:Sticker)
         WHERE datetime(s.created_at) <= datetime() - duration({{hours: 24}})
-        DETACH DELETE s
+        SET s.delete_at = '{datetimenow}'
+        RETURN s
         """
 
         result = session.run(query)
         record = result.single()
-        logger.info("delete_old_stickers")
-        logger.info(record)
-
+        logger.info(f"delete_old_stickers : {record}")
 
     except Exception as e:
         raise e
@@ -446,7 +451,9 @@ async def send_cast(
         UNWIND {send_cast_request.friends} AS friend_node_id
         MATCH (friend:User {{node_id: friend_node_id}})
         WHERE NOT (friend)-[:mute]->(me)
-        CREATE (me)-[c:cast {{edge_id: randomUUID(),created_at:'{datetimenow}',message:'{send_cast_request.message}'}}]->(friend)
+        CREATE (me)-[c:cast 
+            {{edge_id: randomUUID(),created_at:'{datetimenow}',message:'{send_cast_request.message}', deleted_at:''}}]
+        ->(friend)
         RETURN collect(c) AS friends
         """
 
@@ -470,18 +477,18 @@ async def send_cast(
 
 async def delete_old_casts():
     session = get_session()
+    datetimenow = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     try:
         query = f"""
         MATCH ()-[c:cast]->() 
         WHERE datetime(c.created_at) <= datetime() - duration({{hours: 1}})
-        DELETE c
+        SET c.delete_at = '{datetimenow}'
         """
         result = session.run(query)
         record = result.single()
 
-        logger.info("delete_old_casts")
-        logger.info(record)
+        logger.info(f"delete_old_casts : {record}")
 
     except Exception as e:
         raise e
@@ -502,6 +509,7 @@ async def get_casts(
         MATCH (me: User {{node_id: '{user_node_id}'}})
         MATCH (me)<-[c:cast]-(friend:User)
         WHERE NOT (me)-[:mute]->(friend)
+        WHERE c.delete_at is NULL
         RETURN {{content:properties(c),from:friend}} AS cast
         """
 
