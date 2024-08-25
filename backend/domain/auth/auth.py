@@ -16,12 +16,13 @@ from utils import (
     verify_access_token,
     verify_refresh_token,
     Logger,
-    send_verification_email,
+    send_email,
 )
 from .request import (
     SignInRequest,
     SignUpRequest,
     PwChangeRequest,
+    PwResetRequest,
     VerificationRequest,
     SendVerificationCodeRequest,
 )
@@ -29,6 +30,7 @@ from .response import (
     SignInResponse,
     SignUpResponse,
     PwChangeResponse,
+    PwResetResponse,
     VerificationResponse,
     SignOutResponse,
     SendVerificationCodeResponse,
@@ -89,7 +91,10 @@ async def send_verification_code(
             raise HTTPException(status_code=400, detail="Error occurred")
 
         # 이메일로 verification code 전송
-        send_verification_email(send_verification_code_request.email, verification_code)
+        send_email(
+            send_verification_code_request.email,
+            f"Your verification code: '{verification_code}'",
+        )
 
         return SendVerificationCodeResponse(message="verification code sent")
 
@@ -336,6 +341,51 @@ async def logout(request: Request, response: Response):
         return SignOutResponse(message="not logined")
 
 
+@router.post("/pw/reset")
+async def pw_reset(
+    request: Request,
+    session=Depends(get_session),
+    pw_reset_request: PwResetRequest = Body(...),
+):
+
+    logger.info("reset password")
+
+    try:
+        random_password = "".join(
+            random.choices(string.ascii_letters + string.digits, k=10)
+        )
+        hashed_password = hash_password(random_password)
+        print(hashed_password, random_password)
+        query = f"""
+        MATCH (p:PrivateData {{email: '{pw_reset_request.email}'}})
+        WHERE NOT p.grant = 'not-verified' 
+        SET p.password = '{hashed_password}'
+        RETURN 'Password reset successfully' AS message, p.email AS email
+        """
+
+        result = session.run(query)
+        record = result.single()
+
+        if not record:
+            raise HTTPException(
+                status_code=400,
+                detail="Error occurred during password reset or not verified",
+            )
+
+        # 이메일로 랜덤 생성 비밀번호 전송
+        send_email(
+            record["email"],
+            f"Password Reset : '{random_password}'. Change your password after login",
+        )
+
+        return PwResetResponse(message="Password reset successfully, check your email")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
+
+
 @router.post("/pw/change")
 async def pw_change(
     request: Request,
@@ -358,8 +408,7 @@ async def pw_change(
     try:
         # 현재 비밀번호 가져오기
         query = f"""
-        MATCH (u:User)<-[:is_info]-(p:PrivateData)
-        WHERE ID(u) = '{user_node_id}'
+        MATCH (u:User {{node_id: '{user_node_id}'}})<-[:is_info]-(p:PrivateData)
         RETURN p.password AS password
         """
         result = session.run(query)
@@ -392,8 +441,7 @@ async def pw_change(
             raise HTTPException(status_code=400, detail="Incorrect current password")
 
         update_query = f"""
-        MATCH (u:User)<-[:is_info]-(p:PrivateData)
-        WHERE ID(u) = '{user_node_id}'
+        MATCH (u:User {{node_id: '{user_node_id}'}})<-[:is_info]-(p:PrivateData)
         SET p.password = '{hashed_new_pw}'
         RETURN 'Password changed successfully' AS message
         """

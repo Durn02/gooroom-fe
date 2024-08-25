@@ -43,7 +43,6 @@ async def send_knock(
     print(knock_edge_id)
 
     try:
-        # Cypher 쿼리를 사용하여 knock 관계를 생성하거나 확인합니다.
         query = f"""
         MATCH (from_user:User {{node_id: '{from_user_node_id}'}})
         MATCH (to_user:User {{node_id: '{to_user_node_id}'}})
@@ -53,11 +52,10 @@ async def send_knock(
         WHERE r IS NULL
         OPTIONAL MATCH (from_user)-[k:knock]->(to_user)
         WITH from_user, to_user, k
-        WHERE k IS NULL AND NOT (from_user)-[:is_blocked]-(to_user) AND NOT (to_user)-[:is_blocked]-(from_user)
+        WHERE k IS NULL AND NOT (from_user)-[:block]-(to_user) AND NOT (to_user)-[:block]-(from_user)
         CREATE (from_user)-[nk:knock]->(to_user)
         SET nk.edge_id = '{knock_edge_id}'
         RETURN "knock created" AS message, nk.edge_id AS knock_edge_id
-
         """
 
         result = session.run(query)
@@ -154,7 +152,6 @@ async def accept_knock(
         edge_id_1 = str(uuid.uuid4())
         edge_id_2 = str(uuid.uuid4())
 
-        # Cypher 쿼리
         query = f"""
         MATCH (to_user:User {{node_id: '{user_node_id}'}})<-[k1:knock]-(from_user:User)
         WHERE k1.edge_id = '{accept_knock_request.knock_id}'
@@ -246,9 +243,8 @@ async def accept_knock_by_link(
             WHERE expiration_time > datetime("{datetimenow}")
             MATCH (from_user:User {{node_id: u.node_id}}), (to_user:User {{node_id: '{user_node_id}'}})
             WHERE NOT (from_user)-[:is_roommate]-(to_user)
-            AND NOT (from_user)-[:knock]-(to_user)
-            AND NOT (from_user)-[:is_blocked]-(to_user)
-            AND NOT (to_user)-[:is_blocked]-(from_user)
+            AND NOT (from_user)-[:block]-(to_user)
+            AND NOT (to_user)-[:block]-(from_user)
             CREATE (from_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_1}'}}]->(to_user)
             CREATE (to_user)-[:is_roommate {{memo: '', edge_id: '{edge_id_2}'}}]->(from_user)
             RETURN 'Knock accepted successfully' AS message, expiration_time_str, expiration_time
@@ -286,12 +282,12 @@ async def get_members(
         UNWIND roommates AS roommate
         OPTIONAL MATCH (roommate)-[:is_roommate]->(neighbor:User)
         WHERE NOT (u)-[:block]->(neighbor)
-        WHERE neighbor <> u
+        AND neighbor <> u
         with roommate,roommates, collect(neighbor) AS neighbors
         RETURN
-            collect({{roommate:roommate,neighbors:neighbors}}) AS binded_roommate, 
+            collect({{roommate:roommate,neighbors:neighbors}}) AS roommates_with_neighbors, 
             roommates,
-            [n IN apoc.coll.toSet(apoc.coll.flatten(COLLECT(neighbors))) WHERE NOT n IN roommates] AS all_neighbors
+            [n IN apoc.coll.toSet(apoc.coll.flatten(COLLECT(neighbors))) WHERE NOT n IN roommates] AS neighbors
         """
 
         result = session.run(query)
@@ -306,7 +302,6 @@ async def get_members(
     finally:
         session.close()
 
-
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
     request: Request,
@@ -317,31 +312,34 @@ async def get_member(
     user_node_id = verify_access_token(token)["user_node_id"]
 
     try:
-
         query = f"""
         OPTIONAL MATCH (friend:User {{node_id: '{get_friend_request.user_node_id}'}})
         OPTIONAL MATCH (me:User {{node_id: '{user_node_id}'}})
-        OPTIONAL MATCH (friend)<-[b:is_blocked]->(me)
+        OPTIONAL MATCH (friend)<-[b:block]->(me)
         OPTIONAL MATCH (me)-[r:is_roommate]->(friend)
-        WITH friend, me, b, r
+        OPTIONAL MATCH (friend)<-[:is_sticker]-(sticker:Sticker)
+        WITH friend, b , r,  collect(sticker) AS stickers
+        OPTIONAL MATCH (friend)<-[:is_post]-(post:Post)
+        WITH friend, b , r, stickers, collect(post) AS posts
+        OPTIONAL MATCH (friend)-[c:cast]->(:User)
+        WITH friend, b , r, stickers,posts, {{casts : apoc.map.groupBy(collect(c), 'cast_id')}} AS casts
         RETURN 
         CASE 
             WHEN friend IS NULL THEN "no such node {get_friend_request.user_node_id}"
-            WHEN b IS NOT NULL THEN "is_blocked exists"
+            WHEN b IS NOT NULL THEN "block exists"
             ELSE "welcome my friend"
         END AS message,
-        friend, r
+        friend , r, stickers,posts, casts
         """
 
         result = session.run(query)
         record = result.single()
-        print(record)
 
         if record["message"] != "welcome my friend":
             raise HTTPException(status_code=404, detail=record["message"])
 
-        return GetFriendResponse.from_data(dict(record["friend"]), dict(record["r"]))
-
+        return GetFriendResponse.from_data(dict(record["friend"]), dict(record["r"]),record["stickers"],record["posts"],record["casts"])
+    
     except HTTPException as e:
         raise e
     except Exception as e:

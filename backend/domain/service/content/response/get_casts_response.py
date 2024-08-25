@@ -3,6 +3,7 @@ from typing import Dict
 
 class GetCastsResponse(BaseModel):
     cast_edge_id:str
+    cast_id:str
     message:str
     created_at:str
     friend_nickname:str
@@ -12,6 +13,7 @@ class GetCastsResponse(BaseModel):
     def from_data(cls, cast: Dict[str,str] ,friend:Dict[str,str]):
         return cls(
             cast_edge_id = cast.get("edge_id",''),
+            cast_id=cast.get("cast_id",''),
             message=cast.get("message", ''),
             created_at=cast.get("created_at",''),
             friend_nickname=friend.get("nickname"),

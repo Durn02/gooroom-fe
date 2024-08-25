@@ -1,10 +1,9 @@
 # backend/domain/service/content/content.py
-import asyncio, json
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
 from config.connection import get_session
 from typing import List
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from .request import (
     CreateStickerRequest,
     GetStickersRequest,
@@ -26,6 +25,7 @@ from .response import (
     SendCastResponse,
     GetCastsResponse,
 )
+import uuid
 
 logger = Logger(__file__)
 router = APIRouter()
@@ -50,7 +50,7 @@ async def create_sticker(
                 content : '{create_sticker_request.content}',
                 image_url : {create_sticker_request.image_url},
                 created_at : '{datetimenow}',
-                deleted_at : ''
+                deleted_at : '',
                 node_id : randomUUID()
             }})
         CREATE (s)-[is_sticker:is_sticker {{edge_id : randomUUID()}}]->(u)
@@ -444,6 +444,7 @@ async def send_cast(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     datetimenow = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    cast_id = uuid.uuid4()
 
     try:
         query = f"""
@@ -452,7 +453,7 @@ async def send_cast(
         MATCH (friend:User {{node_id: friend_node_id}})
         WHERE NOT (friend)-[:mute]->(me)
         CREATE (me)-[c:cast 
-            {{edge_id: randomUUID(),created_at:'{datetimenow}',message:'{send_cast_request.message}', deleted_at:''}}]
+            {{edge_id: randomUUID(),created_at:'{datetimenow}',message:'{send_cast_request.message}', deleted_at:'',cast_id:'{cast_id}'}}]
         ->(friend)
         RETURN collect(c) AS friends
         """
@@ -509,7 +510,7 @@ async def get_casts(
         MATCH (me: User {{node_id: '{user_node_id}'}})
         MATCH (me)<-[c:cast]-(friend:User)
         WHERE NOT (me)-[:mute]->(friend)
-        WHERE c.delete_at is NULL
+        AND c.delete_at is NULL
         RETURN {{content:properties(c),from:friend}} AS cast
         """
 
