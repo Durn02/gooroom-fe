@@ -208,7 +208,6 @@ async def create_knock_by_link(
         SET p.link_count = p.link_count + 1, 
             p.link_info = '{link_info}'
         RETURN 'knock link created' AS message
-
         """
 
         result = session.run(query)
@@ -281,30 +280,18 @@ async def get_members(
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     try:
-
         query = f"""
-        MATCH (u:User {{node_id: '{user_node_id}'}})
-        OPTIONAL MATCH (u)-[:is_roommate]->(roommates:User)
-        WHERE NOT (u)-[:block]->(roommates)
-        WITH collect(DISTINCT roommates) AS roommate_list, u 
-        OPTIONAL MATCH (roommates)-[:is_roommate]->(all_neighbors:User)
-        WHERE NOT (roommates)-[:block]->(all_neighbors)
-        AND NOT (u)-[:block]->(all_neighbors)
-        AND all_neighbors <> u
-        AND NOT all_neighbors IN roommate_list
-
-        WITH u, roommates, all_neighbors,roommate_list
-        OPTIONAL MATCH (roommates)-[:is_roommate]->(neighbors:User)
-        WHERE NOT (roommates)-[:block]->(neighbors)
-        AND neighbors <> u
-        WITH roommates,roommate_list, all_neighbors,collect(DISTINCT neighbors) AS is_roommate_with
+        MATCH (u:User {{node_id: '{user_node_id}'}})-[:is_roommate]->(roommate:User)
+        WITH u,collect(roommate) AS roommates
+        UNWIND roommates AS roommate
+        OPTIONAL MATCH (roommate)-[:is_roommate]->(neighbor:User)
+        WHERE NOT (u)-[:block]->(neighbor)
+        WHERE neighbor <> u
+        with roommate,roommates, collect(neighbor) AS neighbors
         RETURN
-        roommate_list AS roommates,
-        collect(DISTINCT all_neighbors) AS neighbors,
-        collect(DISTINCT {{
-            roommate_node: roommates {{.*}},
-            is_roommate_with: is_roommate_with
-        }}) AS roommates_info
+            collect({{roommate:roommate,neighbors:neighbors}}) AS binded_roommate, 
+            roommates,
+            [n IN apoc.coll.toSet(apoc.coll.flatten(COLLECT(neighbors))) WHERE NOT n IN roommates] AS all_neighbors
         """
 
         result = session.run(query)
