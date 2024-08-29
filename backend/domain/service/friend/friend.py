@@ -268,7 +268,7 @@ async def accept_knock_by_link(
         session.close()
 
 
-@router.post("/get-members")
+@router.get("/get-members")
 async def get_members(
     request: Request,
     session=Depends(get_session),
