@@ -135,7 +135,7 @@ export default function Signup() {
   // 로그인이 되어있는지 확인하는 useEffect
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
-    async () => {
+    const checkLogin = async () => {
       try {
         const response = await fetch(
           "http://localhost:8000/domain/auth/verify-access-token",
@@ -159,6 +159,7 @@ export default function Signup() {
         alert("unknown error occurred");
       }
     };
+    checkLogin();
   }, []);
 
   return (
