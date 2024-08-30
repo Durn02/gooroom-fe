@@ -1,18 +1,15 @@
-# backend/domain/service/friend/mute/mute.py
-from fastapi import APIRouter
-
-router = APIRouter()
 # backend/domain/service/friend/block/block.py
-import asyncio
 from typing import List
-from fastapi import APIRouter, HTTPException, APIRouter, Depends, Body, Request
-from utils import verify_access_token
+from utils import verify_access_token, Logger
 from config.connection import get_session
 from .request import MuteFriendRequest, PopMutedRequest
 from .response import MuteFriendResponse, GetMutedResponse, PopMutedResponse
+from fastapi import APIRouter, HTTPException, APIRouter, Depends, Body, Request
 
 router = APIRouter()
 access_token = "access_token"
+
+logger = Logger(__file__)
 
 
 @router.post("/add_member", response_model=MuteFriendResponse)
@@ -21,6 +18,7 @@ async def mute_friend(
     session=Depends(get_session),
     mute_friend_request: MuteFriendRequest = Body(...),
 ):
+    logger.info("mute_friend")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -55,6 +53,7 @@ async def get_muteed(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("get_muted")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -87,6 +86,7 @@ async def pop_muted(
     session=Depends(get_session),
     pop_muted_request: PopMutedRequest = Body(...),
 ):
+    logger.info("pop_muted")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 

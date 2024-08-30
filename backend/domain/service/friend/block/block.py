@@ -2,13 +2,14 @@
 import asyncio
 from typing import List
 from fastapi import APIRouter, HTTPException, APIRouter, Depends, Body, Request
-from utils import verify_access_token
+from utils import verify_access_token, Logger
 from config.connection import get_session
 from .request import BlockFriendRequest, PopBlockedRequest
 from .response import BlockFriendResponse, GetBlockedResponse, PopBlockedResponse
 
 router = APIRouter()
 access_token = "access_token"
+logger = Logger(__file__)
 
 
 @router.post("/add_member", response_model=BlockFriendResponse)
@@ -17,6 +18,7 @@ async def block_friend(
     session=Depends(get_session),
     block_friend_request: BlockFriendRequest = Body(...),
 ):
+    logger.info("block_friend")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -54,6 +56,7 @@ async def get_blocked(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("get_blocked")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -86,6 +89,7 @@ async def pop_blocked(
     session=Depends(get_session),
     pop_blocked_request: PopBlockedRequest = Body(...),
 ):
+    logger.info("pop_blocked")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
