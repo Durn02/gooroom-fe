@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import style from "./LandingPage.module.css";
+import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 
 interface User {
   my_memo: string;
@@ -265,17 +266,17 @@ export default function Landing() {
     console.log("roommatesData : ", roommatesData);
     console.log("neighborsData : ", neighborsData);
     console.log("roommatesWithNeighbors : ", roommatesWithNeighbors);
-      console.log(
-        "networkinstance.current in instance useEffect: ",
-        networkInstance.current
-      );
-      const nodes = generateNodes(loginedUser, roommatesData, neighborsData);
-      const edges = generateEdges(
-        loginedUser,
-        roommatesData,
-        roommatesWithNeighbors
-      );
-      updateNetwork(nodes, edges);
+    console.log(
+      "networkinstance.current in instance useEffect: ",
+      networkInstance.current
+    );
+    const nodes = generateNodes(loginedUser, roommatesData, neighborsData);
+    const edges = generateEdges(
+      loginedUser,
+      roommatesData,
+      roommatesWithNeighbors
+    );
+    updateNetwork(nodes, edges);
   }, [loginedUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
   const zoomIn = () => {
@@ -342,6 +343,9 @@ export default function Landing() {
       {showLoginedPage && (
         <>
           <div>
+            <div className={style.castPostStickerDropdownButton}>
+              <CastPostStickerDropdownButton />
+            </div>
             <div className={style.magnifyButtonContainer}>
               <DefaultButton placeholder="+" onClick={() => zoomIn()} />
               <DefaultButton placeholder="O" onClick={() => resetPosition()} />
