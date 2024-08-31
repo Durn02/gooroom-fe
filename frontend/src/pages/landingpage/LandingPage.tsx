@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-// import { Network, Node } from "vis-network";
 import { Network } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
@@ -30,57 +29,17 @@ interface EdgeData {
   to: string;
 }
 
-const networkContainer = useRef<HTMLDivElement | null>(null);
-const networkInstance = useRef<Network | null>(null);
-
-const generateNodes = (roommates: User[], neighbors: User[]): NodeData[] => {
-  const roommateNodes = roommates.map((roommate) => ({
-    id: roommate.node_id,
-    label: roommate.nickname,
-    group: "roommate",
-  }));
-
-  const neighborNodes = neighbors.map((neighbor) => ({
-    id: neighbor.node_id,
-    label: neighbor.nickname,
-    group: "neighbor",
-  }));
-
-  return [...roommateNodes, ...neighborNodes];
-};
-
-const generateEdges = (
-  roommatesWithNeighbors: RoommateWithNeighbors[]
-): EdgeData[] => {
-  const edges: EdgeData[] = [];
-
-  roommatesWithNeighbors.forEach((group) => {
-    const roommateId = group.roommate.node_id;
-    group.neighbors.forEach((neighbor) => {
-      edges.push({
-        from: roommateId,
-        to: neighbor.node_id,
-      });
-    });
-  });
-
-  return edges;
-};
-
-const updateNetwork = (nodes: NodeData[], edges: EdgeData[]) => {
-  if (networkInstance.current) {
-    const data = { nodes, edges };
-    networkInstance.current.setData(data);
-  }
-};
-
 export default function Landing() {
   const [showLoginedPage, setShowLoginedPage] = useState<boolean>(false);
-  const [roommates, setRoommates] = useState<User[]>([]);
-  const [neighbors, setNeighbors] = useState<User[]>([]);
+  const [loginedUser, setLoginedUser] = useState<User>();
+  const [roommatesData, setRoommates] = useState<User[]>([]);
+  const [neighborsData, setNeighbors] = useState<User[]>([]);
   const [roommatesWithNeighbors, setRoommatesWithNeighbors] = useState<
     RoommateWithNeighbors[]
   >([]);
+
+  const networkContainer = useRef(null);
+  const networkInstance = useRef<Network | null>(null);
 
   const verifyAccessToken = async () => {
     try {
@@ -101,9 +60,10 @@ export default function Landing() {
           // 서버가 보낸 메시지에 따라 조건 수정
           // window.location.href = "/main";
           setShowLoginedPage(true);
-          await fetch_friends();
+          await fetchFriends();
         }
       } else {
+        console.log("verify access token not ok");
         const refresh_response = await fetch(
           "http://localhost:8000/domain/auth/refresh-acc-token",
           {
@@ -115,15 +75,13 @@ export default function Landing() {
           }
         );
         if (refresh_response.ok) {
-          await fetch_friends();
           // window.location.href = "/main";
         }
       }
     } catch (error) {
-      alert("unknown error occurred");
+      alert("unknown error occurred in verifyAccessToken");
     }
   };
-
   const onSignoutButtonClickHandler = async () => {
     alert("회원탈퇴를 진행합니다.");
     try {
@@ -145,18 +103,16 @@ export default function Landing() {
         }
       }
     } catch (error) {
-      alert("unknown error occurred");
+      alert("unknown error occurred in onSignoutButtonClickHandler");
     }
   };
 
-  useEffect(() => {
-    verifyAccessToken();
-  }, []);
-
-  const fetch_friends = async () => {
+  //////////////////////
+  const fetchFriends = async () => {
+    console.log("fetchFriends called!");
     try {
       const response = await fetch(
-        "http://localhost:8000/domain/service/friend",
+        "http://localhost:8000/domain/friend/get-members",
         {
           method: "GET",
           headers: {
@@ -165,60 +121,120 @@ export default function Landing() {
           credentials: "include",
         }
       );
-
       if (response.ok) {
-        const data = await response.json();
-        setRoommates(data.roommates);
-        setNeighbors(data.neighbors);
-        setRoommatesWithNeighbors(data.roommates_with_neighbors);
-
-        const nodes = generateNodes(roommates, neighbors);
-        const edges = generateEdges(roommatesWithNeighbors);
-        updateNetwork(nodes, edges);
+        let data = await response.json();
+        console.log("fetchFriend success : ", data);
+        if (data.length > 0) {
+          data = data[0];
+          setLoginedUser(data.u);
+          setRoommates(data.roommates);
+          setNeighbors(data.neighbors);
+          setRoommatesWithNeighbors(data.roommates_with_neighbors);
+        }
       }
     } catch (error) {
-      console.error("Failed to fetch data", error);
+      alert(error);
     }
   };
 
-  // const data = {
-  //   nodes,
-  //   edges,
-  // };
+  const generateNodes = (
+    loggedInUser: User | undefined,
+    roommates: User[],
+    neighbors: User[]
+  ): NodeData[] => {
+    if (!loggedInUser) {
+      console.error("Logged in user is undefined");
+      return [];
+    }
 
-  // useEffect(() => {
-  //   const network: Network | null | undefined = networkContainer.current
-  //     ? new Network(networkContainer.current, { nodes, edges }, visnet_options)
-  //     : null;
-  //   // Use `network` here to configure events, etc
-  //   network?.on("doubleClick", (event: { nodes: number[] }) => {
-  //     const { nodes: clickedNodes } = event;
-  //     alert(`id ${clickedNodes} node is clicked.`);
-  //   });
-  //   if (networkContainer.current) {
-  //     networkInstance.current = new Network(
-  //       networkContainer.current,
-  //       data,
-  //       visnet_options
-  //     );
-  //   }
-  //   return () => {
-  //     // 컴포넌트 언마운트 시 네트워크 인스턴스 정리
-  //     if (networkInstance.current) {
-  //       networkInstance.current.destroy();
-  //     }
-  //   };
-  // }, [networkContainer, nodes, edges]);
+    console.log("generatingNodes");
 
-  // 네트워크 초기화 및 이벤트 설정
+    const userNode: NodeData = {
+      id: loggedInUser.node_id,
+      label: loggedInUser.nickname,
+      group: "loggedInUser",
+    };
+
+    const roommateNodes = roommates.map((roommate) => ({
+      id: roommate.node_id,
+      label: roommate.nickname,
+      group: "roommate",
+    }));
+
+    const neighborNodes = neighbors.map((neighbor) => ({
+      id: neighbor.node_id,
+      label: neighbor.nickname,
+      group: "neighbor",
+    }));
+
+    return [userNode, ...roommateNodes, ...neighborNodes];
+  };
+
+  const generateEdges = (
+    loggedInUser: User | undefined,
+    roommates: User[],
+    roommatesWithNeighbors: RoommateWithNeighbors[]
+  ): EdgeData[] => {
+    if (!loggedInUser) {
+      console.error("Logged in user is undefined");
+      return [];
+    }
+
+    console.log("generatingEdges");
+
+    const edges: EdgeData[] = [];
+    const edgeSet = new Set<string>();
+
+    roommates.forEach((roommate) => {
+      const edgeKey = `${loggedInUser.node_id}-${roommate.node_id}`;
+      edges.push({
+        from: loggedInUser.node_id,
+        to: roommate.node_id,
+      });
+      edgeSet.add(edgeKey);
+    });
+
+    roommatesWithNeighbors.forEach((roommateWithNeighbor) => {
+      const roommateId = roommateWithNeighbor.roommate.node_id;
+      roommateWithNeighbor.neighbors.forEach((neighbor) => {
+        const edgeKey = `${roommateId}-${neighbor.node_id}`;
+        const reverseEdgeKey = `${neighbor.node_id}-${roommateId}`;
+
+        if (!edgeSet.has(reverseEdgeKey)) {
+          edges.push({
+            from: roommateId,
+            to: neighbor.node_id,
+          });
+          edgeSet.add(edgeKey);
+        }
+      });
+    });
+
+    return edges;
+  };
+
+  const updateNetwork = (nodes: NodeData[], edges: EdgeData[]) => {
+    console.log("updating network");
+    if (networkInstance.current) {
+      const data = { nodes, edges };
+      networkInstance.current.setData(data);
+      networkInstance.current.redraw();
+      console.log("networkInstance : ", networkInstance.current);
+    }
+  };
+
   useEffect(() => {
-    if (networkContainer.current) {
+    verifyAccessToken();
+  }, []);
+
+  useEffect(() => {
+    console.log("network container initalizer called");
+    if (networkContainer.current && !networkInstance.current) {
       networkInstance.current = new Network(
         networkContainer.current,
         { nodes: [], edges: [] },
         visnet_options
       );
-
       networkInstance.current.on(
         "doubleClick",
         (event: { nodes: number[] }) => {
@@ -230,22 +246,37 @@ export default function Landing() {
 
     return () => {
       if (networkInstance.current) {
+        console.log("network instance destroyed");
         networkInstance.current.destroy();
+        networkInstance.current = null;
       }
     };
   }, [networkContainer]);
 
   useEffect(() => {
+    console.log(
+      "loginedUser, roommatesData, neighborsData, roommatesWithNeighbors something changed"
+    );
+    console.log("loginedUser : ", loginedUser);
+    console.log("roommatesData : ", roommatesData);
+    console.log("neighborsData : ", neighborsData);
+    console.log("roommatesWithNeighbors : ", roommatesWithNeighbors);
     if (
-      roommates.length > 0 &&
-      neighbors.length > 0 &&
+      loginedUser &&
+      roommatesData.length > 0 &&
+      neighborsData.length > 0 &&
       roommatesWithNeighbors.length > 0
     ) {
-      const nodes = generateNodes(roommates, neighbors);
-      const edges = generateEdges(roommatesWithNeighbors);
+      console.log("networkinstance.current : ", networkInstance.current);
+      const nodes = generateNodes(loginedUser, roommatesData, neighborsData);
+      const edges = generateEdges(
+        loginedUser,
+        roommatesData,
+        roommatesWithNeighbors
+      );
       updateNetwork(nodes, edges);
     }
-  }, [roommates, neighbors, roommatesWithNeighbors]);
+  }, [loginedUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
   const zoomIn = () => {
     if (networkInstance.current) {
@@ -286,7 +317,7 @@ export default function Landing() {
         }
       }
     } catch (error) {
-      alert("unknown error occurred");
+      alert("unknown error occurred in onLogoutButtonClickHandler");
     }
   };
 
