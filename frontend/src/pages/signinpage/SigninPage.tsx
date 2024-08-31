@@ -47,6 +47,7 @@ export default function Signin() {
           } else if (data.detail === "inconsistent password") {
             alert("비밀번호가 일치하지 않습니다");
           } else if (data.message === "login success") {
+            sessionStorage.setItem("userId", userEmailInput);
             alert("로그인 성공");
             window.location.replace("/");
           } else {
@@ -142,6 +143,7 @@ export default function Signin() {
         alert("unknown error occurred");
       }
     };
+
     checkLogin();
   }, []);
 
