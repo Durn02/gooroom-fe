@@ -31,7 +31,7 @@ interface EdgeData {
 }
 
 export default function Landing() {
-  const [showLoginedPage, setShowLoginedPage] = useState<boolean>(false);
+  const [isLoggedIn, setShowLoginedPage] = useState<boolean>(false);
   const [loginedUser, setLoginedUser] = useState<User>();
   const [roommatesData, setRoommates] = useState<User[]>([]);
   const [neighborsData, setNeighbors] = useState<User[]>([]);
@@ -324,7 +324,7 @@ export default function Landing() {
 
   return (
     <>
-      {!showLoginedPage && (
+      {!isLoggedIn && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -340,7 +340,7 @@ export default function Landing() {
         </>
       )}
 
-      {showLoginedPage && (
+      {isLoggedIn && (
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>

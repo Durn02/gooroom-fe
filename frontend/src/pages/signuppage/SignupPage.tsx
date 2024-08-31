@@ -121,7 +121,7 @@ export default function Signup() {
       );
       if (response.ok) {
         alert("Verify successful");
-        window.location.href = "/";
+        window.location.replace("/");
       } else {
         alert(`Verify failed: ${response.statusText}`);
       }
@@ -152,7 +152,7 @@ export default function Signup() {
           const data = await response.json();
           if (data.message === "access token validation check successfull") {
             alert("이미 로그인 되어있습니다.");
-            window.location.href = "/";
+            window.location.replace("/");
           }
         }
       } catch (error) {

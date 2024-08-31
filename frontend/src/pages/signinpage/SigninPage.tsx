@@ -48,7 +48,7 @@ export default function Signin() {
             alert("비밀번호가 일치하지 않습니다");
           } else if (data.message === "login success") {
             alert("로그인 성공");
-            window.location.href = "/";
+            window.location.replace("/");
           } else {
             alert("알 수 없는 이유로 로그인에 실패했습니다");
           }
@@ -76,7 +76,7 @@ export default function Signin() {
       );
       if (response.ok) {
         alert("Verify successful");
-        window.location.href = "/";
+        window.location.replace("/");
       } else {
         alert(`Verify failed: ${response.statusText}`);
       }
@@ -135,7 +135,7 @@ export default function Signin() {
           const data = await response.json();
           if (data.message === "access token validation check successfull") {
             alert("이미 로그인 되어있습니다.");
-            window.location.href = "/";
+            window.location.replace("/");
           }
         }
       } catch (error) {
