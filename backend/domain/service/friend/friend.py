@@ -283,8 +283,9 @@ async def get_members(
         OPTIONAL MATCH (roommate)-[:is_roommate]->(neighbor:User)
         WHERE NOT (u)-[:block]->(neighbor)
         AND neighbor <> u
-        with roommate,roommates, collect(neighbor) AS neighbors
+        with u,roommate,roommates, collect(neighbor) AS neighbors
         RETURN
+            u,
             collect({{roommate:roommate,neighbors:neighbors}}) AS roommates_with_neighbors, 
             roommates,
             [n IN apoc.coll.toSet(apoc.coll.flatten(COLLECT(neighbors))) WHERE NOT n IN roommates] AS neighbors
@@ -293,6 +294,7 @@ async def get_members(
         result = session.run(query)
         record = result.data()
 
+        print("record : ", record)
         return record
 
     except HTTPException as e:

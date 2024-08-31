@@ -229,6 +229,8 @@ export default function Landing() {
 
   useEffect(() => {
     console.log("network container initalizer called");
+    console.log("networkContainer : ", networkContainer.current);
+    console.log("networkInstance : ", networkInstance.current);
     if (networkContainer.current && !networkInstance.current) {
       networkInstance.current = new Network(
         networkContainer.current,
@@ -243,21 +245,23 @@ export default function Landing() {
         }
       );
     }
-
-    return () => {
-      if (networkInstance.current) {
-        console.log("network instance destroyed");
-        networkInstance.current.destroy();
-        networkInstance.current = null;
-      }
-    };
+    console.log(
+      "networkinstance.current in initializing instance: ",
+      networkInstance.current
+    );
+    // return () => {
+    //   if (networkInstance.current) {
+    //     console.log("network instance destroyed");
+    //     networkInstance.current.destroy();
+    //     networkInstance.current = null;
+    //   }
+    // };
   }, [networkContainer]);
 
   useEffect(() => {
     console.log(
       "loginedUser, roommatesData, neighborsData, roommatesWithNeighbors something changed"
     );
-    console.log("loginedUser : ", loginedUser);
     console.log("roommatesData : ", roommatesData);
     console.log("neighborsData : ", neighborsData);
     console.log("roommatesWithNeighbors : ", roommatesWithNeighbors);
@@ -267,7 +271,10 @@ export default function Landing() {
       neighborsData.length > 0 &&
       roommatesWithNeighbors.length > 0
     ) {
-      console.log("networkinstance.current : ", networkInstance.current);
+      console.log(
+        "networkinstance.current in instance useEffect: ",
+        networkInstance.current
+      );
       const nodes = generateNodes(loginedUser, roommatesData, neighborsData);
       const edges = generateEdges(
         loginedUser,
