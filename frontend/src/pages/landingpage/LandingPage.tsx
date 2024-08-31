@@ -265,12 +265,6 @@ export default function Landing() {
     console.log("roommatesData : ", roommatesData);
     console.log("neighborsData : ", neighborsData);
     console.log("roommatesWithNeighbors : ", roommatesWithNeighbors);
-    if (
-      loginedUser &&
-      roommatesData.length > 0 &&
-      neighborsData.length > 0 &&
-      roommatesWithNeighbors.length > 0
-    ) {
       console.log(
         "networkinstance.current in instance useEffect: ",
         networkInstance.current
@@ -282,7 +276,6 @@ export default function Landing() {
         roommatesWithNeighbors
       );
       updateNetwork(nodes, edges);
-    }
   }, [loginedUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
   const zoomIn = () => {
