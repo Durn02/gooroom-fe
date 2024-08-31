@@ -245,13 +245,13 @@ export default function Landing() {
       "networkinstance.current in initializing instance: ",
       networkInstance.current
     );
-    // return () => {
-    //   if (networkInstance.current) {
-    //     console.log("network instance destroyed");
-    //     networkInstance.current.destroy();
-    //     networkInstance.current = null;
-    //   }
-    // };
+    return () => {
+      if (networkInstance.current) {
+        console.log("network instance destroyed");
+        networkInstance.current.destroy();
+        networkInstance.current = null;
+      }
+    };
   }, [networkContainer.current]);
 
   useEffect(() => {
