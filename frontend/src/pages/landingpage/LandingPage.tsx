@@ -3,8 +3,8 @@ import { Network } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
-import style from "./LandingPage.module.css";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
+import style from "./LandingPage.module.css";
 
 interface User {
   my_memo: string;

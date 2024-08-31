@@ -233,9 +233,7 @@ async def dummy_create(
         """
 
         result = session.run(create_query)
-        print("result : ", result)
         record = result.single()
-        print("record: ", record)
 
         token = create_access_token(user_node_id)
         response.set_cookie(key=access_token, value=f"{token}", httponly=True)
@@ -355,7 +353,7 @@ async def pw_reset(
             random.choices(string.ascii_letters + string.digits, k=10)
         )
         hashed_password = hash_password(random_password)
-        print(hashed_password, random_password)
+        # print(hashed_password, random_password)
         query = f"""
         MATCH (p:PrivateData {{email: '{pw_reset_request.email}'}})
         WHERE NOT p.grant = 'not-verified' 
