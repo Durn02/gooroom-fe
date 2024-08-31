@@ -2,12 +2,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from domain.api import router as domain_api_router
+from domain.service.content.content import delete_old_stickers, delete_old_casts
 from utils import Logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from domain.service.content.content import delete_old_stickers, delete_old_casts
 
 scheduler = AsyncIOScheduler()
 logger = Logger("main.py")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

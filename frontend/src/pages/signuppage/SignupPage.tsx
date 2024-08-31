@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
@@ -31,7 +31,6 @@ export default function Signup() {
   const [usernameInput, setUsernameInput] = useState<string>("");
   const [userVerificationCodeInput, setUserVerificationCodeInput] =
     useState<string>("");
-
   const [showVerifyIntputBox, setShowVerifyInputBox] = useState<boolean>(false);
 
   const onSignupClickHandler = async () => {
@@ -132,6 +131,36 @@ export default function Signup() {
       }
     }
   };
+
+  // 로그인이 되어있는지 확인하는 useEffect
+  // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
+  useEffect(() => {
+    const checkLogin = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8000/domain/auth/verify-access-token",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include", // 쿠키를 포함시키기 위해 필요
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "access token validation check successfull") {
+            alert("이미 로그인 되어있습니다.");
+            window.location.href = "/";
+          }
+        }
+      } catch (error) {
+        alert("unknown error occurred");
+      }
+    };
+    checkLogin();
+  }, []);
 
   return (
     <>

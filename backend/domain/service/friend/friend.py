@@ -1,7 +1,6 @@
 # backend/domain/service/friend/friend.py
 from fastapi import HTTPException, APIRouter, Depends, Body, Request
 from utils import verify_access_token, Logger
-import random, string
 from config.connection import get_session
 from .request import (
     SendKnockRequest,
@@ -36,6 +35,7 @@ async def send_knock(
     session=Depends(get_session),
     send_knock_request: SendKnockRequest = Body(...),
 ):
+    logger.info("send_knock")
     token = request.cookies.get(access_token)
     from_user_node_id = verify_access_token(token)["user_node_id"]
     to_user_node_id = send_knock_request.to_user_node_id
@@ -82,6 +82,7 @@ async def list_knock(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("list_knock")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     print("user_node_id : ", user_node_id)
@@ -116,6 +117,7 @@ async def reject_knock(
     session=Depends(get_session),
     reject_knock_request: RejectKnockRequest = Body(...),
 ):
+    logger.info("reject_knock")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -145,6 +147,7 @@ async def accept_knock(
     session=Depends(get_session),
     accept_knock_request: AcceptKnockRequest = Body(...),
 ):
+    logger.info("accept_knock")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -189,6 +192,7 @@ async def create_knock_by_link(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("create_knock_by_link")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -227,6 +231,7 @@ async def accept_knock_by_link(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("accept_knock_by_link")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -273,6 +278,7 @@ async def get_members(
     request: Request,
     session=Depends(get_session),
 ):
+    logger.info("get_members")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     try:
@@ -304,12 +310,14 @@ async def get_members(
     finally:
         session.close()
 
+
 @router.post("/get-member", response_model=GetFriendResponse)
 async def get_member(
     request: Request,
     session=Depends(get_session),
     get_friend_request: GetFriendRequest = Body(...),
 ):
+    logger.info("get_member")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -340,8 +348,14 @@ async def get_member(
         if record["message"] != "welcome my friend":
             raise HTTPException(status_code=404, detail=record["message"])
 
-        return GetFriendResponse.from_data(dict(record["friend"]), dict(record["r"]),record["stickers"],record["posts"],record["casts"])
-    
+        return GetFriendResponse.from_data(
+            dict(record["friend"]),
+            dict(record["r"]),
+            record["stickers"],
+            record["posts"],
+            record["casts"],
+        )
+
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -356,6 +370,7 @@ async def delete_member(
     session=Depends(get_session),
     delete_friend_request: DeleteFriendRequest = Body(...),
 ):
+    logger.info("delete_member")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
     print(user_node_id)
@@ -395,6 +410,7 @@ async def get_memo(
     session=Depends(get_session),
     get_memo_request: GetMemoRequest = Body(...),
 ):
+    logger.info("get_memo")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
@@ -429,6 +445,7 @@ async def modify_memo(
     session=Depends(get_session),
     modify_memo_request: ModifyMemoRequest = Body(...),
 ):
+    logger.info("modify_memo")
     token = request.cookies.get(access_token)
     user_node_id = verify_access_token(token)["user_node_id"]
 
