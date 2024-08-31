@@ -60,7 +60,6 @@ export default function Landing() {
           // 서버가 보낸 메시지에 따라 조건 수정
           // window.location.href = "/main";
           setShowLoginedPage(true);
-          await fetchFriends();
         }
       } else {
         console.log("verify access token not ok");
@@ -228,9 +227,6 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    console.log("network container initalizer called");
-    console.log("networkContainer : ", networkContainer.current);
-    console.log("networkInstance : ", networkInstance.current);
     if (networkContainer.current && !networkInstance.current) {
       networkInstance.current = new Network(
         networkContainer.current,
@@ -256,7 +252,11 @@ export default function Landing() {
     //     networkInstance.current = null;
     //   }
     // };
-  }, [networkContainer]);
+  }, [networkContainer.current]);
+
+  useEffect(() => {
+    fetchFriends();
+  }, [networkInstance.current]);
 
   useEffect(() => {
     console.log(
