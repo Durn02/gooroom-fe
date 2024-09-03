@@ -38,7 +38,7 @@ const CastPostStickerDropdownButton: React.FC<
           A
         </button>
         <button className={styles.dropdownItem} onClick={handleButtonClick}>
-          B
+          Bs
         </button>
         <button className={styles.dropdownItem} onClick={handleButtonClick}>
           C
