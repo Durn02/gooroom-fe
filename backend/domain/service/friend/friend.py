@@ -404,7 +404,7 @@ async def delete_member(
         session.close()
 
 
-@router.post("/memo/get-content", response_model=GetMemoResponse)
+@router.get("/memo/get-content", response_model=GetMemoResponse)
 async def get_memo(
     request: Request,
     session=Depends(get_session),

@@ -176,15 +176,12 @@ async def signup(
         CREATE (new_p)-[:is_info]->(u)
         RETURN p,new_p,u
         """
-
         result = session.run(query)
         record = result.single()
 
         if record == None:
             raise HTTPException(status_code=400, detail="already registered email")
 
-        token = create_access_token(user_node_id)
-        response.set_cookie(key=access_token, value=f"{token}", httponly=True)
         return SignUpResponse()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

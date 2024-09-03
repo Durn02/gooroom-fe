@@ -2,4 +2,4 @@ from pydantic import BaseModel
 
 
 class SignUpResponse(BaseModel):
-    message: str = "user registered successfully. verify your email"
+    message: str = "user registered successfully"

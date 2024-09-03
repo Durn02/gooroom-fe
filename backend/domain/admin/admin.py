@@ -7,6 +7,7 @@ from utils import (
 )
 from .response import DeleteUserResponse
 from .request import DeleteUserRequest
+from config.connection import get_session
 
 logger = Logger(__file__)
 
@@ -19,45 +20,49 @@ access_token = "access_token"
 async def delete_user(
     response: Response,
     request: Request,
-    client=Depends(create_gremlin_client),
+    session=Depends(get_session),
     delete_user_request: DeleteUserRequest = Body(...),
 ):
     logger.info("admin delete user")
+
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Access token is missing")
+
+    admin_node_id = verify_access_token(token)["user_node_id"]
+
     try:
-        token = request.cookies.get(access_token)
-        print("token :", token)
-        if not access_token:
-            raise HTTPException(status_code=401, detail="Access token missing")
-
-        token_payload = verify_access_token(token)
-        user_node_id = token_payload.get("user_node_id")
-
-        if not user_node_id:
-            raise HTTPException(status_code=400, detail="Invalid input")
-
-        deleted_user_node_id = delete_user_request.deletedUserNodeId
-        delete_user_query = f"""
-        g.V('{user_node_id}').has('grant', 'admin').fold().coalesce(
-            unfold().V('{deleted_user_node_id}').has('grant', 'member').fold().coalesce(
-                unfold().as('p').inE('is_info').outV().as('u')
-                .sideEffect(select('u').drop())
-                .sideEffect(select('p').drop())
-                .constant('User deleted successfully'),
-                constant('User not found')
-            ),
-            constant('Cannot delete this user')
-        )
+        query = f"""
+        MATCH (u:User {{node_id: '{admin_node_id}'}})<-[:is_info]-(p:PrivateData {{grant: 'admin'}})
+        RETURN p
         """
+        result = session.run(query, admin_node_id=admin_node_id)
+        record = result.single()
 
-        future_result_set = client.submitAsync(delete_user_query).result().all()
-        results = await asyncio.wrap_future(future_result_set)
+        if not record:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. User does not have admin privileges.",
+            )
 
-        if not results:
-            raise HTTPException(status_code=404, detail="Not verified")
-        if results[0] == "User deleted successfully":
-            response.delete_cookie(key=access_token)
-            return DeleteUserResponse()
-        else:
-            raise HTTPException(status_code=500, detail="{results[0]}")
+        delete_query = f"""
+        MATCH (u:User {{node_id: '{delete_user_request.node_id}'}})
+        OPTIONAL MATCH (u)<-[r:is_info]-(p:PrivateData)
+        DETACH DELETE u, p
+        RETURN COUNT(u) AS deleted_count
+        """
+        delete_result = session.run(delete_query)
+        delete_record = delete_result.single()
+
+        if delete_record["deleted_count"] == 0:
+            raise HTTPException(
+                status_code=400, detail="User not found or failed to delete"
+            )
+
+        return DeleteUserResponse()
+
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
