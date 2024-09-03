@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CSSTransition } from "react-transition-group";
-import "./ProfileModal.css";
+//import "./ProfileModal.css";
+import style from "./ProfileModal.module.css";
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,10 +13,9 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     my_memo: "",
     nickname: "",
     username: "",
-    concern: [],
-    node_id: "",
+    concern: [] as string[], // concern을 배열로 초기화
   });
-  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [newConcern, setNewConcern] = useState<string>(""); // 새로운 concern 입력값
 
   useEffect(() => {
     if (isOpen) {
@@ -32,12 +32,15 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         },
         credentials: "include",
       });
-      const data = await response.json();
-      setProfileData(data);
-      setResponseMessage("Failed to load profile data.");
-    
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(data);
+      } else {
+        console.error("에러가 발생했습니다.");
+      }
     } catch (error) {
-      setResponseMessage("An error occurred while fetching profile data.");
+      console.error("An error occurred while fetching profile data.", error);
     }
   };
 
@@ -49,31 +52,51 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  const handleNewConcernChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setNewConcern(event.target.value);
+  };
+
+  const handleNewConcernKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && newConcern.trim() !== "") {
+      addConcern();
+    }
+  };
+
+  const addConcern = () => {
+    setProfileData((prevData) => ({
+      ...prevData,
+      concern: [...prevData.concern, newConcern.trim()],
+    }));
+    setNewConcern(""); // 입력 필드를 초기화
+  };
+
+  const removeConcern = (index: number) => {
+    setProfileData((prevData) => ({
+      ...prevData,
+      concern: prevData.concern.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/user/info/change`, {
+      const response = await fetch(`http://localhost:8000/domain/user/my/info/change`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          my_memo: profileData.my_memo,
-          nickname: profileData.nickname,
-          username: profileData.username,
-          concern: profileData.concern,
-        }),
+        body: JSON.stringify(profileData),
         credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
-        setResponseMessage(`Profile updated: ${data.my_memo}`);
+        console.log(`Profile updated: ${data.my_memo}`);
         fetchProfileData(); // 저장 후 최신 프로필 데이터 다시 가져오기
       } else {
-        setResponseMessage("Failed to update profile.");
+        console.error("Failed to update profile.");
       }
     } catch (error) {
-      setResponseMessage("An error occurred while saving profile.");
+      console.error("An error occurred while saving profile.", error);
     }
   };
 
@@ -87,7 +110,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     <CSSTransition
       in={isOpen}
       timeout={300}
-      classNames="modal"
+      className={style.slideFade}
       mountOnEnter
       unmountOnExit
     >
@@ -127,16 +150,25 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           <label>Concerns:</label>
           <input
             type="text"
-            name="concern"
-            value={profileData.concern.join(", ")} // 배열을 문자열로 표시
-            onChange={handleChange}
+            value={newConcern}
+            onChange={handleNewConcernChange}
+            onKeyPress={handleNewConcernKeyPress}
             className="modal-input"
-            placeholder="Edit your concerns..."
+            placeholder="Enter a new concern..."
           />
+          <button onClick={addConcern} className="modal-add-button">
+            Add
+          </button>
+          <ul className="concern-list">
+            {profileData.concern.map((item, index) => (
+              <li key={index} className="concern-item">
+                {item} <button onClick={() => removeConcern(index)}>X</button>
+              </li>
+            ))}
+          </ul>
           <button onClick={handleSave} className="modal-save-button">
             Save
           </button>
-          {responseMessage && <p className="modal-response">{responseMessage}</p>}
         </div>
       </div>
     </CSSTransition>
