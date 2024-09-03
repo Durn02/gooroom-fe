@@ -32,13 +32,9 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         },
         credentials: "include",
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfileData(data);
-      } else {
-        console.error("에러가 발생했습니다.");
-      }
+      const data = await response.json();
+      setProfileData(data);
+    
     } catch (error) {
       console.error("An error occurred while fetching profile data.", error);
     }
@@ -79,12 +75,17 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/user/my/info/change`, {
+      const response = await fetch(`http://localhost:8000/domain/user/info/change`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(profileData),
+        body: JSON.stringify({
+          my_memo: profileData.my_memo,
+          nickname: profileData.nickname,
+          username: profileData.username,
+          concern: profileData.concern,
+        }),
         credentials: "include",
       });
 
