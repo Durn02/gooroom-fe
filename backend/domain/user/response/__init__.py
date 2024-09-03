@@ -1,0 +1,1 @@
+from .my_info_change_response import MyInfoChangeResponse
