@@ -33,6 +33,7 @@ export default function Landing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const nodeRadius = 13;
 
   const openModal = (user: User) => {
     setSelectedUser(user);
@@ -159,21 +160,23 @@ export default function Landing() {
 
     const userNode: Node = {
       id: loggedInUser.node_id,
-      label: loggedInUser.nickname,
+      // label: loggedInUser.nickname,
       group: "loggedInUser",
-      size: 18,
+      size: nodeRadius,
     };
 
     const roommateNodes = roommates.map((roommate) => ({
       id: roommate.node_id,
-      label: roommate.nickname,
+      // label: roommate.nickname,
       group: "roommate",
+      size: nodeRadius,
     }));
 
     const neighborNodes = neighbors.map((neighbor) => ({
       id: neighbor.node_id,
-      label: neighbor.nickname,
+      // label: neighbor.nickname,
       group: "neighbor",
+      size: nodeRadius,
     }));
 
     return [userNode, ...roommateNodes, ...neighborNodes];
@@ -342,42 +345,33 @@ export default function Landing() {
     }
   };
 
-  const startCastAnimation = (fromCanvas: Position, toCanvas: Position[]) => {
-    if (!networkContainer.current || !networkInstance.current) return;
-
-    const movingElement = document.createElement("span");
-    movingElement.classList.add(style.blinkingElement);
-    networkContainer.current.appendChild(movingElement);
-    const fromDOM = networkInstance.current.canvasToDOM(fromCanvas);
-
-    if (fromDOM) {
-      movingElement.style.left = `${fromDOM.x}px`;
-      movingElement.style.top = `${fromDOM.y}px`;
+  const disableGraphInteraction = () => {
+    if (networkInstance.current) {
+      networkInstance.current.setOptions({
+        interaction: {
+          dragNodes: false, // 노드 드래그 비활성화
+          dragView: false, // 뷰 드래그 비활성화
+          zoomView: false, // 줌 비활성화
+          selectable: false, // 노드 선택 비활성화
+        },
+      });
     }
-    toCanvas.forEach((pos, index) => {
-      const toDOM = networkInstance.current?.canvasToDOM(pos);
-      if (toDOM && fromDOM) {
-        gsap.fromTo(
-          movingElement,
-          { x: 0, y: 0 },
-          {
-            x: toDOM.x - fromDOM.x,
-            y: toDOM.y - fromDOM.y,
-            duration: 1,
-            ease: "power1.inOut",
-            delay: index * 1,
-            onComplete: () => {
-              if (index === toCanvas.length - 1) {
-                networkContainer.current?.removeChild(movingElement);
-              }
-            },
-          }
-        );
-      }
-    });
   };
 
-  const cast = (cast_message: string) => {
+  const enableGraphInteraction = () => {
+    if (networkInstance.current) {
+      networkInstance.current.setOptions({
+        interaction: {
+          dragNodes: true,
+          dragView: true,
+          zoomView: true,
+          selectable: true,
+        },
+      });
+    }
+  };
+
+  const hardenGraph = () => {
     if (networkInstance.current) {
       networkInstance.current.setOptions({
         edges: {
@@ -388,14 +382,69 @@ export default function Landing() {
           },
         },
       });
-      console.log(cast_message);
     }
+  };
+
+  const softenGraph = () => {
+    if (networkInstance.current) {
+      networkInstance.current.setOptions({
+        edges: {
+          smooth: {
+            enabled: true,
+            type: "dynamic",
+            roundness: 0.5,
+          },
+        },
+      });
+    }
+  };
+
+  const startCastAnimation = (fromCanvas: Position, toCanvas: Position[]) => {
+    if (!networkContainer.current || !networkInstance.current) return;
+
+    const fromDOM = networkInstance.current.canvasToDOM(fromCanvas);
+    toCanvas.forEach((pos, index) => {
+      const toDOM = networkInstance.current?.canvasToDOM(pos);
+      if (toDOM && fromDOM) {
+        const element = document.createElement("span");
+        element.classList.add(style.blinkingElement);
+        networkContainer.current?.appendChild(element);
+
+        element.style.left = `${fromDOM.x - 5}px`;
+        element.style.top = `${fromDOM.y - 5}px`;
+
+        gsap.fromTo(
+          element,
+          { x: 0, y: 0 },
+          {
+            x: toDOM.x - fromDOM.x,
+            y: toDOM.y - fromDOM.y,
+            duration: 2,
+            ease: "power1.inOut",
+            onComplete: () => {
+              networkContainer.current?.removeChild(element);
+              if (index === toCanvas.length - 1) {
+                enableGraphInteraction();
+                softenGraph();
+              }
+            },
+          }
+        );
+      }
+    });
+  };
+
+  const cast = (cast_message: string) => {
+    disableGraphInteraction();
+    console.log(cast_message);
+    hardenGraph();
 
     networkInstance.current?.once("stabilized", () => {
       console.log("finished stablized");
       const loggedInUserPosition = networkInstance.current?.getPositions(
         loggedInUser?.node_id as IdType
       );
+
       const roommates = networkInstance.current?.getConnectedNodes(
         loggedInUser?.node_id as IdType,
         "to"
