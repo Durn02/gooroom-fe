@@ -6,6 +6,8 @@ import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 import style from "./LandingPage.module.css";
 import gsap from "gsap";
+import FriendModal from "./FriendModal";
+import ProfileModal from "./ProfileModal";
 
 interface User {
   my_memo: string;
@@ -28,6 +30,27 @@ export default function Landing() {
   const [roommatesWithNeighbors, setRoommatesWithNeighbors] = useState<
     RoommateWithNeighbors[]
   >([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const openModal = (user: User) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const openProfileModal = () => {
+    setIsProfileModalOpen(true);
+  };
+
+  const closeProfileModal = () => {
+    setIsProfileModalOpen(false);
+  };
 
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
@@ -223,14 +246,23 @@ export default function Landing() {
         { nodes: [], edges: [] },
         visnet_options
       );
-      networkInstance.current.on(
-        "doubleClick",
-        (event: { nodes: number[] }) => {
-          const { nodes: clickedNodes } = event;
-          console.log;
-          alert(`id ${clickedNodes} node is clicked.`);
+      networkInstance.current.on("doubleClick", (event: { nodes: string[] }) => {
+        const { nodes: clickedNodes } = event;
+        if (clickedNodes.length > 0) {
+          const clickedNodeId = clickedNodes[0];
+          if (clickedNodeId === loggedInUser?.node_id) {
+            openProfileModal();
+            console.log(clickedNodeId);
+          } else {
+            const clickedUser =
+              roommatesData.find((user) => user.node_id === clickedNodeId) ||
+              neighborsData.find((user) => user.node_id === clickedNodeId);
+            if (clickedUser) {
+              openModal(clickedUser);
+            }
+          }
         }
-      );
+      });
     }
     console.log(
       "networkinstance.current in initializing instance: ",
@@ -437,6 +469,18 @@ export default function Landing() {
           </div>
         </>
       )}
+
+      {/* 모달 컴포넌트 */}
+      <FriendModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        userNodeId={selectedUser ? selectedUser.node_id : null}
+      />
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={closeProfileModal}
+      />
     </>
   );
 }
