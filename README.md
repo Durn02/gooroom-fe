@@ -15,3 +15,18 @@
 | Design  | CSS 수정 또는 ui 변경               | Design: 버튼 색깔 변경                  |
 | Comment | 주석 추가 또는 변경                 | Comment: get_message api 설명 주석 작성 |
 | Remove  | 파일 제거                           | Remove: alert_button.tsx 제거           |
+
+# gooroom
+
+- GooRoom의 front repository 입니다.
+
+## clone 또는 pull 이후 패키지 설치
+
+- `yarn install`
+- `npm init -y`
+- `npm install`
+
+## 실행 방법
+
+- `cd ./frontend`
+- `yarn start`
