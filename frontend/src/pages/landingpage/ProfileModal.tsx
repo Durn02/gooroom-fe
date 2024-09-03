@@ -25,17 +25,19 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const fetchProfileData = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/user/my/info`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8000/domain/user/my/info`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
       const data = await response.json();
       setProfileData(data);
       setResponseMessage("Failed to load profile data.");
-    
     } catch (error) {
       setResponseMessage("An error occurred while fetching profile data.");
     }
@@ -51,19 +53,22 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/user/info/change`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          my_memo: profileData.my_memo,
-          nickname: profileData.nickname,
-          username: profileData.username,
-          concern: profileData.concern,
-        }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8000/domain/user/info/change`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            my_memo: profileData.my_memo,
+            nickname: profileData.nickname,
+            username: profileData.username,
+            concern: profileData.concern,
+          }),
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -136,7 +141,9 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           <button onClick={handleSave} className="modal-save-button">
             Save
           </button>
-          {responseMessage && <p className="modal-response">{responseMessage}</p>}
+          {responseMessage && (
+            <p className="modal-response">{responseMessage}</p>
+          )}
         </div>
       </div>
     </CSSTransition>

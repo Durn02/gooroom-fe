@@ -4,7 +4,7 @@ import "./FriendModal.css";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userNodeId: string | null;  // 사용자의 노드 ID
+  userNodeId: string | null; // 사용자의 노드 ID
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
@@ -19,20 +19,23 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const fetchMemo = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/friend/memo/get-content`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_node_id: userNodeId }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8000/domain/friend/memo/get-content`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user_node_id: userNodeId }),
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setMemo(data.memo); 
+        setMemo(data.memo);
       } else {
-        console.error("에러가 발생했습니다.")
+        console.error("에러가 발생했습니다.");
         setResponseMessage("Failed to load memo.");
       }
     } catch (error) {
@@ -46,14 +49,17 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/domain/friend/memo/modify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8000/domain/friend/memo/modify`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();

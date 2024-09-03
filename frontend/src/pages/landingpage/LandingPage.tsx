@@ -246,23 +246,26 @@ export default function Landing() {
         { nodes: [], edges: [] },
         visnet_options
       );
-      networkInstance.current.on("doubleClick", (event: { nodes: string[] }) => {
-        const { nodes: clickedNodes } = event;
-        if (clickedNodes.length > 0) {
-          const clickedNodeId = clickedNodes[0];
-          if (clickedNodeId === loggedInUser?.node_id) {
-            openProfileModal();
-            console.log(clickedNodeId);
-          } else {
-            const clickedUser =
-              roommatesData.find((user) => user.node_id === clickedNodeId) ||
-              neighborsData.find((user) => user.node_id === clickedNodeId);
-            if (clickedUser) {
-              openModal(clickedUser);
+      networkInstance.current.on(
+        "doubleClick",
+        (event: { nodes: string[] }) => {
+          const { nodes: clickedNodes } = event;
+          if (clickedNodes.length > 0) {
+            const clickedNodeId = clickedNodes[0];
+            if (clickedNodeId === loggedInUser?.node_id) {
+              openProfileModal();
+              console.log(clickedNodeId);
+            } else {
+              const clickedUser =
+                roommatesData.find((user) => user.node_id === clickedNodeId) ||
+                neighborsData.find((user) => user.node_id === clickedNodeId);
+              if (clickedUser) {
+                openModal(clickedUser);
+              }
             }
           }
         }
-      });
+      );
     }
     console.log(
       "networkinstance.current in initializing instance: ",
@@ -477,10 +480,7 @@ export default function Landing() {
         userNodeId={selectedUser ? selectedUser.node_id : null}
       />
 
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={closeProfileModal}
-      />
+      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
     </>
   );
 }
