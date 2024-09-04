@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+// import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import { Network, Node, Edge, IdType, Position } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
@@ -8,6 +9,7 @@ import style from "./LandingPage.module.css";
 import gsap from "gsap";
 import FriendModal from "./FriendModal";
 import ProfileModal from "./ProfileModal";
+import { IsLoginContext } from "../../shared/IsLoginContext";
 
 interface User {
   my_memo: string;
@@ -23,7 +25,8 @@ interface RoommateWithNeighbors {
 }
 
 export default function Landing() {
-  const [isLoggedIn, setShowLoginedPage] = useState<boolean>(false);
+  // const [isLoggedIn, setShowLoginedPage] = useState<boolean>(false);
+  const isLoggedIn = useContext(IsLoginContext);
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [roommatesData, setRoommates] = useState<User[]>([]);
   const [neighborsData, setNeighbors] = useState<User[]>([]);
@@ -76,7 +79,6 @@ export default function Landing() {
         if (data.message === "access token validation check successfull") {
           // 서버가 보낸 메시지에 따라 조건 수정
           // window.location.href = "/main";
-          setShowLoginedPage(true);
         }
       } else {
         const refresh_response = await fetch(
@@ -337,8 +339,9 @@ export default function Landing() {
         const data = await response.json();
         if (data.message === "logout success") {
           // 서버가 보낸 메시지에 따라 조건 수정
-          sessionStorage.removeItem("userId");
           alert("로그아웃합니다.");
+          sessionStorage.removeItem("userId");
+          console.log("isLoggedIn : ", isLoggedIn);
           window.location.href = "/";
         }
       }
@@ -477,7 +480,7 @@ export default function Landing() {
 
   return (
     <>
-      {!isLoggedIn && (
+      {!isLoggedIn.isLogin && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -493,7 +496,7 @@ export default function Landing() {
         </>
       )}
 
-      {isLoggedIn && (
+      {isLoggedIn.isLogin && (
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>

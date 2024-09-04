@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import style from "./SigninPage.module.css";
 import Input from "../../components/Input/DefaultInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import { useState, useEffect } from "react";
+import { IsLoginContext } from "../../shared/IsLoginContext";
 
 type signinRequestData = {
   email: string;
@@ -116,31 +117,38 @@ export default function Signin() {
   const [userEmailInput, setUserEmailInput] = useState("");
   const [userPwInput, setUserPwInput] = useState("");
   const [userVerifyInput, setUserVerifyCodeInput] = useState("");
+  const isLogin = useContext(IsLoginContext);
   // 로그인이 되어있는지 확인하는 useEffect
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:8000/domain/auth/verify-access-token",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include", // 쿠키를 포함시키기 위해 필요
-          }
-        );
+      console.log("isLgoin의 값은?? ", isLogin.isLogin);
+      if (isLogin.isLogin) {
+        alert("이미 로그인 되어있습니다.");
+        window.location.replace("/");
+      } else {
+        try {
+          const response = await fetch(
+            "http://localhost:8000/domain/auth/verify-access-token",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include", // 쿠키를 포함시키기 위해 필요
+            }
+          );
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.message === "access token validation check successfull") {
-            alert("이미 로그인 되어있습니다.");
-            window.location.replace("/");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.message === "access token validation check successfull") {
+              alert("이미 로그인 되어있습니다.");
+              window.location.replace("/");
+            }
           }
+        } catch (error) {
+          alert("unknown error occurred");
         }
-      } catch (error) {
-        alert("unknown error occurred");
       }
     };
 
