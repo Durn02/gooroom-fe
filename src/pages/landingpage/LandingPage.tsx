@@ -33,6 +33,11 @@ export default function Landing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const isCasting = useRef<boolean>(false);
+  const networkContainer = useRef<HTMLDivElement | null>(null);
+  const networkInstance = useRef<Network | null>(null);
+
   const nodeRadius = 13;
 
   const openModal = (user: User) => {
@@ -52,9 +57,6 @@ export default function Landing() {
   const closeProfileModal = () => {
     setIsProfileModalOpen(false);
   };
-
-  const networkContainer = useRef<HTMLDivElement | null>(null);
-  const networkInstance = useRef<Network | null>(null);
 
   const verifyAccessToken = async () => {
     try {
@@ -160,21 +162,21 @@ export default function Landing() {
 
     const userNode: Node = {
       id: loggedInUser.node_id,
-      // label: loggedInUser.nickname,
+      label: loggedInUser.nickname,
       group: "loggedInUser",
       size: nodeRadius,
     };
 
     const roommateNodes = roommates.map((roommate) => ({
       id: roommate.node_id,
-      // label: roommate.nickname,
+      label: roommate.nickname,
       group: "roommate",
       size: nodeRadius,
     }));
 
     const neighborNodes = neighbors.map((neighbor) => ({
       id: neighbor.node_id,
-      // label: neighbor.nickname,
+      label: neighbor.nickname,
       group: "neighbor",
       size: nodeRadius,
     }));
@@ -302,7 +304,7 @@ export default function Landing() {
   }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
   const zoomIn = () => {
-    if (networkInstance.current) {
+    if (networkInstance.current && !isCasting.current) {
       const scale = networkInstance.current.getScale();
       networkInstance.current.moveTo({
         scale: scale * 1.2, // 1.2배 확대
@@ -310,7 +312,7 @@ export default function Landing() {
     }
   };
   const zoomOut = () => {
-    if (networkInstance.current) {
+    if (networkInstance.current && !isCasting.current) {
       const scale = networkInstance.current.getScale();
       networkInstance.current.moveTo({
         scale: scale * 0.8, // 0.8배 축소
@@ -426,6 +428,7 @@ export default function Landing() {
               if (index === toCanvas.length - 1) {
                 enableGraphInteraction();
                 softenGraph();
+                isCasting.current = false;
               }
             },
           }
@@ -435,9 +438,10 @@ export default function Landing() {
   };
 
   const cast = (cast_message: string) => {
+    isCasting.current = true;
     disableGraphInteraction();
-    console.log(cast_message);
     hardenGraph();
+    console.log("cast_message : ", cast_message);
 
     networkInstance.current?.once("stabilized", () => {
       console.log("finished stablized");
