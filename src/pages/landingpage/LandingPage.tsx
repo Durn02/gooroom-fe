@@ -1,4 +1,3 @@
-// import React, { useEffect, useState, useRef } from "react";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Network, Node, Edge, IdType, Position } from "vis-network";
 import { Link } from "react-router-dom";
@@ -25,7 +24,6 @@ interface RoommateWithNeighbors {
 }
 
 export default function Landing() {
-  // const [isLoggedIn, setShowLoginedPage] = useState<boolean>(false);
   const isLoggedIn = useContext(IsLoginContext);
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [roommatesData, setRoommates] = useState<User[]>([]);
@@ -33,6 +31,8 @@ export default function Landing() {
   const [roommatesWithNeighbors, setRoommatesWithNeighbors] = useState<
     RoommateWithNeighbors[]
   >([]);
+  const [Nodes, setNodes] = useState<Node[]>([]);
+  const [Edges, setEdges] = useState<Edge[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -78,7 +78,7 @@ export default function Landing() {
         const data = await response.json();
         if (data.message === "access token validation check successfull") {
           // 서버가 보낸 메시지에 따라 조건 수정
-          // window.location.href = "/main";
+          await fetchFriends();
         }
       } else {
         const refresh_response = await fetch(
@@ -92,7 +92,7 @@ export default function Landing() {
           }
         );
         if (refresh_response.ok) {
-          // window.location.href = "/main";
+          await fetchFriends();
         }
       }
     } catch (error) {
@@ -227,16 +227,6 @@ export default function Landing() {
     return edges;
   };
 
-  const updateNetwork = (nodes: Node[], edges: Edge[]) => {
-    console.log("updating networkInstance.current : ", networkInstance.current);
-    console.log("with nodes : ", nodes);
-    console.log("with nodes : ", edges);
-    if (networkInstance.current) {
-      const data = { nodes, edges };
-      networkInstance.current.setData(data);
-    }
-  };
-
   useEffect(() => {
     verifyAccessToken();
   }, []);
@@ -247,32 +237,41 @@ export default function Landing() {
       networkContainer.current
     );
     console.log("and now networkInstanc.current : ", networkInstance.current);
-    if (networkContainer.current && !networkInstance.current) {
-      networkInstance.current = new Network(
-        networkContainer.current,
-        { nodes: [], edges: [] },
-        visnet_options
-      );
-      networkInstance.current.on(
-        "doubleClick",
-        (event: { nodes: string[] }) => {
-          const { nodes: clickedNodes } = event;
-          if (clickedNodes.length > 0) {
-            const clickedNodeId = clickedNodes[0];
-            if (clickedNodeId === loggedInUser?.node_id) {
-              openProfileModal();
-              console.log(clickedNodeId);
-            } else {
-              const clickedUser =
-                roommatesData.find((user) => user.node_id === clickedNodeId) ||
-                neighborsData.find((user) => user.node_id === clickedNodeId);
-              if (clickedUser) {
-                openModal(clickedUser);
+    if (networkContainer.current) {
+      if (!networkInstance.current) {
+        console.log("Nodes : ", Nodes);
+        console.log("Edges : ", Edges);
+        networkInstance.current = new Network(
+          networkContainer.current,
+          { nodes: Nodes, edges: Edges },
+          visnet_options
+        );
+        networkInstance.current.on(
+          "doubleClick",
+          (event: { nodes: string[] }) => {
+            const { nodes: clickedNodes } = event;
+            if (clickedNodes.length > 0) {
+              const clickedNodeId = clickedNodes[0];
+              if (clickedNodeId === loggedInUser?.node_id) {
+                openProfileModal();
+                console.log(clickedNodeId);
+              } else {
+                const clickedUser =
+                  roommatesData.find(
+                    (user) => user.node_id === clickedNodeId
+                  ) ||
+                  neighborsData.find((user) => user.node_id === clickedNodeId);
+                if (clickedUser) {
+                  openModal(clickedUser);
+                }
               }
             }
           }
-        }
-      );
+        );
+      } else {
+        const data = { nodes: Nodes, edges: Edges };
+        networkInstance.current.setData(data);
+      }
     }
     console.log(
       "networkinstance.current in initializing instance: ",
@@ -285,15 +284,7 @@ export default function Landing() {
         networkInstance.current = null;
       }
     };
-  }, [networkContainer.current]);
-
-  useEffect(() => {
-    console.log(
-      "networkInstanc.current has changed as : ",
-      networkInstance.current
-    );
-    fetchFriends();
-  }, [networkInstance.current]);
+  }, [networkContainer.current, Nodes, Edges]);
 
   useEffect(() => {
     const nodes = generateNodes(loggedInUser, roommatesData, neighborsData);
@@ -302,7 +293,8 @@ export default function Landing() {
       roommatesData,
       roommatesWithNeighbors
     );
-    updateNetwork(nodes, edges);
+    setNodes(nodes);
+    setEdges(edges);
   }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
   const zoomIn = () => {
@@ -322,7 +314,7 @@ export default function Landing() {
     }
   };
   const resetPosition = () => {
-    if (networkInstance.current) {
+    if (networkInstance.current && !isCasting.current) {
       networkInstance.current.fit(); // 초기 위치로 리셋
     }
   };
