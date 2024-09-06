@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Network, Node, Edge, IdType, Position } from "vis-network";
+import { Network, Node, Edge, IdType } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
@@ -346,13 +346,14 @@ export default function Landing() {
     if (networkInstance.current) {
       networkInstance.current.setOptions({
         interaction: {
-          dragNodes: false, // 노드 드래그 비활성화
-          dragView: false, // 뷰 드래그 비활성화
-          zoomView: false, // 줌 비활성화
-          selectable: false, // 노드 선택 비활성화
+          dragNodes: false,
+          dragView: false,
+          zoomView: false,
+          selectable: false,
         },
       });
     }
+    isCasting.current = true;
   };
 
   const enableGraphInteraction = () => {
@@ -365,6 +366,7 @@ export default function Landing() {
           selectable: true,
         },
       });
+      isCasting.current = false;
     }
   };
 
@@ -396,40 +398,122 @@ export default function Landing() {
     }
   };
 
-  const startCastAnimation = (fromCanvas: Position, toCanvas: Position[]) => {
-    if (!networkContainer.current || !networkInstance.current) return;
+  const getPosition = (node_id: IdType) => {
+    if (!networkInstance.current) {
+      console.error("error in getPosition. there's no networkInstance.current");
+      return;
+    }
 
-    const fromDOM = networkInstance.current.canvasToDOM(fromCanvas);
-    toCanvas.forEach((pos, index) => {
-      const toDOM = networkInstance.current?.canvasToDOM(pos);
-      if (toDOM && fromDOM) {
-        const element = document.createElement("span");
-        element.classList.add(style.blinkingElement);
-        networkContainer.current?.appendChild(element);
+    const canvasPosition = networkInstance.current.getPosition(
+      node_id as IdType
+    );
+    const domPosition = networkInstance.current.canvasToDOM(canvasPosition);
+    return domPosition;
+  };
 
-        element.style.left = `${fromDOM.x - 5}px`;
-        element.style.top = `${fromDOM.y - 5}px`;
+  const castAnimation = () => {
+    if (!networkInstance.current) {
+      console.error("error in getPosition. there's no networkInstance.current");
+      return;
+    }
 
-        gsap.fromTo(
-          element,
-          { x: 0, y: 0 },
-          {
-            x: toDOM.x - fromDOM.x,
-            y: toDOM.y - fromDOM.y,
-            duration: 2,
-            ease: "power1.inOut",
-            onComplete: () => {
-              networkContainer.current?.removeChild(element);
-              if (index === toCanvas.length - 1) {
-                enableGraphInteraction();
-                softenGraph();
-                isCasting.current = false;
-              }
-            },
-          }
-        );
-      }
+    const loggedInUserPosition = getPosition(loggedInUser?.node_id as IdType);
+    if (!loggedInUserPosition) {
+      console.error("error in castAnimation. there's no loggedInUserPosition");
+      return;
+    }
+
+    const roommatesPositions = roommatesData
+      .map((roommate) => {
+        const position = getPosition(roommate.node_id);
+        return position || null;
+      })
+      .filter((position) => position !== null);
+
+    const roommatesByNeighborsPositions = neighborsData.map((neighbor) => {
+      const connectedRoommates = networkInstance.current?.getConnectedNodes(
+        neighbor.node_id
+      ) as IdType[];
+      const connectedRoommatesPositions = connectedRoommates.map(
+        (connnectedRoommate) => {
+          return getPosition(connnectedRoommate);
+        }
+      );
+      return { [neighbor.node_id]: connectedRoommatesPositions };
     });
+
+    const runFirstAnimation = (onComplete: () => void) => {
+      let animationsCompleted = 0;
+
+      roommatesPositions.forEach((roommatePos) => {
+        if (roommatePos && loggedInUserPosition) {
+          const element = document.createElement("span");
+          element.classList.add(style.blinkingElement);
+          networkContainer.current?.appendChild(element);
+
+          element.style.left = `${loggedInUserPosition.x - 5}px`;
+          element.style.top = `${loggedInUserPosition.y - 5}px`;
+
+          gsap.fromTo(
+            element,
+            { x: 0, y: 0 },
+            {
+              x: roommatePos.x - loggedInUserPosition.x,
+              y: roommatePos.y - loggedInUserPosition.y,
+              duration: 2,
+              ease: "power1.inOut",
+              onComplete: () => {
+                networkContainer.current?.removeChild(element);
+                animationsCompleted += 1;
+                if (animationsCompleted === roommatesPositions.length) {
+                  onComplete();
+                }
+              },
+            }
+          );
+        }
+      });
+    };
+
+    const runSecondAnimation = () => {
+      roommatesByNeighborsPositions.forEach((roommatesByNeighborPos, index) => {
+        const [[neighborId, connectedRoommates]] = Object.entries(
+          roommatesByNeighborPos
+        );
+        const neighborPosition = getPosition(neighborId);
+
+        connectedRoommates.forEach((connectedRoommate) => {
+          if (neighborPosition && connectedRoommate) {
+            const element = document.createElement("span");
+            element.classList.add(style.blinkingElement);
+            networkContainer.current?.appendChild(element);
+
+            element.style.left = `${connectedRoommate.x - 5}px`;
+            element.style.top = `${connectedRoommate.y - 5}px`;
+
+            gsap.fromTo(
+              element,
+              { x: 0, y: 0 },
+              {
+                x: neighborPosition.x - connectedRoommate.x,
+                y: neighborPosition.y - connectedRoommate.y,
+                duration: 2,
+                ease: "power1.inOut",
+                onComplete: () => {
+                  networkContainer.current?.removeChild(element);
+                  if (index === roommatesByNeighborsPositions.length - 1) {
+                    enableGraphInteraction();
+                    softenGraph();
+                  }
+                },
+              }
+            );
+          }
+        });
+      });
+    };
+
+    runFirstAnimation(runSecondAnimation);
   };
 
   const cast = (cast_message: string) => {
@@ -440,33 +524,7 @@ export default function Landing() {
 
     networkInstance.current?.once("stabilized", () => {
       console.log("finished stablized");
-      const loggedInUserPosition = networkInstance.current?.getPositions(
-        loggedInUser?.node_id as IdType
-      );
-
-      const roommates = networkInstance.current?.getConnectedNodes(
-        loggedInUser?.node_id as IdType,
-        "to"
-      ) as IdType[] | undefined;
-
-      if (
-        loggedInUserPosition &&
-        roommates &&
-        roommates.every(
-          (node: IdType) => typeof node === "string" || typeof node === "number"
-        )
-      ) {
-        const roommatesPositions =
-          networkInstance.current?.getPositions(roommates);
-        if (roommatesPositions) {
-          startCastAnimation(
-            Object.values(loggedInUserPosition)[0],
-            Object.values(roommatesPositions)
-          );
-        }
-      } else {
-        console.error("Connected nodes are not in the expected format.");
-      }
+      castAnimation();
     });
   };
 
