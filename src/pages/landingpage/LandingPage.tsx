@@ -9,6 +9,7 @@ import gsap from "gsap";
 import FriendModal from "./FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
+import getAPIURL from "../../utils/getAPIURL";
 
 interface User {
   my_memo: string;
@@ -22,6 +23,8 @@ interface RoommateWithNeighbors {
   roommate: User;
   neighbors: User[];
 }
+
+const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
@@ -64,7 +67,7 @@ export default function Landing() {
   const verifyAccessToken = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/domain/auth/verify-access-token",
+        `${APIURL}/domain/auth/verify-access-token`,
         {
           method: "GET",
           headers: {
@@ -82,7 +85,7 @@ export default function Landing() {
         }
       } else {
         const refresh_response = await fetch(
-          "http://localhost:8000/domain/auth/refresh-acc-token",
+          `${APIURL}/domain/auth/refresh-acc-token`,
           {
             method: "POST",
             headers: {
@@ -102,16 +105,13 @@ export default function Landing() {
   const onSignoutButtonClickHandler = async () => {
     alert("회원탈퇴를 진행합니다.");
     try {
-      const response = await fetch(
-        "http://localhost:8000/domain/auth/signout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/auth/signout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.message === "signout success") {
@@ -127,16 +127,13 @@ export default function Landing() {
   const fetchFriends = async () => {
     console.log("fetchFriends called!");
     try {
-      const response = await fetch(
-        "http://localhost:8000/domain/friend/get-members",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/get-members`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       if (response.ok) {
         let data = await response.json();
         if (data.length > 0) {
@@ -320,7 +317,7 @@ export default function Landing() {
   };
   const onLogoutButtonClickHandler = async () => {
     try {
-      const response = await fetch("http://localhost:8000/domain/auth/logout", {
+      const response = await fetch(`${APIURL}/domain/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

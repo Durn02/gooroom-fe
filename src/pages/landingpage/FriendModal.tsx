@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./FriendModal.css";
+import getAPIURL from "../../utils/getAPIURL";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNodeId: string | null; // 사용자의 노드 ID
 }
+
+const APIURL = getAPIURL();
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const [memo, setMemo] = useState("");
@@ -19,17 +22,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const fetchMemo = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/friend/memo/get-content`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_node_id: userNodeId }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/memo/get-content`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_node_id: userNodeId }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -49,17 +49,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/friend/memo/modify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/memo/modify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { CSSTransition } from "react-transition-group";
 //import "./ProfileModal.css";
 import style from "./ProfileModal.module.css";
+import getAPIURL from "../../utils/getAPIURL";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+const APIURL = getAPIURL();
 
 const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [profileData, setProfileData] = useState({
@@ -25,16 +27,13 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const fetchProfileData = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/user/my/info`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/user/my/info`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       const data = await response.json();
       setProfileData(data);
     } catch (error) {
@@ -81,22 +80,19 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/user/info/change`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            my_memo: profileData.my_memo,
-            nickname: profileData.nickname,
-            username: profileData.username,
-            concern: profileData.concern,
-          }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/user/info/change`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          my_memo: profileData.my_memo,
+          nickname: profileData.nickname,
+          username: profileData.username,
+          concern: profileData.concern,
+        }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
