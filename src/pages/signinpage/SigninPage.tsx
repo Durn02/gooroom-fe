@@ -6,6 +6,7 @@ import Input from "../../components/Input/DefaultInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import { useState, useEffect } from "react";
 import { IsLoginContext } from "../../shared/IsLoginContext";
+import getAPIURL from "../../utils/getAPIURL";
 
 type signinRequestData = {
   email: string;
@@ -18,8 +19,10 @@ type VerifyCodeRequestData = {
 type VerifyRequestData = {
   email: string;
 };
+const APIURL = getAPIURL();
 
 export default function Signin() {
+  console.log(APIURL);
   const [emailVerification, setEmailVerification] = useState(false);
 
   const onSignInButtonClickHandler = () => {
@@ -29,7 +32,7 @@ export default function Signin() {
     };
 
     try {
-      fetch("http://localhost:8000/domain/auth/signin", {
+      fetch(`${APIURL}/domain/auth/signin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,16 +69,13 @@ export default function Signin() {
     };
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/domain/auth/verify-code",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(verifyCodeRequest),
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/auth/verify-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(verifyCodeRequest),
+      });
       if (response.ok) {
         alert("Verify successful");
         window.location.replace("/");
@@ -94,7 +94,7 @@ export default function Signin() {
     };
     try {
       const verifyResponse = await fetch(
-        "http://localhost:8000/domain/auth/send-verification-code",
+        `${APIURL}/domain/auth/send-verification-code`,
         {
           method: "POST",
           headers: {
@@ -122,14 +122,13 @@ export default function Signin() {
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      console.log("isLgoin의 값은?? ", isLogin.isLogin);
       if (isLogin.isLogin) {
         alert("이미 로그인 되어있습니다.");
         window.location.replace("/");
       } else {
         try {
           const response = await fetch(
-            "http://localhost:8000/domain/auth/verify-access-token",
+            `${APIURL}/domain/auth/verify-access-token`,
             {
               method: "GET",
               headers: {

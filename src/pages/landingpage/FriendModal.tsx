@@ -1,11 +1,14 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import "./FriendModal.css";
+import getAPIURL from "../../utils/getAPIURL";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNodeId: string | null; // 사용자의 노드 ID
 }
+
+const APIURL = getAPIURL();
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const [memo, setMemo] = useState("");
