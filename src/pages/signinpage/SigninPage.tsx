@@ -147,7 +147,7 @@ export default function Signin() {
             }
           }
         } catch (error) {
-          alert("unknown error occurred");
+          alert(error);
         }
       }
     };

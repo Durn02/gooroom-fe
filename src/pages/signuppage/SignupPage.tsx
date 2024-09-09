@@ -156,7 +156,7 @@ export default function Signup() {
           }
         }
       } catch (error) {
-        alert("unknown error occurred");
+        alert(error);
       }
     };
     checkLogin();

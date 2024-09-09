@@ -34,7 +34,7 @@ export default function Landing() {
   const [Nodes, setNodes] = useState<Node[]>([]);
   const [Edges, setEdges] = useState<Edge[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const isCasting = useRef<boolean>(false);
@@ -43,18 +43,28 @@ export default function Landing() {
 
   const nodeRadius = 13;
 
-  const openModal = (user: User) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
+
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedUser(null);
+    setSelectedUserId(null);
+    fitNetworkToScreen();
   };
 
-  const openProfileModal = () => {
-    setIsProfileModalOpen(true);
+  const openModal = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsModalOpen(true);
+  };
+
+  const fitNetworkToScreen = () => {
+    if (networkInstance.current) {
+      networkInstance.current.fit({
+        animation: {
+          duration: 1000, // 애니메이션 지속 시간 (밀리초)
+          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+        },
+      });
+    }
   };
 
   const closeProfileModal = () => {
@@ -78,6 +88,7 @@ export default function Landing() {
         const data = await response.json();
         if (data.message === "access token validation check successfull") {
           // 서버가 보낸 메시지에 따라 조건 수정
+          
           await fetchFriends();
         }
       } else {
@@ -96,7 +107,7 @@ export default function Landing() {
         }
       }
     } catch (error) {
-      alert("unknown error occurred in verifyAccessToken");
+      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
     }
   };
   const onSignoutButtonClickHandler = async () => {
@@ -120,7 +131,7 @@ export default function Landing() {
         }
       }
     } catch (error) {
-      alert("unknown error occurred in onSignoutButtonClickHandler");
+      console.error(`Unknown error occurred : ${error}`);
     }
   };
 
@@ -236,6 +247,7 @@ export default function Landing() {
       "networkContainer.current changed as : ",
       networkContainer.current
     );
+
     console.log("and now networkInstanc.current : ", networkInstance.current);
     if (networkContainer.current) {
       if (!networkInstance.current) {
@@ -252,19 +264,24 @@ export default function Landing() {
             const { nodes: clickedNodes } = event;
             if (clickedNodes.length > 0) {
               const clickedNodeId = clickedNodes[0];
-              if (clickedNodeId === loggedInUser?.node_id) {
-                openProfileModal();
-                console.log(clickedNodeId);
-              } else {
-                const clickedUser =
-                  roommatesData.find(
-                    (user) => user.node_id === clickedNodeId
-                  ) ||
-                  neighborsData.find((user) => user.node_id === clickedNodeId);
-                if (clickedUser) {
-                  openModal(clickedUser);
+
+              networkInstance.current?.focus(clickedNodeId, {
+                scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
+                animation: {
+                  duration: 1000, // 애니메이션 지속 시간 (밀리초)
+                  easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+                },
+              });
+             
+              
+              setTimeout(() => {
+                if (clickedNodeId === loggedInUser?.node_id) {
+                  openModal(clickedNodeId);
+                } else {
+                  console.log(clickedNodeId);
+                  openModal(clickedNodeId);
                 }
-              }
+              }, 800);
             }
           }
         );
@@ -302,6 +319,10 @@ export default function Landing() {
       const scale = networkInstance.current.getScale();
       networkInstance.current.moveTo({
         scale: scale * 1.2, // 1.2배 확대
+        animation: {
+          duration: 500, // 애니메이션 지속 시간 (밀리초)
+          easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+        },
       });
     }
   };
@@ -310,12 +331,16 @@ export default function Landing() {
       const scale = networkInstance.current.getScale();
       networkInstance.current.moveTo({
         scale: scale * 0.8, // 0.8배 축소
+        animation: {
+          duration: 500, // 애니메이션 지속 시간 (밀리초)
+          easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+        },
       });
     }
   };
   const resetPosition = () => {
     if (networkInstance.current && !isCasting.current) {
-      networkInstance.current.fit(); // 초기 위치로 리셋
+      fitNetworkToScreen();
     }
   };
   const onLogoutButtonClickHandler = async () => {
@@ -338,7 +363,7 @@ export default function Landing() {
         }
       }
     } catch (error) {
-      alert("unknown error occurred in onLogoutButtonClickHandler");
+      alert(error);
     }
   };
 
@@ -583,7 +608,7 @@ export default function Landing() {
       <FriendModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        userNodeId={selectedUser ? selectedUser.node_id : null}
+        userNodeId={selectedUserId ? selectedUserId : null}
       />
 
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
