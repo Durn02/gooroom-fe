@@ -103,24 +103,26 @@ export default function Landing() {
     }
   };
   const onSignoutButtonClickHandler = async () => {
-    alert("회원탈퇴를 진행합니다.");
-    try {
-      const response = await fetch(`${APIURL}/domain/auth/signout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === "signout success") {
-          alert("회원탈퇴가 완료되었습니다.");
-          window.location.href = "/";
+    const result = window.confirm("회원탈퇴를 진행합니다.");
+    if (result) {
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/signout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "signout success") {
+            alert("회원탈퇴가 완료되었습니다.");
+            window.location.href = "/";
+          }
         }
+      } catch (error) {
+        alert("unknown error occurred in onSignoutButtonClickHandler");
       }
-    } catch (error) {
-      alert("unknown error occurred in onSignoutButtonClickHandler");
     }
   };
 
