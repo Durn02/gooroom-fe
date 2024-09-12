@@ -23,7 +23,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const fetchMemo = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/friend/memo/get-content`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
