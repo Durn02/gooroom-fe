@@ -36,7 +36,7 @@ export default function Landing() {
   >([]);
   const [Nodes, setNodes] = useState<Node[]>([]);
   const [Edges, setEdges] = useState<Edge[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -580,7 +580,7 @@ export default function Landing() {
 
       {/* 모달 컴포넌트 */}
       <FriendModal
-        isOpen={isModalOpen}
+        isOpen={isFriendModalOpen}
         onClose={closeModal}
         userNodeId={selectedUser ? selectedUser.node_id : null}
       />
