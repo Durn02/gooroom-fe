@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "./FriendModal.css";
-import getAPIURL from "../../utils/getAPIURL";
+import styles from "./FriendModal.module.css";
+import getAPIURL from "../../../utils/getAPIURL";
 
 interface ModalProps {
   isOpen: boolean;
@@ -73,9 +73,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <button className={styles.modalClose} onClick={onClose}>
           X
         </button>
         <h2>This is FriendPage. Edit Memo</h2>
@@ -83,13 +83,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
           type="text"
           value={memo}
           onChange={handleMemoChange}
-          className="modal-input"
+          className={styles.modalInput}
           placeholder="Edit your memo here..."
         />
-        <button onClick={handleSave} className="modal-save-button">
+        <button onClick={handleSave} className={styles.modalSaveButton}>
           ✔️
         </button>
-        {responseMessage && <p className="modal-response">{responseMessage}</p>}
+        {responseMessage && (
+          <p className={styles.modalResponse}>{responseMessage}</p>
+        )}
       </div>
     </div>
   );

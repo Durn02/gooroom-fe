@@ -6,7 +6,7 @@ import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 import style from "./LandingPage.module.css";
 import gsap from "gsap";
-import FriendModal from "./FriendModal";
+import FriendModal from "../../components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
 import getAPIURL from "../../utils/getAPIURL";
