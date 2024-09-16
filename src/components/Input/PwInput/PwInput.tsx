@@ -6,10 +6,16 @@ interface props {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }
 
-const PwInput = ({ placeholder, value, onChange }: props) => {
+const PwInput = ({ placeholder, value, onChange, onEnter }: props) => {
   const [setShow, setShowState] = useState("password");
+  const handlePressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (onEnter && e.key === "Enter") {
+      onEnter();
+    }
+  };
 
   return (
     <div className={style.pwInputContainer}>
@@ -19,6 +25,7 @@ const PwInput = ({ placeholder, value, onChange }: props) => {
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handlePressEnter}
       ></input>
 
       <div className={style.pwShowButtonContainer}>

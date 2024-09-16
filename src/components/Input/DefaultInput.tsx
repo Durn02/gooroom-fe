@@ -5,9 +5,16 @@ interface props {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }
 
-const Input = ({ placeholder, value, onChange }: props) => {
+const Input = ({ placeholder, value, onChange, onEnter }: props) => {
+  const handlePressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (onEnter && e.key === "Enter") {
+      onEnter();
+    }
+  };
+
   return (
     <input
       className={style.input}
@@ -15,6 +22,7 @@ const Input = ({ placeholder, value, onChange }: props) => {
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onKeyDown={handlePressEnter}
     ></input>
   );
 };
