@@ -96,6 +96,8 @@ export default function Landing() {
         );
         if (refresh_response.ok) {
           await fetchFriends();
+        } else {
+          isLoggedIn.isLogin = false;
         }
       }
     } catch (error) {
