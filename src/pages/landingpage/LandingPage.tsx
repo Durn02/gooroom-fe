@@ -63,6 +63,8 @@ export default function Landing() {
   };
 
   const onSignoutButtonClickHandler = async () => {
+    const result = window.confirm("회원탈퇴를 진행합니다.");
+    if (result) {
     alert("회원탈퇴를 진행합니다.");
     try {
       const response = await fetch(`${APIURL}/domain/auth/signout`, {
@@ -81,6 +83,8 @@ export default function Landing() {
       }
     } catch (error) {
       alert("unknown error occurred in onSignoutButtonClickHandler");
+        console.error(error);
+      }
     }
   };
 
@@ -379,12 +383,12 @@ export default function Landing() {
                 onClick={() => onLogoutButtonClickHandler()}
               />
             </div>
-            {/* <div className={style.signoutButtonContainer}>
+            <div className={style.signoutButtonContainer}>
               <DefaultButton
                 placeholder="회원탈퇴"
                 onClick={() => onSignoutButtonClickHandler()}
               />
-            </div> */}
+            </div>
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}
