@@ -23,6 +23,27 @@ interface RoommateWithNeighbors {
   neighbors: User[];
 }
 
+interface CastNode {
+  duration: number;
+  created_at: string;
+  message: string;
+  deleted_at: string;
+  node_id: string;
+}
+
+interface Creator {
+  my_memo: string;
+  nickname: string;
+  username: string;
+  node_id: string;
+  concern: string[];
+}
+
+interface GetCastsResponse {
+  cast_node: CastNode;
+  creator: Creator;
+}
+
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
   const [loggedInUser, setLoggedInUser] = useState<User>();
@@ -40,8 +61,10 @@ export default function Landing() {
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
+  const new_casts = useRef<GetCastsResponse[]>([]);
 
   const nodeRadius = 13;
+  const alignOffset = 5;
 
   const openModal = (user: User) => {
     setSelectedUser(user);
@@ -78,6 +101,7 @@ export default function Landing() {
         const data = await response.json();
         if (data.message === "access token validation check successfull") {
           // 서버가 보낸 메시지에 따라 조건 수정
+          isLoggedIn.isLogin = true;
           await fetchFriends();
         }
       } else {
@@ -92,6 +116,7 @@ export default function Landing() {
           }
         );
         if (refresh_response.ok) {
+          isLoggedIn.isLogin = true;
           await fetchFriends();
         }
       }
@@ -227,6 +252,31 @@ export default function Landing() {
     return edges;
   };
 
+  const longPoll = async () => {
+    console.log("longPoll called");
+    try {
+      const response = await fetch(
+        "http://localhost:8000/domain/content/long_poll",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.new_exists) {
+          new_casts.current = data.contents;
+          // alertCast();
+        }
+      }
+    } catch (error) {
+      console.error("error : ", error);
+    }
+  };
+
   useEffect(() => {
     verifyAccessToken();
   }, []);
@@ -296,6 +346,23 @@ export default function Landing() {
     setNodes(nodes);
     setEdges(edges);
   }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (loggedInUser) {
+      const startPolling = async () => {
+        while (!isCancelled) {
+          await longPoll();
+        }
+      };
+      startPolling();
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [loggedInUser]);
 
   const zoomIn = () => {
     if (networkInstance.current && !isCasting.current) {
@@ -451,8 +518,8 @@ export default function Landing() {
           element.classList.add(style.blinkingElement);
           networkContainer.current?.appendChild(element);
 
-          element.style.left = `${loggedInUserPosition.x - 5}px`;
-          element.style.top = `${loggedInUserPosition.y - 5}px`;
+          element.style.left = `${loggedInUserPosition.x - alignOffset}px`;
+          element.style.top = `${loggedInUserPosition.y - alignOffset}px`;
 
           gsap.fromTo(
             element,
@@ -488,8 +555,8 @@ export default function Landing() {
             element.classList.add(style.blinkingElement);
             networkContainer.current?.appendChild(element);
 
-            element.style.left = `${connectedRoommate.x - 5}px`;
-            element.style.top = `${connectedRoommate.y - 5}px`;
+            element.style.left = `${connectedRoommate.x - alignOffset}px`;
+            element.style.top = `${connectedRoommate.y - alignOffset}px`;
 
             gsap.fromTo(
               element,
@@ -530,6 +597,7 @@ export default function Landing() {
 
   return (
     <>
+      {console.log(isLoggedIn.isLogin)}
       {!isLoggedIn.isLogin && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>

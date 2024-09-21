@@ -122,7 +122,7 @@ export default function Signin() {
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      console.log("isLgoin의 값은?? ", isLogin.isLogin);
+      console.log("isLogin의 값은?? ", isLogin.isLogin);
       if (isLogin.isLogin) {
         alert("이미 로그인 되어있습니다.");
         window.location.replace("/");
