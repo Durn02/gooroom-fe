@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Network, Node, Edge, IdType } from "vis-network";
 import { Link } from "react-router-dom";
+import { DataSet } from "vis-data";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
@@ -60,7 +61,8 @@ export default function Landing() {
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
+  const tnodes = useRef(new DataSet<Node>());
+  const tedges = useRef(new DataSet<Edge>());
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
@@ -68,6 +70,12 @@ export default function Landing() {
 
   const nodeRadius = 13;
   const alignOffset = 5;
+=======
+
+  const nodeRadius = 13;
+
+>>>>>>> parent of ccfd22c (visdata)
+
 
   const closeModal = () => {
     setIsModalOpen(false);
