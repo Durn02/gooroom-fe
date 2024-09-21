@@ -1,51 +1,30 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Network, Node, Edge, IdType } from "vis-network";
+import { Network, Node, Edge } from "vis-network";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 import style from "./LandingPage.module.css";
-import gsap from "gsap";
 import FriendModal from "../../components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
 import getAPIURL from "../../utils/getAPIURL";
-
-interface User {
-  my_memo: string;
-  nickname: string;
-  node_id: string;
-  concern: string[];
-  username: string;
-}
-
-interface RoommateWithNeighbors {
-  roommate: User;
-  neighbors: User[];
-}
+import {
+  zoomIn,
+  zoomOut,
+  fitNetworkToScreen,
+  resetPosition,
+  disableGraphInteraction,
+  hardenGraph,
+} from "../../utils/graphInteraction";
+import { castAnimation } from "../../utils/casting";
+import {
+  User,
+  RoommateWithNeighbors,
+  GetCastsResponse,
+} from "../../types/landingPage.type";
 
 const APIURL = getAPIURL();
-
-interface CastNode {
-  duration: number;
-  created_at: string;
-  message: string;
-  deleted_at: string;
-  node_id: string;
-}
-
-interface Creator {
-  my_memo: string;
-  nickname: string;
-  username: string;
-  node_id: string;
-  concern: string[];
-}
-
-interface GetCastsResponse {
-  cast_node: CastNode;
-  creator: Creator;
-}
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
@@ -67,28 +46,16 @@ export default function Landing() {
   const new_casts = useRef<GetCastsResponse[]>([]);
 
   const nodeRadius = 13;
-  const alignOffset = 5;
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUserId(null);
-    fitNetworkToScreen();
+    fitNetworkToScreen(networkInstance.current);
   };
 
   const openModal = (userId: string) => {
     setSelectedUserId(userId);
     setIsModalOpen(true);
-  };
-
-  const fitNetworkToScreen = () => {
-    if (networkInstance.current) {
-      networkInstance.current.fit({
-        animation: {
-          duration: 1000, // 애니메이션 지속 시간 (밀리초)
-          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
-        },
-      });
-    }
   };
 
   const closeProfileModal = () => {
@@ -137,27 +104,27 @@ export default function Landing() {
       console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
     }
   };
-  const onSignoutButtonClickHandler = async () => {
-    alert("회원탈퇴를 진행합니다.");
-    try {
-      const response = await fetch(`${APIURL}/domain/auth/signout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === "signout success") {
-          alert("회원탈퇴가 완료되었습니다.");
-          window.location.href = "/";
-        }
-      }
-    } catch (error) {
-      alert("unknown error occurred in onSignoutButtonClickHandler");
-    }
-  };
+  // const onSignoutButtonClickHandler = async () => {
+  //   alert("회원탈퇴를 진행합니다.");
+  //   try {
+  //     const response = await fetch(`${APIURL}/domain/auth/signout`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       credentials: "include",
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       if (data.message === "signout success") {
+  //         alert("회원탈퇴가 완료되었습니다.");
+  //         window.location.href = "/";
+  //       }
+  //     }
+  //   } catch (error) {
+  //     alert("unknown error occurred in onSignoutButtonClickHandler");
+  //   }
+  // };
 
   const fetchFriends = async () => {
     console.log("fetchFriends called!");
@@ -376,35 +343,6 @@ export default function Landing() {
     };
   }, [loggedInUser]);
 
-  const zoomIn = () => {
-    if (networkInstance.current && !isCasting.current) {
-      const scale = networkInstance.current.getScale();
-      networkInstance.current.moveTo({
-        scale: scale * 1.2, // 1.2배 확대
-        animation: {
-          duration: 500, // 애니메이션 지속 시간 (밀리초)
-          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
-        },
-      });
-    }
-  };
-  const zoomOut = () => {
-    if (networkInstance.current && !isCasting.current) {
-      const scale = networkInstance.current.getScale();
-      networkInstance.current.moveTo({
-        scale: scale * 0.8, // 0.8배 축소
-        animation: {
-          duration: 500, // 애니메이션 지속 시간 (밀리초)
-          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
-        },
-      });
-    }
-  };
-  const resetPosition = () => {
-    if (networkInstance.current && !isCasting.current) {
-      fitNetworkToScreen();
-    }
-  };
   const onLogoutButtonClickHandler = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/auth/logout`, {
@@ -429,190 +367,23 @@ export default function Landing() {
     }
   };
 
-  const disableGraphInteraction = () => {
-    if (networkInstance.current) {
-      networkInstance.current.setOptions({
-        interaction: {
-          dragNodes: false,
-          dragView: false,
-          zoomView: false,
-          selectable: false,
-        },
-      });
-    }
-    isCasting.current = true;
-  };
-
-  const enableGraphInteraction = () => {
-    if (networkInstance.current) {
-      networkInstance.current.setOptions({
-        interaction: {
-          dragNodes: true,
-          dragView: true,
-          zoomView: true,
-          selectable: true,
-        },
-      });
-      isCasting.current = false;
-    }
-  };
-
-  const hardenGraph = () => {
-    if (networkInstance.current) {
-      networkInstance.current.setOptions({
-        edges: {
-          smooth: {
-            enabled: true,
-            type: "continuous",
-            roundness: 0,
-          },
-        },
-      });
-    }
-  };
-
-  const softenGraph = () => {
-    if (networkInstance.current) {
-      networkInstance.current.setOptions({
-        edges: {
-          smooth: {
-            enabled: true,
-            type: "dynamic",
-            roundness: 0.5,
-          },
-        },
-      });
-    }
-  };
-
-  const getPosition = (node_id: IdType) => {
-    if (!networkInstance.current) {
-      console.error("error in getPosition. there's no networkInstance.current");
-      return;
-    }
-
-    const canvasPosition = networkInstance.current.getPosition(
-      node_id as IdType
-    );
-    const domPosition = networkInstance.current.canvasToDOM(canvasPosition);
-    return domPosition;
-  };
-
-  const castAnimation = () => {
-    if (!networkInstance.current) {
-      console.error("error in getPosition. there's no networkInstance.current");
-      return;
-    }
-
-    const loggedInUserPosition = getPosition(loggedInUser?.node_id as IdType);
-    if (!loggedInUserPosition) {
-      console.error("error in castAnimation. there's no loggedInUserPosition");
-      return;
-    }
-
-    const roommatesPositions = roommatesData
-      .map((roommate) => {
-        const position = getPosition(roommate.node_id);
-        return position || null;
-      })
-      .filter((position) => position !== null);
-
-    const roommatesByNeighborsPositions = neighborsData.map((neighbor) => {
-      const connectedRoommates = networkInstance.current?.getConnectedNodes(
-        neighbor.node_id
-      ) as IdType[];
-      const connectedRoommatesPositions = connectedRoommates.map(
-        (connnectedRoommate) => {
-          return getPosition(connnectedRoommate);
-        }
-      );
-      return { [neighbor.node_id]: connectedRoommatesPositions };
-    });
-
-    const runFirstAnimation = (onComplete: () => void) => {
-      let animationsCompleted = 0;
-
-      roommatesPositions.forEach((roommatePos) => {
-        if (roommatePos && loggedInUserPosition) {
-          const element = document.createElement("span");
-          element.classList.add(style.blinkingElement);
-          networkContainer.current?.appendChild(element);
-
-          element.style.left = `${loggedInUserPosition.x - alignOffset}px`;
-          element.style.top = `${loggedInUserPosition.y - alignOffset}px`;
-
-          gsap.fromTo(
-            element,
-            { x: 0, y: 0 },
-            {
-              x: roommatePos.x - loggedInUserPosition.x,
-              y: roommatePos.y - loggedInUserPosition.y,
-              duration: 2,
-              ease: "power1.inOut",
-              onComplete: () => {
-                networkContainer.current?.removeChild(element);
-                animationsCompleted += 1;
-                if (animationsCompleted === roommatesPositions.length) {
-                  onComplete();
-                }
-              },
-            }
-          );
-        }
-      });
-    };
-
-    const runSecondAnimation = () => {
-      roommatesByNeighborsPositions.forEach((roommatesByNeighborPos, index) => {
-        const [[neighborId, connectedRoommates]] = Object.entries(
-          roommatesByNeighborPos
-        );
-        const neighborPosition = getPosition(neighborId);
-
-        connectedRoommates.forEach((connectedRoommate) => {
-          if (neighborPosition && connectedRoommate) {
-            const element = document.createElement("span");
-            element.classList.add(style.blinkingElement);
-            networkContainer.current?.appendChild(element);
-
-            element.style.left = `${connectedRoommate.x - alignOffset}px`;
-            element.style.top = `${connectedRoommate.y - alignOffset}px`;
-
-            gsap.fromTo(
-              element,
-              { x: 0, y: 0 },
-              {
-                x: neighborPosition.x - connectedRoommate.x,
-                y: neighborPosition.y - connectedRoommate.y,
-                duration: 2,
-                ease: "power1.inOut",
-                onComplete: () => {
-                  networkContainer.current?.removeChild(element);
-                  if (index === roommatesByNeighborsPositions.length - 1) {
-                    enableGraphInteraction();
-                    softenGraph();
-                  }
-                },
-              }
-            );
-          }
-        });
-      });
-    };
-
-    runFirstAnimation(runSecondAnimation);
-  };
-
   const cast = (cast_message: string) => {
     isCasting.current = true;
-    disableGraphInteraction();
-    hardenGraph();
+    disableGraphInteraction(networkInstance.current);
+    hardenGraph(networkInstance.current);
     console.log("cast_message : ", cast_message);
 
     networkInstance.current?.once("stabilized", () => {
       console.log("finished stablized");
-      castAnimation();
+      castAnimation(
+        networkInstance.current,
+        networkContainer.current,
+        loggedInUser?.node_id,
+        roommatesData,
+        neighborsData
+      );
     });
+    isCasting.current = false;
   };
 
   return (
@@ -641,9 +412,24 @@ export default function Landing() {
               <CastPostStickerDropdownButton cast_fuction={cast} />
             </div>
             <div className={style.magnifyButtonContainer}>
-              <DefaultButton placeholder="+" onClick={() => zoomIn()} />
-              <DefaultButton placeholder="O" onClick={() => resetPosition()} />
-              <DefaultButton placeholder="-" onClick={() => zoomOut()} />
+              <DefaultButton
+                placeholder="+"
+                onClick={() =>
+                  zoomIn(networkInstance.current, isCasting.current)
+                }
+              />
+              <DefaultButton
+                placeholder="O"
+                onClick={() =>
+                  resetPosition(networkInstance.current, isCasting.current)
+                }
+              />
+              <DefaultButton
+                placeholder="-"
+                onClick={() =>
+                  zoomOut(networkInstance.current, isCasting.current)
+                }
+              />
             </div>
             <div className={style.logoutButtonContainer}>
               <DefaultButton
@@ -651,12 +437,12 @@ export default function Landing() {
                 onClick={() => onLogoutButtonClickHandler()}
               />
             </div>
-            <div className={style.signoutButtonContainer}>
+            {/* <div className={style.signoutButtonContainer}>
               <DefaultButton
                 placeholder="회원탈퇴"
                 onClick={() => onSignoutButtonClickHandler()}
               />
-            </div>
+            </div> */}
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}
