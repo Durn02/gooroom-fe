@@ -6,9 +6,10 @@ import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 import style from "./LandingPage.module.css";
 import gsap from "gsap";
-import FriendModal from "./FriendModal";
+import FriendModal from "../../components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
+import getAPIURL from "../../utils/getAPIURL";
 
 interface User {
   my_memo: string;
@@ -22,6 +23,8 @@ interface RoommateWithNeighbors {
   roommate: User;
   neighbors: User[];
 }
+
+const APIURL = getAPIURL();
 
 interface CastNode {
   duration: number;
@@ -54,7 +57,7 @@ export default function Landing() {
   >([]);
   const [Nodes, setNodes] = useState<Node[]>([]);
   const [Edges, setEdges] = useState<Edge[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -87,7 +90,7 @@ export default function Landing() {
   const verifyAccessToken = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/domain/auth/verify-access-token",
+        `${APIURL}/domain/auth/verify-access-token`,
         {
           method: "GET",
           headers: {
@@ -106,7 +109,7 @@ export default function Landing() {
         }
       } else {
         const refresh_response = await fetch(
-          "http://localhost:8000/domain/auth/refresh-acc-token",
+          `${APIURL}/domain/auth/refresh-acc-token`,
           {
             method: "POST",
             headers: {
@@ -118,6 +121,8 @@ export default function Landing() {
         if (refresh_response.ok) {
           isLoggedIn.isLogin = true;
           await fetchFriends();
+        } else {
+          isLoggedIn.isLogin = false;
         }
       }
     } catch (error) {
@@ -125,43 +130,39 @@ export default function Landing() {
     }
   };
   const onSignoutButtonClickHandler = async () => {
-    alert("회원탈퇴를 진행합니다.");
-    try {
-      const response = await fetch(
-        "http://localhost:8000/domain/auth/signout",
-        {
+    const result = window.confirm("회원탈퇴를 진행합니다.");
+    if (result) {
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/signout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "signout success") {
+            alert("회원탈퇴가 완료되었습니다.");
+            window.location.href = "/";
+          }
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === "signout success") {
-          alert("회원탈퇴가 완료되었습니다.");
-          window.location.href = "/";
-        }
+      } catch (error) {
+        alert("unknown error occurred in onSignoutButtonClickHandler");
       }
-    } catch (error) {
-      alert("unknown error occurred in onSignoutButtonClickHandler");
     }
   };
 
   const fetchFriends = async () => {
     console.log("fetchFriends called!");
     try {
-      const response = await fetch(
-        "http://localhost:8000/domain/friend/get-members",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/get-members`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       if (response.ok) {
         let data = await response.json();
         if (data.length > 0) {
@@ -387,7 +388,7 @@ export default function Landing() {
   };
   const onLogoutButtonClickHandler = async () => {
     try {
-      const response = await fetch("http://localhost:8000/domain/auth/logout", {
+      const response = await fetch(`${APIURL}/domain/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -649,7 +650,7 @@ export default function Landing() {
 
       {/* 모달 컴포넌트 */}
       <FriendModal
-        isOpen={isModalOpen}
+        isOpen={isFriendModalOpen}
         onClose={closeModal}
         userNodeId={selectedUser ? selectedUser.node_id : null}
       />

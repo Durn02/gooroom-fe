@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import "./FriendModal.css";
+import styles from "./FriendModal.module.css";
+import getAPIURL from "../../../utils/getAPIURL";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNodeId: string | null; // 사용자의 노드 ID
 }
+
+const APIURL = getAPIURL();
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const [memo, setMemo] = useState("");
@@ -19,17 +22,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const fetchMemo = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/friend/memo/get-content`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_node_id: userNodeId }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/memo/get-content`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_node_id: userNodeId }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -49,17 +49,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/domain/friend/memo/modify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/friend/memo/modify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -76,9 +73,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <button className={styles.modalClose} onClick={onClose}>
           X
         </button>
         <h2>This is FriendPage. Edit Memo</h2>
@@ -86,13 +83,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
           type="text"
           value={memo}
           onChange={handleMemoChange}
-          className="modal-input"
+          className={styles.modalInput}
           placeholder="Edit your memo here..."
         />
-        <button onClick={handleSave} className="modal-save-button">
+        <button onClick={handleSave} className={styles.modalSaveButton}>
           ✔️
         </button>
-        {responseMessage && <p className="modal-response">{responseMessage}</p>}
+        {responseMessage && (
+          <p className={styles.modalResponse}>{responseMessage}</p>
+        )}
       </div>
     </div>
   );

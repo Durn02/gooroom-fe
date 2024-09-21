@@ -6,6 +6,7 @@ import Input from "../../components/Input/DefaultInput";
 import PwInput from "../../components/Input/PwInput/PwInput";
 import { useState, useEffect } from "react";
 import { IsLoginContext } from "../../shared/IsLoginContext";
+import getAPIURL from "../../utils/getAPIURL";
 
 type signinRequestData = {
   email: string;
@@ -18,8 +19,10 @@ type VerifyCodeRequestData = {
 type VerifyRequestData = {
   email: string;
 };
+const APIURL = getAPIURL();
 
 export default function Signin() {
+  console.log(APIURL);
   const [emailVerification, setEmailVerification] = useState(false);
 
   const onSignInButtonClickHandler = () => {
@@ -28,35 +31,41 @@ export default function Signin() {
       password: userPwInput,
     };
 
-    try {
-      fetch("http://localhost:8000/domain/auth/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signinRequestData),
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data.message);
-          if (data.detail === "not registered email") {
-            alert("가입되지 않은 이메일입니다");
-          } else if (data.detail === "not verified email") {
-            alert("이메일 인증을 해주세요");
-            setEmailVerification(true);
-          } else if (data.detail === "inconsistent password") {
-            alert("비밀번호가 일치하지 않습니다");
-          } else if (data.message === "login success") {
-            sessionStorage.setItem("userId", userEmailInput);
-            alert("로그인 성공");
-            window.location.replace("/");
-          } else {
-            alert("알 수 없는 이유로 로그인에 실패했습니다");
-          }
-        });
-    } catch (e) {
-      alert(e);
+    if (!userEmailInput) {
+      alert("이메일을 입력해주세요");
+    } else if (!userPwInput) {
+      alert("비밀번호를 입력해주세요");
+    } else {
+      try {
+        fetch(`${APIURL}/domain/auth/signin`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signinRequestData),
+          credentials: "include",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data.message);
+            if (data.detail === "not registered email") {
+              alert("가입되지 않은 이메일입니다");
+            } else if (data.detail === "not verified email") {
+              alert("이메일 인증을 해주세요");
+              setEmailVerification(true);
+            } else if (data.detail === "inconsistent password") {
+              alert("비밀번호가 일치하지 않습니다");
+            } else if (data.message === "login success") {
+              sessionStorage.setItem("userId", userEmailInput);
+              alert("로그인 성공");
+              window.location.replace("/");
+            } else {
+              alert("알 수 없는 이유로 로그인에 실패했습니다");
+            }
+          });
+      } catch (e) {
+        alert(e);
+      }
     }
   };
   const onVerifyButtonClickHandler = async () => {
@@ -66,16 +75,13 @@ export default function Signin() {
     };
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/domain/auth/verify-code",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(verifyCodeRequest),
-        }
-      );
+      const response = await fetch(`${APIURL}/domain/auth/verify-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(verifyCodeRequest),
+      });
       if (response.ok) {
         alert("Verify successful");
         window.location.replace("/");
@@ -94,7 +100,7 @@ export default function Signin() {
     };
     try {
       const verifyResponse = await fetch(
-        "http://localhost:8000/domain/auth/send-verification-code",
+        `${APIURL}/domain/auth/send-verification-code`,
         {
           method: "POST",
           headers: {
@@ -117,19 +123,18 @@ export default function Signin() {
   const [userEmailInput, setUserEmailInput] = useState("");
   const [userPwInput, setUserPwInput] = useState("");
   const [userVerifyInput, setUserVerifyCodeInput] = useState("");
-  const isLogin = useContext(IsLoginContext);
+  const isLoggedin = useContext(IsLoginContext);
   // 로그인이 되어있는지 확인하는 useEffect
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      console.log("isLogin의 값은?? ", isLogin.isLogin);
-      if (isLogin.isLogin) {
+      if (isLoggedin.isLogin) {
         alert("이미 로그인 되어있습니다.");
         window.location.replace("/");
       } else {
         try {
           const response = await fetch(
-            "http://localhost:8000/domain/auth/verify-access-token",
+            `${APIURL}/domain/auth/verify-access-token`,
             {
               method: "GET",
               headers: {
@@ -170,6 +175,7 @@ export default function Signin() {
           placeholder="email"
           value={userEmailInput}
           onChange={(e) => setUserEmailInput(e)}
+          onEnter={onSignInButtonClickHandler}
         />
       </div>
 
@@ -180,6 +186,7 @@ export default function Signin() {
           onChange={(e) => {
             setUserPwInput(e);
           }}
+          onEnter={onSignInButtonClickHandler}
         />
       </div>
 

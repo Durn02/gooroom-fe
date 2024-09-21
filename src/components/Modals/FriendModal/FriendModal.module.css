@@ -1,4 +1,4 @@
-.modal-overlay {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +11,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.modalContent {
   background-color: white;
   padding: 20px;
   border-radius: 10px;
@@ -22,7 +22,7 @@
   animation: fadeIn 0.3s ease;
 }
 
-.modal-close {
+.modalClose {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -32,7 +32,7 @@
   cursor: pointer;
 }
 
-.modal-input {
+.modalInput {
   width: calc(100% - 40px);
   padding: 10px;
   margin: 20px 0;
@@ -41,8 +41,8 @@
   font-size: 16px;
 }
 
-.modal-save-button {
-  background-color: #4CAF50;
+.modalSaveButton {
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -52,11 +52,11 @@
   margin-right: 10px;
 }
 
-.modal-save-button:hover {
+.modalSaveButton:hover {
   background-color: #45a049;
 }
 
-.modal-response {
+.modalResponse {
   margin-top: 20px;
   font-size: 14px;
   color: #555;
