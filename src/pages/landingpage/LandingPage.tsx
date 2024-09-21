@@ -57,24 +57,17 @@ export default function Landing() {
   >([]);
   const [Nodes, setNodes] = useState<Node[]>([]);
   const [Edges, setEdges] = useState<Edge[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
-<<<<<<< HEAD
   const new_casts = useRef<GetCastsResponse[]>([]);
 
   const nodeRadius = 13;
   const alignOffset = 5;
-=======
-
-  const nodeRadius = 13;
-
->>>>>>> parent of ccfd22c (visdata)
-
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -322,11 +315,10 @@ export default function Landing() {
                 scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
                 animation: {
                   duration: 1000, // 애니메이션 지속 시간 (밀리초)
-                  easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+                  easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
                 },
               });
-             
-              
+
               setTimeout(() => {
                 if (clickedNodeId === loggedInUser?.node_id) {
                   openModal(clickedNodeId);
@@ -367,7 +359,6 @@ export default function Landing() {
     setEdges(edges);
   }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
 
-<<<<<<< HEAD
   useEffect(() => {
     let isCancelled = false;
 
@@ -385,8 +376,6 @@ export default function Landing() {
     };
   }, [loggedInUser]);
 
-=======
->>>>>>> parent of ccfd22c (visdata)
   const zoomIn = () => {
     if (networkInstance.current && !isCasting.current) {
       const scale = networkInstance.current.getScale();
@@ -394,7 +383,7 @@ export default function Landing() {
         scale: scale * 1.2, // 1.2배 확대
         animation: {
           duration: 500, // 애니메이션 지속 시간 (밀리초)
-          easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
         },
       });
     }
@@ -406,7 +395,7 @@ export default function Landing() {
         scale: scale * 0.8, // 0.8배 축소
         animation: {
           duration: 500, // 애니메이션 지속 시간 (밀리초)
-          easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+          easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
         },
       });
     }
