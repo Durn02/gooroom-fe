@@ -60,8 +60,6 @@ export const generateNodes = (
     return [];
   }
 
-
-
   const userNode: Node = {
     id: loggedInUser.node_id,
     label: loggedInUser.nickname,
@@ -75,7 +73,6 @@ export const generateNodes = (
     group: "roommate",
     size: 15,
   }));
-
 
   const neighborNodes = neighbors.map((neighbor) => ({
     id: neighbor.node_id,

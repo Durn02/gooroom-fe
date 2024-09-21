@@ -1,19 +1,31 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Network, Node, Edge, IdType } from "vis-network";
+import { Network, Node, Edge } from "vis-network";
 import { Link } from "react-router-dom";
-import { DataSet } from "vis-data";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
 import CastPostStickerDropdownButton from "../../components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton";
 import style from "./LandingPage.module.css";
-import gsap from "gsap";
 import FriendModal from "../../components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
 import getAPIURL from "../../utils/getAPIURL";
-import { User, RoommateWithNeighbors, GetCastsResponse } from "../../types/landingPage.type";
-import { fetchFriends, generateEdges, generateNodes } from "../../utils/handleFriends";
-import { zoomIn, zoomOut, fitNetworkToScreen, resetPosition, disableGraphInteraction, hardenGraph } from "../../utils/graphInteraction";
+import {
+  User,
+  RoommateWithNeighbors,
+  GetCastsResponse,
+} from "../../types/landingPage.type";
+import {
+  fetchFriends,
+  generateEdges,
+  generateNodes,
+} from "../../utils/handleFriends";
+import {
+  zoomIn,
+  zoomOut,
+  resetPosition,
+  disableGraphInteraction,
+  hardenGraph,
+} from "../../utils/graphInteraction";
 import { castAnimation } from "../../utils/casting";
 
 const APIURL = getAPIURL();
@@ -27,18 +39,14 @@ export default function Landing() {
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
   const [logined, setlogined] = useState(false);
-  const nodesDataset= useRef(new DataSet<Node>());
-  const edgesDataset = useRef(new DataSet<Edge>());
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   const new_casts = useRef<GetCastsResponse[]>([]);
 
-
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -65,24 +73,24 @@ export default function Landing() {
   const onSignoutButtonClickHandler = async () => {
     const result = window.confirm("회원탈퇴를 진행합니다.");
     if (result) {
-    alert("회원탈퇴를 진행합니다.");
-    try {
-      const response = await fetch(`${APIURL}/domain/auth/signout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === "signout success") {
-          alert("회원탈퇴가 완료되었습니다.");
-          window.location.href = "/";
+      alert("회원탈퇴를 진행합니다.");
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/signout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "signout success") {
+            alert("회원탈퇴가 완료되었습니다.");
+            window.location.href = "/";
+          }
         }
-      }
-    } catch (error) {
-      alert("unknown error occurred in onSignoutButtonClickHandler");
+      } catch (error) {
+        alert("unknown error occurred in onSignoutButtonClickHandler");
         console.error(error);
       }
     }
@@ -94,19 +102,21 @@ export default function Landing() {
 
   const verifyAccessToken = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${APIURL}/domain/auth/verify-access-token`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         console.log(data);
         if (data.message == "access token validation check successfull") {
-          
           const friendsData = await fetchFriends();
           setlogined(true);
           console.log(friendsData);
@@ -114,19 +124,21 @@ export default function Landing() {
           loggedInUserRef.current = friendsData.loggedInUser;
           roommatesDataRef.current = friendsData.roommates;
           neighborsDataRef.current = friendsData.neighbors;
-          roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-          
+          roommatesWithNeighborsRef.current =
+            friendsData.roommatesWithNeighbors;
         }
       } else {
-        const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
+        const refresh_response = await fetch(
+          `${APIURL}/domain/auth/refresh-acc-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
         if (refresh_response.ok) {
-          
           const friendsData = await fetchFriends();
           console.log(isLoggedIn.isLogin);
           setlogined(true);
@@ -134,8 +146,8 @@ export default function Landing() {
           loggedInUserRef.current = friendsData.loggedInUser;
           roommatesDataRef.current = friendsData.roommates;
           neighborsDataRef.current = friendsData.neighbors;
-          roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-          
+          roommatesWithNeighborsRef.current =
+            friendsData.roommatesWithNeighbors;
         } else {
           isLoggedIn.isLogin = false;
         }
@@ -145,10 +157,7 @@ export default function Landing() {
     }
   };
 
-  
-
   const longPoll = async () => {
-   
     try {
       const response = await fetch(
         "http://localhost:8000/domain/content/long_poll",
@@ -177,16 +186,15 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    if (!logined) 
-      {
-        console.log("IsLoggedIn:", isLoggedIn.isLogin);
-        return;
-      }
-    console.log("gi");
-    if(!loggedInUserRef.current) {
+    if (!logined) {
+      console.log("IsLoggedIn:", isLoggedIn.isLogin);
       return;
     }
-    console.log("ok")
+    console.log("gi");
+    if (!loggedInUserRef.current) {
+      return;
+    }
+    console.log("ok");
     const nodes = generateNodes(
       loggedInUserRef.current,
       roommatesDataRef.current,
@@ -214,11 +222,16 @@ export default function Landing() {
 
     return () => {
       if (networkInstance.current) {
-        networkInstance.current.destroy(); 
+        networkInstance.current.destroy();
         networkInstance.current = null;
       }
     };
-  }, [loggedInUserRef.current, roommatesDataRef.current, neighborsDataRef.current, roommatesWithNeighborsRef.current]);
+  }, [
+    loggedInUserRef.current,
+    roommatesDataRef.current,
+    neighborsDataRef.current,
+    roommatesWithNeighborsRef.current,
+  ]);
 
   useEffect(() => {
     if (networkContainer.current) {
@@ -227,7 +240,7 @@ export default function Landing() {
           networkContainer.current,
           {
             nodes: nodesRef.current,
-            edges: edgesRef.current, 
+            edges: edgesRef.current,
           },
           visnet_options
         );
@@ -264,7 +277,6 @@ export default function Landing() {
     }
     return () => {
       if (networkInstance.current) {
-
         networkInstance.current.destroy();
         networkInstance.current = null;
       }
@@ -331,7 +343,6 @@ export default function Landing() {
     isCasting.current = false;
   };
 
-  
   return (
     <>
       {console.log(isLoggedIn.isLogin)}
