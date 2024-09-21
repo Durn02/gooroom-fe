@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Network, Node, Edge, IdType } from "vis-network";
+import { DataSet } from "vis-data";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
@@ -43,15 +44,31 @@ export default function Landing() {
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
-
+  const tnodes = useRef(new DataSet<Node>());
+  const tedges = useRef(new DataSet<Edge>());
   const nodeRadius = 13;
-
+  const [nodeId, setNodeId] = useState<string>(""); // nodeId의 타입을 string으로 명시
+  const [selectedGroup, setSelectedGroup] = useState<string>("group1"); 
 
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUserId(null);
     fitNetworkToScreen();
+    if (networkInstance.current) {
+      networkInstance.current.setOptions({
+        interaction: {
+          dragNodes: true,
+          dragView: true,
+          zoomView: true,
+          selectable: true,
+        },
+        physics: {
+          enabled: true,
+        }
+      });
+    }
+
   };
 
   const openModal = (userId: string) => {
@@ -68,6 +85,79 @@ export default function Landing() {
         },
       });
     }
+  };
+
+  const tgenerateNodes = (loggedInUser: User | undefined, roommates: User[], neighbors: User[]) => {
+    if (!loggedInUser) {
+      console.error("Logged in user is undefined");
+      return;
+    }
+
+    // DataSet에 노드 추가
+    tnodes.current.clear(); // 기존 노드를 지우고 새로 추가
+    tnodes.current.add([
+      {
+        id: loggedInUser.node_id,
+        label: loggedInUser.nickname,
+        group: "loggedInUser",
+        size: nodeRadius,
+      },
+      ...roommates.map((roommate) => ({
+        id: roommate.node_id,
+        label: roommate.nickname,
+        group: "roommate",
+        size: nodeRadius,
+      })),
+      ...neighbors.map((neighbor) => ({
+        id: neighbor.node_id,
+        label: neighbor.nickname,
+        group: "neighbor",
+        size: nodeRadius,
+      })),
+    ]);
+  };
+
+  const tgenerateEdges = (
+    loggedInUser: User | undefined,
+    roommates: User[],
+    roommatesWithNeighbors: RoommateWithNeighbors[]
+  ) => {
+    if (!loggedInUser) {
+      console.error("Logged in user is undefined");
+      return;
+    }
+
+    // DataSet에 엣지 추가
+    tedges.current.clear(); // 기존 엣지를 지우고 새로 추가
+    const newEdges: Edge[] = [];
+    const edgeSet = new Set<string>();
+
+    roommates.forEach((roommate) => {
+      const edgeKey = `${loggedInUser.node_id}-${roommate.node_id}`;
+      newEdges.push({
+        from: loggedInUser.node_id,
+        to: roommate.node_id,
+      });
+      edgeSet.add(edgeKey);
+    });
+
+    roommatesWithNeighbors.forEach((roommateWithNeighbor) => {
+      const roommateId = roommateWithNeighbor.roommate.node_id;
+      roommateWithNeighbor.neighbors.forEach((neighbor) => {
+        const edgeKey = `${roommateId}-${neighbor.node_id}`;
+        const reverseEdgeKey = `${neighbor.node_id}-${roommateId}`;
+
+        if (!edgeSet.has(reverseEdgeKey)) {
+          newEdges.push({
+            from: roommateId,
+            to: neighbor.node_id,
+          });
+          edgeSet.add(edgeKey);
+        }
+      });
+    });
+
+    tedges.current.add(newEdges);
   };
 
   const closeProfileModal = () => {
@@ -175,6 +265,7 @@ export default function Landing() {
       label: loggedInUser.nickname,
       group: "loggedInUser",
       size: nodeRadius,
+ 
     };
 
     const roommateNodes = roommates.map((roommate) => ({
@@ -182,6 +273,7 @@ export default function Landing() {
       label: roommate.nickname,
       group: "roommate",
       size: nodeRadius,
+ 
     }));
 
     const neighborNodes = neighbors.map((neighbor) => ({
@@ -189,6 +281,7 @@ export default function Landing() {
       label: neighbor.nickname,
       group: "neighbor",
       size: nodeRadius,
+
     }));
 
     return [userNode, ...roommateNodes, ...neighborNodes];
@@ -248,27 +341,61 @@ export default function Landing() {
     console.log("and now networkInstanc.current : ", networkInstance.current);
     if (networkContainer.current) {
       if (!networkInstance.current) {
-        console.log("Nodes : ", Nodes);
-        console.log("Edges : ", Edges);
+        console.log("Nodes : ", tnodes.current);
+        console.log("Edges : ", tedges.current);
         networkInstance.current = new Network(
           networkContainer.current,
-          { nodes: Nodes, edges: Edges },
+          { nodes: tnodes.current, edges: tedges.current },
           visnet_options
         );
-        networkInstance.current.on(
-          "doubleClick",
-          (event: { nodes: string[] }) => {
-            const { nodes: clickedNodes } = event;
-            if (clickedNodes.length > 0) {
-              const clickedNodeId = clickedNodes[0];
+        networkInstance.current.on("click", (event) => {
+          if (event.nodes.length === 0 && event.edges.length === 0) {
+            // 노드나 엣지가 클릭되지 않았을 때만 배경을 변경
+            if (networkContainer.current) {
+              // 랜덤 색 생성
+              const generateRandomGradient = () => {
+                // 밝은 색상 그라데이션을 생성하는 함수
+                const color1 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+                const color2 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+                return `linear-gradient(135deg, ${color1}, ${color2})`;
+              };
+              const randomGradient = generateRandomGradient();
+              networkContainer.current.style.background = randomGradient;
+            }
+          }
+        });
+        networkInstance.current.on("click", (event) => {
+          const clickedNodes = event.nodes; // 클릭된 노드의 ID 리스트  
+          if(clickedNodes.length > 0)
+            console.log(clickedNodes[0]);
+        });
 
-              networkInstance.current?.focus(clickedNodeId, {
-                scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
-                animation: {
-                  duration: 1000, // 애니메이션 지속 시간 (밀리초)
-                  easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+
+        networkInstance.current.on("doubleClick", (event) => {
+          const clickedNodes = event.nodes; // 클릭된 노드의 ID 리스트
+          if (clickedNodes.length > 0) {
+            const clickedNodeId = clickedNodes[0]; // 첫 번째 클릭된 노드의 ID
+            if (networkInstance.current) {
+              networkInstance.current.setOptions({
+                interaction: {
+                  dragNodes: false,
+                  dragView: false,
+                  zoomView: false,
+                  selectable: false,
+                },
+                physics: {
+                  enabled: false, // 물리적 동작 비활성화
                 },
               });
+            }
+  
+            networkInstance.current?.focus(clickedNodeId, {
+              scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
+              animation: {
+                duration: 1000, // 애니메이션 지속 시간 (밀리초)
+                easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+              },
+            });
              
               
               setTimeout(() => {
@@ -301,15 +428,19 @@ export default function Landing() {
   }, [networkContainer.current, Nodes, Edges]);
 
   useEffect(() => {
-    const nodes = generateNodes(loggedInUser, roommatesData, neighborsData);
-    const edges = generateEdges(
-      loggedInUser,
-      roommatesData,
-      roommatesWithNeighbors
-    );
-    setNodes(nodes);
-    setEdges(edges);
+  //   const nodes = generateNodes(loggedInUser, roommatesData, neighborsData);
+  //   const edges = generateEdges(
+  //     loggedInUser,
+  //     roommatesData,
+  //     roommatesWithNeighbors
+  //   );
+  //   setNodes(nodes);
+  //   setEdges(edges);
+  // }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
+  tgenerateNodes(loggedInUser, roommatesData, neighborsData);
+    tgenerateEdges(loggedInUser, roommatesData, roommatesWithNeighbors);
   }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
+
 
   const zoomIn = () => {
     if (networkInstance.current && !isCasting.current) {
@@ -323,6 +454,55 @@ export default function Landing() {
       });
     }
   };
+  const changeNodeGroup = (nodeId: string, newGroup: string) => {
+    if (nodeId && newGroup) {
+      tnodes.current.update({ id: nodeId, group: newGroup });
+    }
+  };
+
+  const handleGroupChange = () => {
+    if (nodeId && selectedGroup) {
+      // 노드의 그룹을 변경
+      
+      tnodes.current.update({ id: "2", group: selectedGroup, shape: "star" });
+      tnodes.current.add([
+        {
+          id: "1",
+          label: "1",
+          group: "cluster-1",
+          size: nodeRadius,
+        },
+      ]);
+      console.log("d", Nodes);
+  
+      // 해당 그룹의 클러스터 노드와 연결
+      const clusterNodeId = `cluster-${selectedGroup}`;
+  
+      // 투명한 클러스터 노드가 있는지 확인하고 없다면 생성
+      if (!tnodes.current.get(clusterNodeId)) {
+        tnodes.current.add({
+          id: clusterNodeId,
+          label: `Cluster ${selectedGroup}`,
+          group: selectedGroup,
+          hidden: true, // 클러스터 노드는 화면에 보이지 않음
+          mass: 10,
+        });
+      }
+  
+      // 클러스터 노드와 연결된 투명 엣지 추가
+      tedges.current.add({
+        from: nodeId,
+        to: clusterNodeId,
+        color: {
+          color: "rgba(0,0,0,0)", // 투명 엣지
+          opacity: 0,
+        },
+      });
+    }
+  };
+  
+  
+
   const zoomOut = () => {
     if (networkInstance.current && !isCasting.current) {
       const scale = networkInstance.current.getScale();
@@ -364,6 +544,7 @@ export default function Landing() {
     }
   };
 
+  
   const disableGraphInteraction = () => {
     if (networkInstance.current) {
       networkInstance.current.setOptions({
@@ -550,6 +731,20 @@ export default function Landing() {
     });
   };
 
+  // const handleGroupChange = () => {
+  //   if (loggedInUser) {
+  //     changeNodeGroup(loggedInUser.node_id, "roommate");
+  //   }
+  // };
+
+  // const changeNodeGroup = (nodeId: string, newGroup: string) => {
+  //   setNodes((prevNodes) =>
+  //     prevNodes.map((node) =>
+  //       node.id === nodeId ? { ...node, group: newGroup } : node
+  //     )
+  //   );
+  // };
+
   return (
     <>
       {!isLoggedIn.isLogin && (
@@ -579,6 +774,24 @@ export default function Landing() {
               <DefaultButton placeholder="O" onClick={() => resetPosition()} />
               <DefaultButton placeholder="-" onClick={() => zoomOut()} />
             </div>
+            <div>
+              <input
+                type="text"
+                placeholder="Node ID"
+                value={nodeId}
+                onChange={(e) => setNodeId(e.target.value)}
+              />
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+              >
+                <option value="group1">Group 1</option>
+                <option value="group2">Group 2</option>
+                <option value="group3">Group 3</option>
+                <option value="group4">Group 4</option>
+              </select>
+              <button onClick={handleGroupChange}>Change Group</button>
+            </div>
             <div className={style.logoutButtonContainer}>
               <DefaultButton
                 placeholder="로그아웃"
@@ -600,7 +813,7 @@ export default function Landing() {
           </div>
         </>
       )}
-
+      
       {/* 모달 컴포넌트 */}
       <FriendModal
         isOpen={isModalOpen}
