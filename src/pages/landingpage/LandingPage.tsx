@@ -64,27 +64,31 @@ export default function Landing() {
     setIsModalOpen(true);
   };
 
-  // const onSignoutButtonClickHandler = async () => {
-  //   alert("회원탈퇴를 진행합니다.");
-  //   try {
-  //     const response = await fetch(`${APIURL}/domain/auth/signout`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       credentials: "include",
-  //     });
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       if (data.message === "signout success") {
-  //         alert("회원탈퇴가 완료되었습니다.");
-  //         window.location.href = "/";
-  //       }
-  //     }
-  //   } catch (error) {
-  //     alert("unknown error occurred in onSignoutButtonClickHandler");
-  //   }
-  // };
+  const onSignoutButtonClickHandler = async () => {
+    const isSignout = window.confirm("정말 회원탈퇴를 진행하시겠습니까?");
+    if (isSignout) {
+      alert("회원탈퇴를 진행합니다.");
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/signout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "signout success") {
+            alert("회원탈퇴가 완료되었습니다.");
+            window.location.href = "/";
+          }
+        }
+      } catch (error) {
+        alert("unknown error occurred in onSignoutButtonClickHandler");
+        console.error(error);
+      }
+    }
+  };
 
   const closeProfileModal = () => {
     setIsProfileModalOpen(false);
@@ -382,12 +386,12 @@ export default function Landing() {
                 onClick={() => onLogoutButtonClickHandler()}
               />
             </div>
-            {/* <div className={style.signoutButtonContainer}>
+            <div className={style.signoutButtonContainer}>
               <DefaultButton
                 placeholder="회원탈퇴"
                 onClick={() => onSignoutButtonClickHandler()}
               />
-            </div> */}
+            </div>
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}
