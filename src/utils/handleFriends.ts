@@ -74,8 +74,8 @@ export const generateNodes = (
   const roommateNodes = roommates.map((roommate) => ({
     id: roommate.roommate.node_id,
     label: roommate.roommate.nickname,
-    group: roommate.roommate_edge.group
-      ? roommate.roommate_edge.group
+    group: roommate.is_roommate_edge.group
+      ? roommate.is_roommate_edge.group
       : "friend",
     size: 15,
   }));

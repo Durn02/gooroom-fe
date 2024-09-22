@@ -14,9 +14,8 @@ export interface User {
 
 export interface RoomMateData {
   roommate: User;
-  roommate_edge: RoomMateEdge;
+  is_roommate_edge: RoomMateEdge;
 }
-
 export interface RoommateWithNeighbors {
   roommate: User;
   neighbors: User[];
