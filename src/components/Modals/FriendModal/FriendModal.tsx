@@ -40,6 +40,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
       }
     } catch (error) {
       setResponseMessage("An error occurred while fetching memo.");
+      console.error(error);
     }
   };
 
@@ -67,6 +68,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
       }
     } catch (error) {
       setResponseMessage("An error occurred while saving memo.");
+      console.error(error);
     }
   };
 
