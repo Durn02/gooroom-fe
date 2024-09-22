@@ -1,10 +1,14 @@
-import { User, RoommateWithNeighbors } from "../types/landingPage.type"; // Import your types
+import {
+  User,
+  RoomMateData,
+  RoommateWithNeighbors,
+} from "../types/landingPage.type"; // Import your types
 import getAPIURL from "./getAPIURL"; // Utility to get API URL
 import { Node, Edge } from "vis-network"; // Import vis-network types
 
 export const fetchFriends = async (): Promise<{
   loggedInUser: User | undefined;
-  roommates: User[];
+  roommates: RoomMateData[];
   neighbors: User[];
   roommatesWithNeighbors: RoommateWithNeighbors[];
 }> => {
@@ -52,7 +56,7 @@ export const fetchFriends = async (): Promise<{
 
 export const generateNodes = (
   loggedInUser: User | undefined,
-  roommates: User[],
+  roommates: RoomMateData[],
   neighbors: User[]
 ): Node[] => {
   if (!loggedInUser) {
@@ -63,15 +67,17 @@ export const generateNodes = (
   const userNode: Node = {
     id: loggedInUser.node_id,
     label: loggedInUser.nickname,
-    group: "loggedInUser",
+    group: "me",
     size: 20,
   };
 
   const roommateNodes = roommates.map((roommate) => ({
-    id: roommate.node_id,
-    label: roommate.nickname,
-    group: "roommate",
-    size: 13,
+    id: roommate.roommate.node_id,
+    label: roommate.roommate.nickname,
+    group: roommate.roommate_edge.group
+      ? roommate.roommate_edge.group
+      : "friend",
+    size: 15,
   }));
 
   const neighborNodes = neighbors.map((neighbor) => ({
@@ -86,7 +92,7 @@ export const generateNodes = (
 
 export const generateEdges = (
   loggedInUser: User | undefined,
-  roommates: User[],
+  roommates: RoomMateData[],
   roommatesWithNeighbors: RoommateWithNeighbors[]
 ): Edge[] => {
   if (!loggedInUser) {
@@ -98,10 +104,10 @@ export const generateEdges = (
   const edgeSet = new Set<string>();
 
   roommates.forEach((roommate) => {
-    const edgeKey = `${loggedInUser.node_id}-${roommate.node_id}`;
+    const edgeKey = `${loggedInUser.node_id}-${roommate.roommate.node_id}`;
     edges.push({
       from: loggedInUser.node_id,
-      to: roommate.node_id,
+      to: roommate.roommate.node_id,
     });
     edgeSet.add(edgeKey);
   });

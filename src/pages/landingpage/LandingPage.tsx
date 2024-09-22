@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Network, Node, Edge } from "vis-network";
+import { DataSet } from "vis-data";
 import { Link } from "react-router-dom";
 import DefaultButton from "../../components/Button/DefaultButton";
 import visnet_options from "../../components/VisNetGraph/visnetGraphOptions";
@@ -20,32 +21,37 @@ import {
 import { castAnimation } from "../../utils/casting";
 import {
   User,
+  RoomMateData,
   RoommateWithNeighbors,
   GetCastsResponse,
 } from "../../types/landingPage.type";
+import {
+  fetchFriends,
+  generateEdges,
+  generateNodes,
+} from "../../utils/handleFriends";
 
 const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
   const [loggedInUser, setLoggedInUser] = useState<User>();
-  const [roommatesData, setRoommates] = useState<User[]>([]);
-  const [neighborsData, setNeighbors] = useState<User[]>([]);
-  const [roommatesWithNeighbors, setRoommatesWithNeighbors] = useState<
-    RoommateWithNeighbors[]
-  >([]);
-  const [Nodes, setNodes] = useState<Node[]>([]);
-  const [Edges, setEdges] = useState<Edge[]>([]);
-  const [isFriendModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
+  const roommatesDataRef = useRef<RoomMateData[]>([]);
+  const neighborsDataRef = useRef<User[]>([]);
+  const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
+  // const nodesRef = useRef<Node[]>([]);
+  // const edgesRef = useRef<Edge[]>([]);
+  // const [logined, setlogined] = useState(false);
+  const nodesDataset = useRef(new DataSet<Node>());
+  const edgesDataset = useRef(new DataSet<Edge>());
   const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   const new_casts = useRef<GetCastsResponse[]>([]);
 
-  const nodeRadius = 13;
+  const [isFriendModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -58,52 +64,6 @@ export default function Landing() {
     setIsModalOpen(true);
   };
 
-  const closeProfileModal = () => {
-    setIsProfileModalOpen(false);
-  };
-
-  const verifyAccessToken = async () => {
-    try {
-      const response = await fetch(
-        `${APIURL}/domain/auth/verify-access-token`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // 쿠키를 포함시키기 위해 필요
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === "access token validation check successfull") {
-          // 서버가 보낸 메시지에 따라 조건 수정
-          isLoggedIn.isLogin = true;
-          await fetchFriends();
-        }
-      } else {
-        const refresh_response = await fetch(
-          `${APIURL}/domain/auth/refresh-acc-token`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          }
-        );
-        if (refresh_response.ok) {
-          isLoggedIn.isLogin = true;
-          await fetchFriends();
-        } else {
-          isLoggedIn.isLogin = false;
-        }
-      }
-    } catch (error) {
-      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
-    }
-  };
   // const onSignoutButtonClickHandler = async () => {
   //   alert("회원탈퇴를 진행합니다.");
   //   try {
@@ -126,108 +86,53 @@ export default function Landing() {
   //   }
   // };
 
-  const fetchFriends = async () => {
-    console.log("fetchFriends called!");
+  const closeProfileModal = () => {
+    setIsProfileModalOpen(false);
+  };
+
+  const verifyAccessToken = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/friend/get-members`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${APIURL}/domain/auth/verify-access-token`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
       if (response.ok) {
-        let data = await response.json();
-        if (data.length > 0) {
-          data = data[0];
-          setLoggedInUser(data.u);
-          setRoommates(data.roommates);
-          setNeighbors(data.neighbors);
-          setRoommatesWithNeighbors(data.roommates_with_neighbors);
+        const data = await response.json();
+        console.log(data);
+        if (data.message == "access token validation check successfull") {
+          isLoggedIn.isLogin = true;
+        }
+      } else {
+        const refresh_response = await fetch(
+          `${APIURL}/domain/auth/refresh-acc-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+        if (refresh_response.ok) {
+          isLoggedIn.isLogin = true;
+          // Update refs instead of state
+        } else {
+          isLoggedIn.isLogin = false;
         }
       }
     } catch (error) {
-      alert(error);
+      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
     }
-  };
-
-  const generateNodes = (
-    loggedInUser: User | undefined,
-    roommates: User[],
-    neighbors: User[]
-  ): Node[] => {
-    if (!loggedInUser) {
-      console.error("Logged in user is undefined");
-      return [];
-    }
-
-    const userNode: Node = {
-      id: loggedInUser.node_id,
-      label: loggedInUser.nickname,
-      group: "loggedInUser",
-      size: nodeRadius,
-    };
-
-    const roommateNodes = roommates.map((roommate) => ({
-      id: roommate.node_id,
-      label: roommate.nickname,
-      group: "roommate",
-      size: nodeRadius,
-    }));
-
-    const neighborNodes = neighbors.map((neighbor) => ({
-      id: neighbor.node_id,
-      label: neighbor.nickname,
-      group: "neighbor",
-      size: nodeRadius,
-    }));
-
-    return [userNode, ...roommateNodes, ...neighborNodes];
-  };
-
-  const generateEdges = (
-    loggedInUser: User | undefined,
-    roommates: User[],
-    roommatesWithNeighbors: RoommateWithNeighbors[]
-  ): Edge[] => {
-    if (!loggedInUser) {
-      console.error("Logged in user is undefined");
-      return [];
-    }
-
-    const edges: Edge[] = [];
-    const edgeSet = new Set<string>();
-
-    roommates.forEach((roommate) => {
-      const edgeKey = `${loggedInUser.node_id}-${roommate.node_id}`;
-      edges.push({
-        from: loggedInUser.node_id,
-        to: roommate.node_id,
-      });
-      edgeSet.add(edgeKey);
-    });
-
-    roommatesWithNeighbors.forEach((roommateWithNeighbor) => {
-      const roommateId = roommateWithNeighbor.roommate.node_id;
-      roommateWithNeighbor.neighbors.forEach((neighbor) => {
-        const edgeKey = `${roommateId}-${neighbor.node_id}`;
-        const reverseEdgeKey = `${neighbor.node_id}-${roommateId}`;
-
-        if (!edgeSet.has(reverseEdgeKey)) {
-          edges.push({
-            from: roommateId,
-            to: neighbor.node_id,
-          });
-          edgeSet.add(edgeKey);
-        }
-      });
-    });
-
-    return edges;
   };
 
   const longPoll = async () => {
-    console.log("longPoll called");
     try {
       const response = await fetch(
         "http://localhost:8000/domain/content/long_poll",
@@ -255,22 +160,75 @@ export default function Landing() {
     verifyAccessToken();
   }, []);
 
-  useEffect(() => {
-    console.log(
-      "networkContainer.current changed as : ",
-      networkContainer.current
-    );
+  // useEffect(() => {
+  //   const updateNetwork = async () => {
+  //     if (isLoggedIn.isLogin) {
+  //       const friendsData = await fetchFriends();
+  //       const { loggedInUser, roommates, neighbors, roommatesWithNeighbors } =
+  //         friendsData;
 
-    console.log("and now networkInstanc.current : ", networkInstance.current);
+  //       setLoggedInUser(loggedInUser);
+
+  //       nodesDataset.current.clear();
+  //       edgesDataset.current.clear();
+
+  //       const nodes = generateNodes(loggedInUser, roommates, neighbors);
+  //       const edges = generateEdges(loggedInUser, roommates, roommatesWithNeighbors);
+
+  //       nodesDataset.current.add(nodes);
+  //       edgesDataset.current.add(edges);
+
+  //       if (networkInstance.current) {
+  //         networkInstance.current.setData({
+  //           nodes: nodesDataset.current,
+  //           edges: edgesDataset.current,
+  //         });
+  //       }
+  //     }
+  //   };
+
+  //   if (isLoggedIn.isLogin) {
+  //     updateNetwork();
+  //   }
+  // }, [isLoggedIn.isLogin]);
+
+  useEffect(() => {
     if (networkContainer.current) {
+      const updateNetwork = async () => {
+        const friendsData = await fetchFriends();
+        console.log(friendsData);
+        // Update refs instead of state
+        setLoggedInUser(friendsData.loggedInUser);
+        roommatesDataRef.current = friendsData.roommates;
+        neighborsDataRef.current = friendsData.neighbors;
+        roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
+      };
+
       if (!networkInstance.current) {
-        console.log("Nodes : ", Nodes);
-        console.log("Edges : ", Edges);
+        updateNetwork();
+        const nodes = generateNodes(
+          loggedInUser,
+          roommatesDataRef.current,
+          neighborsDataRef.current
+        );
+        const edges = generateEdges(
+          loggedInUser,
+          roommatesDataRef.current,
+          roommatesWithNeighborsRef.current
+        );
+
+        nodesDataset.current.add(nodes);
+        edgesDataset.current.add(edges);
+
         networkInstance.current = new Network(
           networkContainer.current,
-          { nodes: Nodes, edges: Edges },
+          {
+            nodes: nodesDataset.current,
+            edges: edgesDataset.current,
+          },
           visnet_options
         );
+
         networkInstance.current.on(
           "doubleClick",
           (event: { nodes: string[] }) => {
@@ -298,33 +256,20 @@ export default function Landing() {
           }
         );
       } else {
-        const data = { nodes: Nodes, edges: Edges };
+        const data = {
+          nodes: nodesDataset.current,
+          edges: edgesDataset.current,
+        };
         networkInstance.current.setData(data);
       }
     }
-    console.log(
-      "networkinstance.current in initializing instance: ",
-      networkInstance.current
-    );
     return () => {
       if (networkInstance.current) {
-        console.log("network instance destroyed");
         networkInstance.current.destroy();
         networkInstance.current = null;
       }
     };
-  }, [networkContainer.current, Nodes, Edges]);
-
-  useEffect(() => {
-    const nodes = generateNodes(loggedInUser, roommatesData, neighborsData);
-    const edges = generateEdges(
-      loggedInUser,
-      roommatesData,
-      roommatesWithNeighbors
-    );
-    setNodes(nodes);
-    setEdges(edges);
-  }, [loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors]);
+  }, [networkContainer.current]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -379,8 +324,8 @@ export default function Landing() {
         networkInstance.current,
         networkContainer.current,
         loggedInUser?.node_id,
-        roommatesData,
-        neighborsData
+        roommatesDataRef.current,
+        neighborsDataRef.current
       );
     });
     isCasting.current = false;

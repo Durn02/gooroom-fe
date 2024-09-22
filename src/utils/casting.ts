@@ -1,5 +1,5 @@
 import { Network, IdType } from "vis-network";
-import { User } from "../types/landingPage.type";
+import { RoomMateData, User } from "../types/landingPage.type";
 import style from "../pages/landingpage/LandingPage.module.css";
 import gsap from "gsap";
 import { softenGraph, enableGraphInteraction } from "./graphInteraction";
@@ -21,7 +21,7 @@ export const castAnimation = (
   network: Network | null,
   networkContainer: HTMLDivElement | null,
   loggedInUserNodeId: string | undefined,
-  roommatesData: User[],
+  roommatesData: RoomMateData[],
   neighborsData: User[]
 ) => {
   const alignOffset = 5;
@@ -47,7 +47,7 @@ export const castAnimation = (
 
   const roommatesPositions = roommatesData
     .map((roommate) => {
-      const position = getPosition(roommate.node_id, network);
+      const position = getPosition(roommate.roommate.node_id, network);
       return position || null;
     })
     .filter((position) => position !== null);
