@@ -39,9 +39,6 @@ export default function Landing() {
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
-  // const nodesRef = useRef<Node[]>([]);
-  // const edgesRef = useRef<Edge[]>([]);
-  // const [logined, setlogined] = useState(false);
   const nodesDataset = useRef(new DataSet<Node>());
   const edgesDataset = useRef(new DataSet<Edge>());
   const isCasting = useRef<boolean>(false);
@@ -163,38 +160,6 @@ export default function Landing() {
   useEffect(() => {
     verifyAccessToken();
   }, []);
-
-  // useEffect(() => {
-  //   const updateNetwork = async () => {
-  //     if (isLoggedIn.isLogin) {
-  //       const friendsData = await fetchFriends();
-  //       const { loggedInUser, roommates, neighbors, roommatesWithNeighbors } =
-  //         friendsData;
-
-  //       setLoggedInUser(loggedInUser);
-
-  //       nodesDataset.current.clear();
-  //       edgesDataset.current.clear();
-
-  //       const nodes = generateNodes(loggedInUser, roommates, neighbors);
-  //       const edges = generateEdges(loggedInUser, roommates, roommatesWithNeighbors);
-
-  //       nodesDataset.current.add(nodes);
-  //       edgesDataset.current.add(edges);
-
-  //       if (networkInstance.current) {
-  //         networkInstance.current.setData({
-  //           nodes: nodesDataset.current,
-  //           edges: edgesDataset.current,
-  //         });
-  //       }
-  //     }
-  //   };
-
-  //   if (isLoggedIn.isLogin) {
-  //     updateNetwork();
-  //   }
-  // }, [isLoggedIn.isLogin]);
 
   useEffect(() => {
     if (networkContainer.current) {
