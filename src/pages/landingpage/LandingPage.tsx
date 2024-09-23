@@ -149,7 +149,6 @@ export default function Landing() {
         const data = await response.json();
         if (data.contents.length > 0) {
           new_casts.current = data.contents;
-          console.log("new_casts.current : ", new_casts.current);
           // alertCast();
         }
       }
