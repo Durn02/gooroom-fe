@@ -147,8 +147,10 @@ export default function Landing() {
       );
       if (response.ok) {
         const data = await response.json();
-        if (data.new_exists) {
+        console.log("data : ", data);
+        if (data.contents.length > 0) {
           new_casts.current = data.contents;
+          console.log("new_casts.current : ", new_casts.current);
           // alertCast();
         }
       }
