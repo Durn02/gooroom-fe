@@ -10,8 +10,6 @@ const getPosition = (node_id: IdType, network: Network | null) => {
     return;
   }
 
-  console.log("node_id : ", node_id);
-
   const canvasPosition = network.getPosition(node_id);
   const domPosition = network.canvasToDOM(canvasPosition);
   return domPosition;
@@ -24,12 +22,13 @@ export const castAnimation = (
   roommatesData: RoomMateData[],
   neighborsData: User[]
 ) => {
-  const alignOffset = 5;
-
   if (!network) {
     console.error("error in castAnimation. there's no network");
     return;
   }
+
+  const scale = network.getScale();
+  const alignOffset = 5 * scale;
 
   if (!networkContainer) {
     console.error("error in castAnimation. there's no network");
@@ -76,6 +75,9 @@ export const castAnimation = (
         element.style.left = `${loggedInUserPosition.x - alignOffset}px`;
         element.style.top = `${loggedInUserPosition.y - alignOffset}px`;
 
+        element.style.width = `${10 * scale}px`;
+        element.style.height = `${10 * scale}px`;
+
         gsap.fromTo(
           element,
           { x: 0, y: 0 },
@@ -109,6 +111,9 @@ export const castAnimation = (
           const element = document.createElement("span");
           element.classList.add(style.blinkingElement);
           networkContainer.appendChild(element);
+
+          element.style.width = `${10 * scale}px`;
+          element.style.height = `${10 * scale}px`;
 
           element.style.left = `${connectedRoommate.x - alignOffset}px`;
           element.style.top = `${connectedRoommate.y - alignOffset}px`;

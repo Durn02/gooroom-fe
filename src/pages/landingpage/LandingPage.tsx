@@ -13,7 +13,6 @@ import getAPIURL from "../../utils/getAPIURL";
 import {
   zoomIn,
   zoomOut,
-  fitNetworkToScreen,
   resetPosition,
   disableGraphInteraction,
   hardenGraph,
@@ -41,7 +40,6 @@ export default function Landing() {
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
   const nodesDataset = useRef(new DataSet<Node>());
   const edgesDataset = useRef(new DataSet<Edge>());
-  const isCasting = useRef<boolean>(false);
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   const new_casts = useRef<GetCastsResponse[]>([]);
@@ -53,7 +51,7 @@ export default function Landing() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUserId(null);
-    fitNetworkToScreen(networkInstance.current);
+    resetPosition(networkInstance.current);
   };
 
   const openModal = (userId: string) => {
@@ -282,7 +280,6 @@ export default function Landing() {
   };
 
   const cast = (cast_message: string) => {
-    isCasting.current = true;
     disableGraphInteraction(networkInstance.current);
     hardenGraph(networkInstance.current);
     console.log("cast_message : ", cast_message);
@@ -297,7 +294,6 @@ export default function Landing() {
         neighborsDataRef.current
       );
     });
-    isCasting.current = false;
   };
 
   return (
@@ -328,21 +324,15 @@ export default function Landing() {
             <div className={style.magnifyButtonContainer}>
               <DefaultButton
                 placeholder="+"
-                onClick={() =>
-                  zoomIn(networkInstance.current, isCasting.current)
-                }
+                onClick={() => zoomIn(networkInstance.current)}
               />
               <DefaultButton
                 placeholder="O"
-                onClick={() =>
-                  resetPosition(networkInstance.current, isCasting.current)
-                }
+                onClick={() => resetPosition(networkInstance.current)}
               />
               <DefaultButton
                 placeholder="-"
-                onClick={() =>
-                  zoomOut(networkInstance.current, isCasting.current)
-                }
+                onClick={() => zoomOut(networkInstance.current)}
               />
             </div>
             <div className={style.logoutButtonContainer}>
