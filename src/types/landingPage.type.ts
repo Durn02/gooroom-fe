@@ -17,8 +17,8 @@ export interface RoomMateData {
   is_roommate_edge: RoomMateEdge;
 }
 export interface RoommateWithNeighbors {
-  roommate: User;
-  neighbors: User[];
+  roommate: string;
+  neighbors: string[];
 }
 
 interface CastNode {

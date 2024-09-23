@@ -113,15 +113,15 @@ export const generateEdges = (
   });
 
   roommatesWithNeighbors.forEach((roommateWithNeighbor) => {
-    const roommateId = roommateWithNeighbor.roommate.node_id;
-    roommateWithNeighbor.neighbors.forEach((neighbor) => {
-      const edgeKey = `${roommateId}-${neighbor.node_id}`;
-      const reverseEdgeKey = `${neighbor.node_id}-${roommateId}`;
+    const roommateId = roommateWithNeighbor.roommate;
+    roommateWithNeighbor.neighbors.forEach((neighborId) => {
+      const edgeKey = `${roommateId}-${neighborId}`;
+      const reverseEdgeKey = `${neighborId}-${roommateId}`;
 
       if (!edgeSet.has(reverseEdgeKey)) {
         edges.push({
           from: roommateId,
-          to: neighbor.node_id,
+          to: neighborId,
         });
         edgeSet.add(edgeKey);
       }
