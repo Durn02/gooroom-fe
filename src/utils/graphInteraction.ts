@@ -1,6 +1,7 @@
 import { Network } from "vis-network";
+let isCasting: boolean = false;
 
-export const zoomIn = (network: Network | null, isCasting: boolean) => {
+export const zoomIn = (network: Network | null) => {
   if (network && !isCasting) {
     const scale = network.getScale();
     network.moveTo({
@@ -13,7 +14,7 @@ export const zoomIn = (network: Network | null, isCasting: boolean) => {
   }
 };
 
-export const zoomOut = (network: Network | null, isCasting: boolean) => {
+export const zoomOut = (network: Network | null) => {
   if (network && !isCasting) {
     const scale = network.getScale();
     network.moveTo({
@@ -26,20 +27,14 @@ export const zoomOut = (network: Network | null, isCasting: boolean) => {
   }
 };
 
-export const fitNetworkToScreen = (network: Network | null) => {
-  if (network) {
+export const resetPosition = (network: Network | null) => {
+  if (network && !isCasting) {
     network.fit({
       animation: {
         duration: 1000, // 애니메이션 지속 시간 (밀리초)
         easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
       },
     });
-  }
-};
-
-export const resetPosition = (network: Network | null, isCasting: boolean) => {
-  if (network && !isCasting) {
-    fitNetworkToScreen(network);
   }
 };
 
@@ -54,6 +49,7 @@ export const disableGraphInteraction = (network: Network | null) => {
       },
     });
   }
+  isCasting = true;
 };
 
 export const enableGraphInteraction = (network: Network | null) => {
@@ -67,6 +63,7 @@ export const enableGraphInteraction = (network: Network | null) => {
       },
     });
   }
+  isCasting = false;
 };
 
 export const hardenGraph = (network: Network | null) => {
