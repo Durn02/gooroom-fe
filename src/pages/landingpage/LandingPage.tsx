@@ -26,8 +26,8 @@ import {
 } from "../../types/landingPage.type";
 import {
   fetchFriends,
-  generateEdges,
-  generateNodes,
+  initDataset,
+  reloadDataset,
 } from "../../utils/handleFriends";
 
 const APIURL = getAPIURL();
@@ -43,7 +43,7 @@ export default function Landing() {
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   const new_casts = useRef<GetCastsResponse[]>([]);
-  const nodesUpdated = useRef(false);
+  
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -59,10 +59,32 @@ export default function Landing() {
     setIsModalOpen(true);
   };
 
+  const fetchAndUpdateData = async () => {
+    const friendsData = await fetchFriends();
+
+    if(loggedInUser) {
+      reloadDataset({ 
+        loggedInUser: loggedInUser, 
+        roommates: roommatesDataRef.current, 
+        neighbors: neighborsDataRef.current, 
+        roommatesWithNeighbors: roommatesWithNeighborsRef.current
+      }, friendsData, nodesDataset.current, edgesDataset.current);
+    }
+    roommatesDataRef.current = friendsData.roommates;
+    neighborsDataRef.current = friendsData.neighbors;
+    roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
+
+    // Check if loggedInUser exists. If it doesn't, this is the first load.
+    if (!loggedInUser) {
+      setLoggedInUser(friendsData.loggedInUser); // First time load
+      initDataset(friendsData, nodesDataset.current, edgesDataset.current);
+    } 
+  };
+
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm("정말 회원탈퇴를 진행하시겠습니까?");
     if (isSignout) {
-      alert("회원탈퇴를 진행합니다.");
+      alert("회원탈퇴를 진행합니다!");
       try {
         const response = await fetch(`${APIURL}/domain/auth/signout`, {
           method: "POST",
@@ -121,7 +143,6 @@ export default function Landing() {
         );
         if (refresh_response.ok) {
           isLoggedIn.isLogin = true;
-          // Update refs instead of state
         } else {
           isLoggedIn.isLogin = false;
         }
@@ -161,32 +182,8 @@ export default function Landing() {
 
   useEffect(() => {
     if (networkContainer.current) {
-      const updateNetwork = async () => {
-        const friendsData = await fetchFriends();
-        console.log(friendsData);
-        // Update refs instead of state
-        setLoggedInUser(friendsData.loggedInUser);
-        roommatesDataRef.current = friendsData.roommates;
-        neighborsDataRef.current = friendsData.neighbors;
-        roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-      };
-
+    
       if (!networkInstance.current) {
-        updateNetwork();
-        const nodes = generateNodes(
-          loggedInUser,
-          roommatesDataRef.current,
-          neighborsDataRef.current
-        );
-        const edges = generateEdges(
-          loggedInUser,
-          roommatesDataRef.current,
-          roommatesWithNeighborsRef.current
-        );
-
-        nodesDataset.current.add(nodes);
-        edgesDataset.current.add(edges);
-
         networkInstance.current = new Network(
           networkContainer.current,
           {
@@ -195,6 +192,8 @@ export default function Landing() {
           },
           visnet_options
         );
+        fetchAndUpdateData();
+        console.log('networkInstance constructed');
 
         networkInstance.current.on(
           "doubleClick",
@@ -223,11 +222,8 @@ export default function Landing() {
           }
         );
       } else {
-        const data = {
-          nodes: nodesDataset.current,
-          edges: edgesDataset.current,
-        };
-        networkInstance.current.setData(data);
+        fetchAndUpdateData();
+        console.log("fetchAndUpdateData called");
       }
     }
     return () => {
@@ -277,6 +273,12 @@ export default function Landing() {
     } catch (error) {
       alert(error);
     }
+  };
+
+  const addFriend = async () => {
+    // Simulate adding a friend
+
+    fetchAndUpdateData(); // Re-fetch and reload the dataset
   };
 
   const cast = (cast_message: string) => {
@@ -347,6 +349,7 @@ export default function Landing() {
                 onClick={() => onSignoutButtonClickHandler()}
               />
             </div>
+            <button onClick={addFriend}>Add Friend Test</button>
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}
