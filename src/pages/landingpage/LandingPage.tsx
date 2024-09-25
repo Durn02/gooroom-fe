@@ -34,7 +34,7 @@ const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
-  const [loggedInUser, setLoggedInUser] = useState<User>();
+  const loggedInUserRef = useRef<User>();
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
@@ -62,9 +62,9 @@ export default function Landing() {
   const fetchAndUpdateData = async () => {
     const friendsData = await fetchFriends();
 
-    if(loggedInUser) {
+    if(loggedInUserRef.current) {
       reloadDataset({ 
-        loggedInUser: loggedInUser, 
+        loggedInUser: loggedInUserRef.current, 
         roommates: roommatesDataRef.current, 
         neighbors: neighborsDataRef.current, 
         roommatesWithNeighbors: roommatesWithNeighborsRef.current
@@ -75,8 +75,10 @@ export default function Landing() {
     roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
 
     // Check if loggedInUser exists. If it doesn't, this is the first load.
-    if (!loggedInUser) {
-      setLoggedInUser(friendsData.loggedInUser); // First time load
+    if (!loggedInUserRef.current) {
+      console.log(loggedInUserRef.current);
+      loggedInUserRef.current = friendsData.loggedInUser; 
+      console.log(loggedInUserRef.current);
       initDataset(friendsData, nodesDataset.current, edgesDataset.current);
     } 
   };
@@ -211,7 +213,7 @@ export default function Landing() {
               });
 
               setTimeout(() => {
-                if (clickedNodeId === loggedInUser?.node_id) {
+                if (clickedNodeId === loggedInUserRef.current?.node_id) {
                   openModal(clickedNodeId);
                 } else {
                   console.log(clickedNodeId);
@@ -237,7 +239,7 @@ export default function Landing() {
   useEffect(() => {
     let isCancelled = false;
 
-    if (loggedInUser) {
+    if (loggedInUserRef.current) {
       const startPolling = async () => {
         while (!isCancelled) {
           await longPoll();
@@ -249,7 +251,7 @@ export default function Landing() {
     return () => {
       isCancelled = true;
     };
-  }, [loggedInUser]);
+  }, [loggedInUserRef.current]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
@@ -291,7 +293,7 @@ export default function Landing() {
       castAnimation(
         networkInstance.current,
         networkContainer.current,
-        loggedInUser?.node_id,
+        loggedInUserRef.current?.node_id,
         roommatesDataRef.current,
         neighborsDataRef.current
       );
