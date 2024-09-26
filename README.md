@@ -1,33 +1,36 @@
-# gooroom
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-- GooRoom의 front repository 입니다.
+## Getting Started
 
-## git commit convention
+First, run the development server:
 
-| 종류    | 내용                                | 예시                                    |
-| ------- | ----------------------------------- | --------------------------------------- |
-| Feat    | 새로운 기능 추가                    | Feat: 알림 기능 버튼 구현               |
-| Chore   | package 매니저 수정, 기타 작은 수정 | Chore: api 개선                         |
-| Rename  | 파일, 폴더명 수정, 이동             | Rename: landing to front                |
-| Docs    | 문서 수정                           | Docs: README 수정                       |
-| Test    | 테스트                              | Test: 버튼 임시 기능 테스트             |
-| Fix     | 버그 수정                           | Fix: 이상한 페이지로 이동하는 버그 수정 |
-| Design  | CSS 수정 또는 ui 변경               | Design: 버튼 색깔 변경                  |
-| Comment | 주석 추가 또는 변경                 | Comment: get_message api 설명 주석 작성 |
-| Remove  | 파일 제거                           | Remove: alert_button.tsx 제거           |
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## clone 또는 pull 이후 패키지 설치
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- `yarn install`
-- `npm init -y`
-- `npm install`
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 실행 방법
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-production mode로 실행
+## Learn More
 
-- `yarn start`
+To learn more about Next.js, take a look at the following resources:
 
-dev mode로 실행
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-- `yarn start:dev`
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
