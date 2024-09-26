@@ -3,8 +3,8 @@ import {
   RoomMateData,
   RoommateWithNeighbors,
 } from "../types/landingPage.type"; // Import your types
-import getAPIURL from "./getAPIURL"; // Utility to get API URL
 import { Node, Edge } from "vis-network"; // Import vis-network types
+import { API_URL } from "./config";
 
 export const fetchFriends = async (): Promise<{
   loggedInUser: User | undefined;
@@ -12,7 +12,7 @@ export const fetchFriends = async (): Promise<{
   neighbors: User[];
   roommatesWithNeighbors: RoommateWithNeighbors[];
 }> => {
-  const APIURL = getAPIURL();
+  const APIURL = API_URL;
   console.log("API URL: ", APIURL);
   console.log("fetchFriends called!");
   try {

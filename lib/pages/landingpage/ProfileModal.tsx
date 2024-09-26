@@ -4,13 +4,13 @@ import React, { useState, useEffect } from "react";
 import { CSSTransition } from "react-transition-group";
 //import "./ProfileModal.css";
 import style from "./ProfileModal.module.css";
-import getAPIURL from "../../utils/getAPIURL";
+import { API_URL } from "@/lib/utils/config";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-const APIURL = getAPIURL();
+const APIURL = API_URL;
 
 const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [profileData, setProfileData] = useState({

@@ -11,7 +11,7 @@ import style from "./LandingPage.module.css";
 import FriendModal from "@/components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
-import getAPIURL from "../../utils/getAPIURL";
+
 import {
   zoomIn,
   zoomOut,
@@ -31,8 +31,9 @@ import {
   generateEdges,
   generateNodes,
 } from "../../utils/handleFriends";
+import { API_URL } from "@/lib/utils/config";
 
-const APIURL = getAPIURL();
+const APIURL = API_URL;
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);

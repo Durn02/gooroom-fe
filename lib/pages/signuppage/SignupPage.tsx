@@ -6,7 +6,7 @@ import Input from "@/components/Input/DefaultInput";
 import VerifyInput from "@/components/Input/VerifyInput/VerifyInput";
 import PwInput from "@/components/Input/PwInput/PwInput";
 import style from "./SignupPage.module.css";
-import getAPIURL from "../../utils/getAPIURL";
+import { API_URL } from "@/lib/utils/config";
 
 // ~RequestData는 python backend에서 요구하는 형식과 맞춰야함
 type SignupRequestData = {
@@ -24,7 +24,7 @@ type SendVerificationCodeRequestData = {
   email: string;
 };
 
-const APIURL = getAPIURL();
+const APIURL = API_URL
 
 export default function Signup() {
   const [userEmailInput, setEmailInput] = useState<string>("");

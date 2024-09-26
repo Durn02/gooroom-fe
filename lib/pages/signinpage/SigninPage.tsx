@@ -8,7 +8,7 @@ import Input from "@/components/Input/DefaultInput";
 import PwInput from "@/components/Input/PwInput/PwInput";
 import { useState, useEffect } from "react";
 import { IsLoginContext } from "../../shared/IsLoginContext";
-import getAPIURL from "../../utils/getAPIURL";
+import { API_URL } from "@/lib/utils/config";
 
 type signinRequestData = {
   email: string;
@@ -21,7 +21,7 @@ type VerifyCodeRequestData = {
 type VerifyRequestData = {
   email: string;
 };
-const APIURL = getAPIURL();
+const APIURL = API_URL;
 
 export default function Signin() {
   console.log(APIURL);
