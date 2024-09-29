@@ -3,7 +3,6 @@ import { RoomMateData, User } from "../types/landingPage.type";
 import style from "../pages/landingpage/LandingPage.module.css";
 import gsap from "gsap";
 import { softenGraph, enableGraphInteraction } from "./graphInteraction";
-
 const getPosition = (node_id: IdType, network: Network | null) => {
   if (!network) {
     console.error("error in getPosition. there's no networkInstance.current");

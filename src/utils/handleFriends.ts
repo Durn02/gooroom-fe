@@ -7,7 +7,7 @@ import getAPIURL from "./getAPIURL"; // Utility to get API URL
 import { Node, Edge } from "vis-network"; // Import vis-network types
 
 export const fetchFriends = async (): Promise<{
-  loggedInUser: User | undefined;
+  loggedInUser: User | null;
   roommates: RoomMateData[];
   neighbors: User[];
   roommatesWithNeighbors: RoommateWithNeighbors[];
@@ -38,7 +38,7 @@ export const fetchFriends = async (): Promise<{
     }
     // If response is not OK or data is not as expected, return empty values
     return {
-      loggedInUser: undefined,
+      loggedInUser: null,
       roommates: [],
       neighbors: [],
       roommatesWithNeighbors: [],
@@ -46,7 +46,7 @@ export const fetchFriends = async (): Promise<{
   } catch (error) {
     alert(`Failed to fetch friends: ${error}`);
     return {
-      loggedInUser: undefined,
+      loggedInUser: null,
       roommates: [],
       neighbors: [],
       roommatesWithNeighbors: [],
@@ -55,12 +55,12 @@ export const fetchFriends = async (): Promise<{
 };
 
 export const generateNodes = (
-  loggedInUser: User | undefined,
+  loggedInUser: User | null,
   roommates: RoomMateData[],
   neighbors: User[]
 ): Node[] => {
   if (!loggedInUser) {
-    console.error("Logged in user is undefined");
+    console.error("Logged in user is null");
     return [];
   }
 
@@ -91,12 +91,12 @@ export const generateNodes = (
 };
 
 export const generateEdges = (
-  loggedInUser: User | undefined,
+  loggedInUser: User | null,
   roommates: RoomMateData[],
   roommatesWithNeighbors: RoommateWithNeighbors[]
 ): Edge[] => {
   if (!loggedInUser) {
-    console.error("Logged in user is undefined");
+    console.error("Logged in user is null");
     return [];
   }
 

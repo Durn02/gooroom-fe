@@ -18,11 +18,11 @@ import {
   hardenGraph,
 } from "../../utils/graphInteraction";
 import { castAnimation } from "../../utils/casting";
+import { fetchUnreadCasts } from "../../utils/alertCasting";
 import {
   User,
   RoomMateData,
   RoommateWithNeighbors,
-  GetCastsResponse,
 } from "../../types/landingPage.type";
 import {
   fetchFriends,
@@ -34,7 +34,8 @@ const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
-  const [loggedInUser, setLoggedInUser] = useState<User>();
+  // const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
+  const loggedInUserRef = useRef<User | null>(null);
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
@@ -42,7 +43,7 @@ export default function Landing() {
   const edgesDataset = useRef(new DataSet<Edge>());
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
-  const new_casts = useRef<GetCastsResponse[]>([]);
+  // const new_casts = useRef<GetCastsResponse[]>([]);
 
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -131,97 +132,180 @@ export default function Landing() {
     }
   };
 
-  const longPoll = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:8000/domain/content/long_poll",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.contents.length > 0) {
-          new_casts.current = data.contents;
-          // alertCast();
-        }
-      }
-    } catch (error) {
-      console.error("error : ", error);
-    }
-  };
-
   useEffect(() => {
     verifyAccessToken();
   }, []);
 
+  // useEffect(() => {
+  //   console.log("networkContainer has changed as : ", networkContainer.current);
+  //   console.log("networkInstance is  : ", networkInstance.current);
+
+  //   if (networkContainer.current) {
+  //     const updateNetwork = async () => {
+  //       const friendsData = await fetchFriends();
+  //       setLoggedInUser(friendsData.loggedInUser);
+  //       roommatesDataRef.current = friendsData.roommates;
+  //       neighborsDataRef.current = friendsData.neighbors;
+  //       roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
+  //     };
+
+  //     if (!networkInstance.current) {
+  //       console.log(
+  //         "networkInstance.current pass the if statement with  : ",
+  //         networkInstance.current
+  //       );
+  //       await updateNetwork();
+  //       const nodes = generateNodes(
+  //         loggedInUser,
+  //         roommatesDataRef.current,
+  //         neighborsDataRef.current
+  //       );
+  //       const edges = generateEdges(
+  //         loggedInUser,
+  //         roommatesDataRef.current,
+  //         roommatesWithNeighborsRef.current
+  //       );
+
+  //       nodesDataset.current.add(nodes);
+  //       edgesDataset.current.add(edges);
+
+  //       networkInstance.current = new Network(
+  //         networkContainer.current,
+  //         {
+  //           nodes: nodesDataset.current,
+  //           edges: edgesDataset.current,
+  //         },
+  //         visnet_options
+  //       );
+
+  //       networkInstance.current.on(
+  //         "doubleClick",
+  //         (event: { nodes: string[] }) => {
+  //           const { nodes: clickedNodes } = event;
+  //           if (clickedNodes.length > 0) {
+  //             const clickedNodeId = clickedNodes[0];
+
+  //             networkInstance.current?.focus(clickedNodeId, {
+  //               scale: 100,
+  //               animation: {
+  //                 duration: 1000,
+  //                 easingFunction: "easeInOutQuad",
+  //               },
+  //             });
+
+  //             setTimeout(() => {
+  //               if (clickedNodeId === loggedInUser?.node_id) {
+  //                 openModal(clickedNodeId);
+  //               } else {
+  //                 console.log(clickedNodeId);
+  //                 openModal(clickedNodeId);
+  //               }
+  //             }, 800);
+  //           }
+  //         }
+  //       );
+
+  //       fetchUnreadCasts(nodesDataset.current);
+  //       // fetchUnreadCasts();
+  //     } else {
+  //       const data = {
+  //         nodes: nodesDataset.current,
+  //         edges: edgesDataset.current,
+  //       };
+  //       networkInstance.current.setData(data);
+  //     }
+  //   }
+  //   return () => {
+  //     if (networkInstance.current) {
+  //       networkInstance.current.destroy();
+  //       networkInstance.current = null;
+  //     }
+  //   };
+  // }, [networkContainer.current]);
+
   useEffect(() => {
+    console.log("networkContainer has changed as : ", networkContainer.current);
+    console.log("networkInstance is  : ", networkInstance.current);
+
     if (networkContainer.current) {
       const updateNetwork = async () => {
         const friendsData = await fetchFriends();
-        console.log(friendsData);
-        // Update refs instead of state
-        setLoggedInUser(friendsData.loggedInUser);
+        console.log(
+          "friendData.loggedInUser in updatenetwork : ",
+          friendsData.loggedInUser
+        );
+        loggedInUserRef.current = friendsData.loggedInUser;
+        console.log("loggedInUser in updateNetwork: ", loggedInUserRef.current);
         roommatesDataRef.current = friendsData.roommates;
         neighborsDataRef.current = friendsData.neighbors;
         roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
       };
 
-      if (!networkInstance.current) {
-        updateNetwork();
-        const nodes = generateNodes(
-          loggedInUser,
-          roommatesDataRef.current,
-          neighborsDataRef.current
-        );
-        const edges = generateEdges(
-          loggedInUser,
-          roommatesDataRef.current,
-          roommatesWithNeighborsRef.current
-        );
+      const initializeNetworkInstance = async () => {
+        if (networkContainer.current) {
+          await updateNetwork();
+          console.log("netWorkUpdated");
 
-        nodesDataset.current.add(nodes);
-        edgesDataset.current.add(edges);
+          console.log(
+            "loggedInUser before generate Nodes: ",
+            loggedInUserRef.current
+          );
+          const nodes = generateNodes(
+            loggedInUserRef.current,
+            roommatesDataRef.current,
+            neighborsDataRef.current
+          );
+          const edges = generateEdges(
+            loggedInUserRef.current,
+            roommatesDataRef.current,
+            roommatesWithNeighborsRef.current
+          );
 
-        networkInstance.current = new Network(
-          networkContainer.current,
-          {
-            nodes: nodesDataset.current,
-            edges: edgesDataset.current,
-          },
-          visnet_options
-        );
+          nodesDataset.current.add(nodes);
+          edgesDataset.current.add(edges);
 
-        networkInstance.current.on(
-          "doubleClick",
-          (event: { nodes: string[] }) => {
-            const { nodes: clickedNodes } = event;
-            if (clickedNodes.length > 0) {
-              const clickedNodeId = clickedNodes[0];
+          networkInstance.current = new Network(
+            networkContainer.current,
+            {
+              nodes: nodesDataset.current,
+              edges: edgesDataset.current,
+            },
+            visnet_options
+          );
 
-              networkInstance.current?.focus(clickedNodeId, {
-                scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
-                animation: {
-                  duration: 1000, // 애니메이션 지속 시간 (밀리초)
-                  easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
-                },
-              });
+          networkInstance.current.on(
+            "doubleClick",
+            (event: { nodes: string[] }) => {
+              const { nodes: clickedNodes } = event;
+              if (clickedNodes.length > 0) {
+                const clickedNodeId = clickedNodes[0];
 
-              setTimeout(() => {
-                if (clickedNodeId === loggedInUser?.node_id) {
-                  openModal(clickedNodeId);
-                } else {
-                  console.log(clickedNodeId);
-                  openModal(clickedNodeId);
-                }
-              }, 800);
+                networkInstance.current?.focus(clickedNodeId, {
+                  scale: 100,
+                  animation: {
+                    duration: 1000,
+                    easingFunction: "easeInOutQuad",
+                  },
+                });
+
+                setTimeout(() => {
+                  if (clickedNodeId === loggedInUserRef.current?.node_id) {
+                    openModal(clickedNodeId);
+                  } else {
+                    console.log(clickedNodeId);
+                    openModal(clickedNodeId);
+                  }
+                }, 800);
+              }
             }
-          }
-        );
+          );
+
+          fetchUnreadCasts(nodesDataset.current);
+        }
+      };
+
+      if (!networkInstance.current) {
+        initializeNetworkInstance();
       } else {
         const data = {
           nodes: nodesDataset.current,
@@ -230,6 +314,7 @@ export default function Landing() {
         networkInstance.current.setData(data);
       }
     }
+
     return () => {
       if (networkInstance.current) {
         networkInstance.current.destroy();
@@ -238,22 +323,23 @@ export default function Landing() {
     };
   }, [networkContainer.current]);
 
-  useEffect(() => {
-    let isCancelled = false;
+  // useEffect(() => {
+  //   let isCancelled = false;
+  //   console.log("longPoll called");
 
-    if (loggedInUser) {
-      const startPolling = async () => {
-        while (!isCancelled) {
-          await longPoll();
-        }
-      };
-      startPolling();
-    }
+  //   if (loggedInUser) {
+  //     const startPolling = async () => {
+  //       while (!isCancelled) {
+  //         await longPoll();
+  //       }
+  //     };
+  //     startPolling();
+  //   }
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [loggedInUser]);
+  //   return () => {
+  //     isCancelled = true;
+  //   };
+  // }, [loggedInUser]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
@@ -289,7 +375,7 @@ export default function Landing() {
       castAnimation(
         networkInstance.current,
         networkContainer.current,
-        loggedInUser?.node_id,
+        loggedInUserRef.current?.node_id,
         roommatesDataRef.current,
         neighborsDataRef.current
       );
@@ -298,7 +384,7 @@ export default function Landing() {
 
   return (
     <>
-      {console.log(isLoggedIn.isLogin)}
+      {console.log("isLoggedIn.isLogin : ", isLoggedIn.isLogin)}
       {!isLoggedIn.isLogin && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>

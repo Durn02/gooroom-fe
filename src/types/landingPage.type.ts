@@ -8,7 +8,7 @@ export interface User {
   my_memo: string;
   nickname: string;
   node_id: string;
-  concern: string[];
+  tags: string[];
   username: string;
 }
 
