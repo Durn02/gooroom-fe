@@ -4,18 +4,9 @@ import getAPIURL from "./getAPIURL";
 import { GetCastsResponse } from "../types/landingPage.type";
 
 const castsToAlert: GetCastsResponse[] = [];
-// let isFetching = false;
-
 export const fetchUnreadCasts = async (nodesDataset: DataSet<Node>) => {
-  console.log("fetchUnreadCasts is called");
-  //   if (isFetching) {
-  //     console.log("now fetching is doing");
-  //     return;
-  //   } // 이미 호출 중이면 중단
-  //   isFetching = true;
   const APIURL = getAPIURL();
   try {
-    console.log("trying fetchUnreadCasts");
     const response = await fetch(
       `${APIURL}/domain/content/cast/get-unread-members`,
       {
@@ -25,41 +16,49 @@ export const fetchUnreadCasts = async (nodesDataset: DataSet<Node>) => {
       }
     );
     if (response.ok) {
-      console.log("fetchUnreadCasts response ok");
       const data = await response.json();
       if (data.contents.length > 0) {
         castsToAlert.push(...data.contents);
-        console.log("data: ", data);
         castsToAlert.forEach(async (cast) => {
-          console.log("here is cast : ", cast);
           alertCast(nodesDataset, cast.creator.node_id);
         });
       }
     }
   } catch (error) {
-    console.log("there's error");
     console.error("error: ", error);
-  } finally {
-    // isFetching = false; // 호출이 완료되면 상태 초기화
   }
 };
 
 const alertCast = (nodesDataset: DataSet<Node>, node_id: IdType) => {
-  const originalSize = nodesDataset.get(node_id)?.size ?? 5;
+  const originalSize = nodesDataset.get(node_id)?.size || 10;
   let growing = true;
+  let newOpacity = 1;
   let newSize = originalSize;
 
   const interval = setInterval(() => {
-    newSize = growing ? newSize + 2 : newSize - 2;
-    if (newSize >= originalSize + 10) growing = false;
-    if (newSize <= originalSize) growing = true;
+    newOpacity = growing ? newOpacity - 0.1 : newOpacity + 0.1;
+    newSize = growing ? newSize + 0.2 : newSize - 0.2;
 
-    nodesDataset.update({ id: node_id, size: newSize });
+    if (newOpacity < 0.4) {
+      growing = false;
+    }
+    if (newOpacity >= 1) {
+      growing = true;
+    }
+
+    nodesDataset.update({
+      id: node_id,
+      size: newSize,
+      opacity: newOpacity,
+    });
   }, 100);
 
   setTimeout(() => {
-    console.log("setTimeout called");
     clearInterval(interval);
-    nodesDataset.update({ id: node_id, size: originalSize });
-  }, 2000);
+    nodesDataset.update({
+      id: node_id,
+      size: originalSize,
+      opacity: 1,
+    });
+  }, 2800);
 };

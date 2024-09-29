@@ -26,16 +26,15 @@ import {
 } from "../../types/landingPage.type";
 import {
   fetchFriends,
-  generateEdges,
-  generateNodes,
+  initDataset,
+  reloadDataset,
 } from "../../utils/handleFriends";
 
 const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
-  // const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
-  const loggedInUserRef = useRef<User | null>(null);
+  const loggedInUserRef = useRef<User>();
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
@@ -60,10 +59,39 @@ export default function Landing() {
     setIsModalOpen(true);
   };
 
+  const fetchAndUpdateData = async () => {
+    const friendsData = await fetchFriends();
+
+    if (loggedInUserRef.current) {
+      reloadDataset(
+        {
+          loggedInUser: loggedInUserRef.current,
+          roommates: roommatesDataRef.current,
+          neighbors: neighborsDataRef.current,
+          roommatesWithNeighbors: roommatesWithNeighborsRef.current,
+        },
+        friendsData,
+        nodesDataset.current,
+        edgesDataset.current
+      );
+    }
+    roommatesDataRef.current = friendsData.roommates;
+    neighborsDataRef.current = friendsData.neighbors;
+    roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
+
+    // Check if loggedInUser exists. If it doesn't, this is the first load.
+    if (!loggedInUserRef.current) {
+      console.log(loggedInUserRef.current);
+      loggedInUserRef.current = friendsData.loggedInUser;
+      console.log(loggedInUserRef.current);
+      initDataset(friendsData, nodesDataset.current, edgesDataset.current);
+    }
+  };
+
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm("정말 회원탈퇴를 진행하시겠습니까?");
     if (isSignout) {
-      alert("회원탈퇴를 진행합니다.");
+      alert("회원탈퇴를 진행합니다!");
       try {
         const response = await fetch(`${APIURL}/domain/auth/signout`, {
           method: "POST",
@@ -122,7 +150,6 @@ export default function Landing() {
         );
         if (refresh_response.ok) {
           isLoggedIn.isLogin = true;
-          // Update refs instead of state
         } else {
           isLoggedIn.isLogin = false;
         }
@@ -136,185 +163,52 @@ export default function Landing() {
     verifyAccessToken();
   }, []);
 
-  // useEffect(() => {
-  //   console.log("networkContainer has changed as : ", networkContainer.current);
-  //   console.log("networkInstance is  : ", networkInstance.current);
-
-  //   if (networkContainer.current) {
-  //     const updateNetwork = async () => {
-  //       const friendsData = await fetchFriends();
-  //       setLoggedInUser(friendsData.loggedInUser);
-  //       roommatesDataRef.current = friendsData.roommates;
-  //       neighborsDataRef.current = friendsData.neighbors;
-  //       roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-  //     };
-
-  //     if (!networkInstance.current) {
-  //       console.log(
-  //         "networkInstance.current pass the if statement with  : ",
-  //         networkInstance.current
-  //       );
-  //       await updateNetwork();
-  //       const nodes = generateNodes(
-  //         loggedInUser,
-  //         roommatesDataRef.current,
-  //         neighborsDataRef.current
-  //       );
-  //       const edges = generateEdges(
-  //         loggedInUser,
-  //         roommatesDataRef.current,
-  //         roommatesWithNeighborsRef.current
-  //       );
-
-  //       nodesDataset.current.add(nodes);
-  //       edgesDataset.current.add(edges);
-
-  //       networkInstance.current = new Network(
-  //         networkContainer.current,
-  //         {
-  //           nodes: nodesDataset.current,
-  //           edges: edgesDataset.current,
-  //         },
-  //         visnet_options
-  //       );
-
-  //       networkInstance.current.on(
-  //         "doubleClick",
-  //         (event: { nodes: string[] }) => {
-  //           const { nodes: clickedNodes } = event;
-  //           if (clickedNodes.length > 0) {
-  //             const clickedNodeId = clickedNodes[0];
-
-  //             networkInstance.current?.focus(clickedNodeId, {
-  //               scale: 100,
-  //               animation: {
-  //                 duration: 1000,
-  //                 easingFunction: "easeInOutQuad",
-  //               },
-  //             });
-
-  //             setTimeout(() => {
-  //               if (clickedNodeId === loggedInUser?.node_id) {
-  //                 openModal(clickedNodeId);
-  //               } else {
-  //                 console.log(clickedNodeId);
-  //                 openModal(clickedNodeId);
-  //               }
-  //             }, 800);
-  //           }
-  //         }
-  //       );
-
-  //       fetchUnreadCasts(nodesDataset.current);
-  //       // fetchUnreadCasts();
-  //     } else {
-  //       const data = {
-  //         nodes: nodesDataset.current,
-  //         edges: edgesDataset.current,
-  //       };
-  //       networkInstance.current.setData(data);
-  //     }
-  //   }
-  //   return () => {
-  //     if (networkInstance.current) {
-  //       networkInstance.current.destroy();
-  //       networkInstance.current = null;
-  //     }
-  //   };
-  // }, [networkContainer.current]);
-
   useEffect(() => {
-    console.log("networkContainer has changed as : ", networkContainer.current);
-    console.log("networkInstance is  : ", networkInstance.current);
-
     if (networkContainer.current) {
-      const updateNetwork = async () => {
-        const friendsData = await fetchFriends();
-        console.log(
-          "friendData.loggedInUser in updatenetwork : ",
-          friendsData.loggedInUser
-        );
-        loggedInUserRef.current = friendsData.loggedInUser;
-        console.log("loggedInUser in updateNetwork: ", loggedInUserRef.current);
-        roommatesDataRef.current = friendsData.roommates;
-        neighborsDataRef.current = friendsData.neighbors;
-        roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-      };
-
-      const initializeNetworkInstance = async () => {
-        if (networkContainer.current) {
-          await updateNetwork();
-          console.log("netWorkUpdated");
-
-          console.log(
-            "loggedInUser before generate Nodes: ",
-            loggedInUserRef.current
-          );
-          const nodes = generateNodes(
-            loggedInUserRef.current,
-            roommatesDataRef.current,
-            neighborsDataRef.current
-          );
-          const edges = generateEdges(
-            loggedInUserRef.current,
-            roommatesDataRef.current,
-            roommatesWithNeighborsRef.current
-          );
-
-          nodesDataset.current.add(nodes);
-          edgesDataset.current.add(edges);
-
-          networkInstance.current = new Network(
-            networkContainer.current,
-            {
-              nodes: nodesDataset.current,
-              edges: edgesDataset.current,
-            },
-            visnet_options
-          );
-
-          networkInstance.current.on(
-            "doubleClick",
-            (event: { nodes: string[] }) => {
-              const { nodes: clickedNodes } = event;
-              if (clickedNodes.length > 0) {
-                const clickedNodeId = clickedNodes[0];
-
-                networkInstance.current?.focus(clickedNodeId, {
-                  scale: 100,
-                  animation: {
-                    duration: 1000,
-                    easingFunction: "easeInOutQuad",
-                  },
-                });
-
-                setTimeout(() => {
-                  if (clickedNodeId === loggedInUserRef.current?.node_id) {
-                    openModal(clickedNodeId);
-                  } else {
-                    console.log(clickedNodeId);
-                    openModal(clickedNodeId);
-                  }
-                }, 800);
-              }
-            }
-          );
-
-          fetchUnreadCasts(nodesDataset.current);
-        }
-      };
-
       if (!networkInstance.current) {
-        initializeNetworkInstance();
+        networkInstance.current = new Network(
+          networkContainer.current,
+          {
+            nodes: nodesDataset.current,
+            edges: edgesDataset.current,
+          },
+          visnet_options
+        );
+        fetchAndUpdateData();
+        console.log("networkInstance constructed");
+
+        networkInstance.current.on(
+          "doubleClick",
+          (event: { nodes: string[] }) => {
+            const { nodes: clickedNodes } = event;
+            if (clickedNodes.length > 0) {
+              const clickedNodeId = clickedNodes[0];
+
+              networkInstance.current?.focus(clickedNodeId, {
+                scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
+                animation: {
+                  duration: 1000, // 애니메이션 지속 시간 (밀리초)
+                  easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+                },
+              });
+
+              setTimeout(() => {
+                if (clickedNodeId === loggedInUserRef.current?.node_id) {
+                  openModal(clickedNodeId);
+                } else {
+                  console.log(clickedNodeId);
+                  openModal(clickedNodeId);
+                }
+              }, 800);
+            }
+          }
+        );
+        fetchUnreadCasts(nodesDataset.current);
       } else {
-        const data = {
-          nodes: nodesDataset.current,
-          edges: edgesDataset.current,
-        };
-        networkInstance.current.setData(data);
+        fetchAndUpdateData();
+        console.log("fetchAndUpdateData called");
       }
     }
-
     return () => {
       if (networkInstance.current) {
         networkInstance.current.destroy();
@@ -322,24 +216,6 @@ export default function Landing() {
       }
     };
   }, [networkContainer.current]);
-
-  // useEffect(() => {
-  //   let isCancelled = false;
-  //   console.log("longPoll called");
-
-  //   if (loggedInUser) {
-  //     const startPolling = async () => {
-  //       while (!isCancelled) {
-  //         await longPoll();
-  //       }
-  //     };
-  //     startPolling();
-  //   }
-
-  //   return () => {
-  //     isCancelled = true;
-  //   };
-  // }, [loggedInUser]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
@@ -365,13 +241,18 @@ export default function Landing() {
     }
   };
 
+  const addFriend = async () => {
+    // Simulate adding a friend
+
+    fetchAndUpdateData(); // Re-fetch and reload the dataset
+  };
+
   const cast = (cast_message: string) => {
     disableGraphInteraction(networkInstance.current);
     hardenGraph(networkInstance.current);
     console.log("cast_message : ", cast_message);
 
     networkInstance.current?.once("stabilized", () => {
-      console.log("finished stablized");
       castAnimation(
         networkInstance.current,
         networkContainer.current,
@@ -433,6 +314,7 @@ export default function Landing() {
                 onClick={() => onSignoutButtonClickHandler()}
               />
             </div>
+            <button onClick={addFriend}>Add Friend Test</button>
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}

@@ -34,7 +34,7 @@ interface Creator {
   nickname: string;
   username: string;
   node_id: string;
-  concern: string[];
+  tags: string[];
 }
 
 export interface GetCastsResponse {
