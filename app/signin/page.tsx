@@ -6,7 +6,7 @@ import DefaultButton from "@/components/Button/DefaultButton";
 import Input from "@/components/Input/DefaultInput";
 import PwInput from "@/components/Input/PwInput/PwInput";
 import { useState, useEffect } from "react";
-import { IsLoginContext } from "@/lib/shared/IsLoginContext";
+import { IsLoginContext } from "@/lib/context/IsLoginContext";
 import { API_URL } from "@/lib/utils/config";
 
 type signinRequestData = {
@@ -23,6 +23,7 @@ type VerifyRequestData = {
 const APIURL = API_URL;
 
 export default function Signin() {
+  const loginCtx = useContext(IsLoginContext);
   console.log(APIURL);
   const [emailVerification, setEmailVerification] = useState(false);
 
@@ -57,7 +58,7 @@ export default function Signin() {
             } else if (data.detail === "inconsistent password") {
               alert("비밀번호가 일치하지 않습니다");
             } else if (data.message === "login success") {
-              // globalThis?.sessionStorage?.setItem("userId", userEmailInput);
+              loginCtx.setUserId(userEmailInput);
               alert("로그인 성공");
               window?.location?.replace("/");
             } else {

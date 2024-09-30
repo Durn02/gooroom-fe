@@ -10,7 +10,7 @@ import CastPostStickerDropdownButton from "@/components/Button/DropdownButton/Ca
 import style from "./LandingPage.module.css";
 import FriendModal from "@/components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
-import { IsLoginContext } from "../../shared/IsLoginContext";
+import { IsLoginContext } from "@/lib/context/IsLoginContext";
 
 import {
   zoomIn,
@@ -272,7 +272,7 @@ export default function Landing() {
         if (data.message === "logout success") {
           // 서버가 보낸 메시지에 따라 조건 수정
           alert("로그아웃합니다.");
-          // TODO sessionStorage.removeItem("userId");
+          isLoggedIn.setUserId(null);
           console.log("isLoggedIn : ", isLoggedIn);
           window.location.href = "/";
         }

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { IsLoginProvider } from "@/lib/shared/IsLoginProvider";
+
+import dynamic from "next/dynamic";
+const IsLoginProvider = dynamic( () => import("@/lib/context/IsLoginProvider") , { ssr: false });
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

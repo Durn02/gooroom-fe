@@ -91,7 +91,7 @@ export default function Signup() {
             }
           }
         } else {
-          alert("회원가입 실패");
+          alert("회원가입 실패 - 2");
         }
       } catch (error) {
         if (error instanceof Error) {

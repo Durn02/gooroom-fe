@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
 import styles from "./FriendModal.module.css";
 import { API_URL } from "@/lib/utils/config";
