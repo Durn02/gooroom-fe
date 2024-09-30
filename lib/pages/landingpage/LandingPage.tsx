@@ -19,6 +19,7 @@ import {
   disableGraphInteraction,
   hardenGraph,
 } from "../../utils/graphInteraction";
+import CastModal from "@/components/Modals/CastModal/CastModal";
 import { castAnimation } from "../../utils/casting";
 import {
   User,
@@ -40,27 +41,38 @@ export default function Landing() {
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
+  const friendsData: string[] = [];
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
   const nodesDataset = useRef(new DataSet<Node>());
   const edgesDataset = useRef(new DataSet<Edge>());
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   const new_casts = useRef<GetCastsResponse[]>([]);
-
+  const [cast_message, setCastMessage] = useState("")
+  
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
+  const [isCastModalOpen, setIsCastModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const closeModal = () => {
+  const closeFriendModal = () => {
     setIsModalOpen(false);
     setSelectedUserId(null);
     resetPosition(networkInstance.current);
   };
 
-  const openModal = (userId: string) => {
+  const openFriendModal = (userId: string) => {
     setSelectedUserId(userId);
     setIsModalOpen(true);
   };
+
+  const closeCastModal = () => {
+      setIsCastModalOpen(false);
+    };
+  
+    const openCastModal = () => {
+      setIsCastModalOpen(true);
+    };
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm("정말 회원탈퇴를 진행하시겠습니까?");
@@ -216,10 +228,10 @@ export default function Landing() {
 
               setTimeout(() => {
                 if (clickedNodeId === loggedInUser?.node_id) {
-                  openModal(clickedNodeId);
+                  openFriendModal(clickedNodeId);
                 } else {
                   console.log(clickedNodeId);
-                  openModal(clickedNodeId);
+                  openFriendModal(clickedNodeId);
                 }
               }, 800);
             }
@@ -282,7 +294,7 @@ export default function Landing() {
     }
   };
 
-  const cast = (cast_message: string) => {
+  const cast = () => {
     disableGraphInteraction(networkInstance.current);
     hardenGraph(networkInstance.current);
     console.log("cast_message : ", cast_message);
@@ -297,8 +309,38 @@ export default function Landing() {
         neighborsDataRef.current
       );
     });
-  };
 
+    roommatesDataRef.current.forEach((element) => {
+            friendsData.push(element.roommate.node_id);
+          });
+          neighborsDataRef.current.forEach((element) => {
+            friendsData.push(element.node_id);
+          });
+      
+          fetch(`${APIURL}/domain/content/cast/send`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              friends: friendsData,
+              message: cast_message,
+              duration: 1,
+            }),
+            credentials: "include",
+          })
+            .then((response) => {
+              if (response.ok) {
+                console.log("cast success");
+              } else {
+                console.error("cast failed");
+              }
+            })
+            .catch((error) => {
+              console.error("error : ", error);
+            });
+
+  };
   return (
     <>
       {console.log(isLoggedIn.isLogin)}
@@ -322,7 +364,7 @@ export default function Landing() {
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>
-              <CastPostStickerDropdownButton cast_fuction={cast} />
+              <CastPostStickerDropdownButton cast_fuction={openCastModal} />
             </div>
             <div className={style.magnifyButtonContainer}>
               <DefaultButton
@@ -363,9 +405,15 @@ export default function Landing() {
       {/* 모달 컴포넌트 */}
       <FriendModal
         isOpen={isFriendModalOpen}
-        onClose={closeModal}
+        onClose={closeFriendModal}
         userNodeId={selectedUserId ? selectedUserId : null}
       />
+      <CastModal
+        isOpen={isCastModalOpen}
+        onClose={closeCastModal}
+        setCastMessage={setCastMessage}
+        cast={cast}
+        />
 
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
     </>

@@ -2,7 +2,7 @@ import React, { useState, MouseEvent } from "react";
 import styles from "./CastPostStickerDropdownButton.module.css";
 
 interface CastPostStickerDropdownButtonProps {
-  cast_fuction: (cast_message: string) => void;
+  cast_fuction: () => void;
 }
 
 const CastPostStickerDropdownButton: React.FC<
@@ -15,13 +15,10 @@ const CastPostStickerDropdownButton: React.FC<
   };
 
   const handleButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const selectedOption = (event.target as HTMLButtonElement).innerText;
+    const selectedOption = event.currentTarget.id;
 
-    if (selectedOption === "C") {
-      const message = prompt("Please enter your message:");
-      if (message) {
-        cast_fuction(message);
-      }
+    if (selectedOption === "cast") {
+      cast_fuction();
     }
   };
 
@@ -34,16 +31,28 @@ const CastPostStickerDropdownButton: React.FC<
         {isOpen ? "-" : "+"}
       </button>
       <div className={`${styles.dropdown} ${isOpen ? styles.show : ""}`}>
-        <button className={styles.dropdownItem} onClick={handleButtonClick}>
-          A
-        </button>
-        <button className={styles.dropdownItem} onClick={handleButtonClick}>
-          Bs
-        </button>
-        <button className={styles.dropdownItem} onClick={handleButtonClick}>
-          C
-        </button>
-      </div>
+        <button
+          className={styles.dropdownItem}
+          onClick={handleButtonClick}
+          id="post"
+        >
+           A
+         </button>
+        <button
+          className={styles.dropdownItem}
+          onClick={handleButtonClick}
+          id="sticker"
+        >
+           Bs
+         </button>
+        <button
+          className={styles.dropdownItem}
+          onClick={handleButtonClick}
+          id="cast"
+        >
+           C
+         </button>
+       </div>
     </div>
   );
 };
