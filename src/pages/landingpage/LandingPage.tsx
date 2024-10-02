@@ -34,15 +34,17 @@ const APIURL = getAPIURL();
 
 export default function Landing() {
   const isLoggedIn = useContext(IsLoginContext);
+
   const loggedInUserRef = useRef<User>();
   const roommatesDataRef = useRef<RoomMateData[]>([]);
   const neighborsDataRef = useRef<User[]>([]);
   const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
+
   const nodesDataset = useRef(new DataSet<Node>());
   const edgesDataset = useRef(new DataSet<Edge>());
+
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
-  // const new_casts = useRef<GetCastsResponse[]>([]);
 
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
