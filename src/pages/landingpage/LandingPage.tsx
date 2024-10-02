@@ -10,6 +10,8 @@ import FriendModal from "../../components/Modals/FriendModal/FriendModal";
 import ProfileModal from "./ProfileModal";
 import { IsLoginContext } from "../../shared/IsLoginContext";
 import getAPIURL from "../../utils/getAPIURL";
+import gsap from "gsap";
+
 import {
   zoomIn,
   zoomOut,
@@ -28,6 +30,7 @@ import {
   fetchFriends,
   initDataset,
   reloadDataset,
+  parseGroups,
 } from "../../utils/handleFriends";
 
 const APIURL = getAPIURL();
@@ -43,10 +46,14 @@ export default function Landing() {
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
   // const new_casts = useRef<GetCastsResponse[]>([]);
+  const selectedNodeIdRef = useRef<string | null>(null);
+  const selectedGroupRef = useRef<string>("");
 
   const [isFriendModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // const groupChangeUIRef = useRef<HTMLDivElement | null>(null);
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -59,6 +66,43 @@ export default function Landing() {
     setIsModalOpen(true);
   };
 
+  const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    // Store the selected group in the `selectedGroupRef`
+    selectedGroupRef.current = event.target.value;
+    console.log("Selected group:", selectedGroupRef.current);
+  };
+
+  const updateNodeGroup = async () => {
+    if (selectedNodeIdRef.current && selectedGroupRef.current) {
+      const currentNode = nodesDataset.current.get(selectedNodeIdRef.current);
+
+      try {
+        const response = await fetch(`${APIURL}/domain/group/modify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_node_id: selectedNodeIdRef.current,
+            new_group: selectedGroupRef.current,
+
+          }),
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === "signout success") {
+            alert("회원탈퇴가 완료되었습니다.");
+            window.location.href = "/";
+          }
+        }
+      } catch (error) {
+        alert("unknown error occurred in onSignoutButtonClickHandler");
+        console.error(error);
+      }
+    }
+  };
+  
   const fetchAndUpdateData = async () => {
     const friendsData = await fetchFriends();
 
@@ -79,11 +123,9 @@ export default function Landing() {
     neighborsDataRef.current = friendsData.neighbors;
     roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
 
-    // Check if loggedInUser exists. If it doesn't, this is the first load.
+
     if (!loggedInUserRef.current) {
-      console.log(loggedInUserRef.current);
       loggedInUserRef.current = friendsData.loggedInUser;
-      console.log(loggedInUserRef.current);
       initDataset(friendsData, nodesDataset.current, edgesDataset.current);
     }
   };
@@ -177,6 +219,63 @@ export default function Landing() {
         fetchAndUpdateData();
         console.log("networkInstance constructed");
 
+        networkInstance.current.on("click", (event: { nodes: string[] }) => {
+          const { nodes: clickedNodes } = event;
+          if (clickedNodes.length > 0) {
+            selectedNodeIdRef.current = clickedNodes[0];
+          }
+          console.log(selectedNodeIdRef.current);
+        });
+        
+
+        // networkInstance.current.on("hoverNode", (event: { node: string }) => {
+        //   const hoveredNodeId = event.node;
+        
+        //   // Get the position of the hovered node
+        //   const nodePosition = networkInstance.current?.getPosition(hoveredNodeId);
+        //   const domPosition = networkInstance.current?.canvasToDOM(nodePosition);
+        
+        //   // Get the current scale of the network
+        //   const scale = networkInstance.current?.getScale() || 1;
+        
+        //   // Show the UI above the node relative to its position and scale
+        //   if (domPosition && groupChangeUIRef.current) {
+        //     gsap.set(groupChangeUIRef.current, { opacity: 1 });
+        
+        //     // Calculate offset for correct positioning
+        //     const offsetX = groupChangeUIRef.current.offsetWidth / 2;
+        //     const offsetY = groupChangeUIRef.current.offsetHeight;
+        
+        //     // Position the UI centered above the node
+        //     const targetLeft = domPosition.x - offsetX;
+        //     const targetTop = domPosition.y - offsetY - (10 * scale);
+        //     const targetWidth = 100 * scale;
+        //     const targetHeight = 50 * scale;
+        
+        //     // Animate the position and scale with gsap
+        //     gsap.to(groupChangeUIRef.current, {
+        //       left: `${targetLeft}px`,
+        //       top: `${targetTop}px`,
+        //       width: `${targetWidth}px`,
+        //       height: `${targetHeight}px`,
+        //       duration: 0.3, // Duration of the animation
+        //       ease: "power1.out",
+        //     });
+        //   }
+        // });
+        
+        // networkInstance.current.on("blurNode", () => {
+        //   // Animate the UI to disappear when the mouse leaves the node
+        //   if (groupChangeUIRef.current) {
+        //     gsap.to(groupChangeUIRef.current, {
+        //       opacity: 0,
+        //       duration: 0.3,
+        //       ease: "power1.out",
+        //     });
+        //   }
+        // });
+        
+
         networkInstance.current.on(
           "doubleClick",
           (event: { nodes: string[] }) => {
@@ -241,12 +340,6 @@ export default function Landing() {
     }
   };
 
-  const addFriend = async () => {
-    // Simulate adding a friend
-
-    fetchAndUpdateData(); // Re-fetch and reload the dataset
-  };
-
   const cast = (cast_message: string) => {
     disableGraphInteraction(networkInstance.current);
     hardenGraph(networkInstance.current);
@@ -281,10 +374,24 @@ export default function Landing() {
           </div>
         </>
       )}
+      {loggedInUserRef.current?.groups && (
+        <div className="group-selector">
+          <label htmlFor="group-select">Select Group:</label>
+          <select id="group-select" onChange={handleGroupChange}>
+            {Object.keys(parseGroups(loggedInUserRef.current.groups)).map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
+          <button onClick={updateNodeGroup}>Change Group</button>
+        </div>
+      )}
 
       {isLoggedIn.isLogin && (
         <>
           <div>
+
             <div className={style.castPostStickerDropdownButton}>
               <CastPostStickerDropdownButton cast_fuction={cast} />
             </div>
@@ -314,7 +421,6 @@ export default function Landing() {
                 onClick={() => onSignoutButtonClickHandler()}
               />
             </div>
-            <button onClick={addFriend}>Add Friend Test</button>
             <div className={style.visNetContainer}>
               <div
                 ref={networkContainer}

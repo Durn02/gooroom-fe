@@ -2,10 +2,32 @@ import {
   User,
   RoomMateData,
   RoommateWithNeighbors,
+  Group,
 } from "../types/landingPage.type"; // Import your types
 import getAPIURL from "./getAPIURL"; // Utility to get API URL
 import { Node, Edge } from "vis-network"; // Import vis-network types
 import { DataSet } from "vis-data";
+
+export const parseGroups = (groupsString: string | undefined): Group[] => {
+  try {
+    // Replace single quotes around values with double quotes and add double quotes around keys
+    const validJsonString = groupsString
+      ?.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Add quotes around keys
+      .replace(/'/g, '"'); // Replace single quotes around values with double quotes
+    
+    // Parse the corrected JSON string
+    const groups: Record<string, string> = validJsonString ? JSON.parse(validJsonString) : {};
+    
+    // Convert the object to an array of Group objects
+    return Object.entries(groups).map(([group_name, group_color]) => ({
+      group_name,
+      group_color,
+    }));
+  } catch (error) {
+    console.error("Failed to parse groups:", error);
+    return [];
+  }
+};
 
 export const fetchFriends = async (): Promise<{
   loggedInUser: User | undefined;
@@ -27,6 +49,7 @@ export const fetchFriends = async (): Promise<{
 
     if (response.ok) {
       let data = await response.json();
+      console.log("Data: ", data);
       if (data.length > 0) {
         data = data[0];
         return {
@@ -58,12 +81,27 @@ export const fetchFriends = async (): Promise<{
 const generateNodes = (
   loggedInUser: User | undefined,
   roommates: RoomMateData[],
-  neighbors: User[]
+  neighbors: User[],
 ): Node[] => {
   if (!loggedInUser) {
     console.error("Logged in user is undefined");
     return [];
   }
+
+  const groupArray: Group[] = parseGroups(loggedInUser.groups);
+  console.log("Group array: ", groupArray);
+  const groupCenterNodes: Node[] = groupArray.map((group) => ({
+    id: `center-${group.group_name}`, // Create unique IDs for each center node
+    label: group.group_name,
+    group: group.group_name,
+    size: 30,
+    mass: 10,
+    color: {
+      background: group.group_color,
+      border: group.group_color,
+    },
+    hidden:true,
+  }));
 
   const userNode: Node = {
     id: loggedInUser.node_id,
@@ -75,10 +113,11 @@ const generateNodes = (
   const roommateNodes = roommates.map((roommate) => ({
     id: roommate.roommate.node_id,
     label: roommate.roommate.nickname,
-    group: roommate.is_roommate_edge.group
-      ? roommate.is_roommate_edge.group
-      : "friend",
+    group: roommate.is_roommate_edge.group || "center-default",
     size: 15,
+    color: {
+      background: groupArray.find((g) => g.group_name === roommate.is_roommate_edge.group)?.group_color || "#cccccc",
+    },
   }));
 
   const neighborNodes = neighbors.map((neighbor) => ({
@@ -87,12 +126,8 @@ const generateNodes = (
     group: "neighbor",
     size: 10,
   }));
-  console.log("Nodes generated: ", [
-    userNode,
-    ...roommateNodes,
-    ...neighborNodes,
-  ]);
-  return [userNode, ...roommateNodes, ...neighborNodes];
+
+  return [userNode, ...groupCenterNodes, ...roommateNodes, ...neighborNodes];
 };
 
 const generateEdges = (
@@ -105,10 +140,27 @@ const generateEdges = (
     return [];
   }
 
+  const groupArray: Group[] = parseGroups(loggedInUser.groups);
+
   const edges: Edge[] = [];
   const edgeSet = new Set<string>();
 
   roommates.forEach((roommate) => {
+    const groupName = roommate.is_roommate_edge.group || "default";
+    const groupColor = groupArray.find((g) => g.group_name === groupName)?.group_color || "#dddddd";
+
+
+    edges.push({
+      from: `center-${groupName}`, 
+      to: roommate.roommate.node_id,
+      color: {
+        color: groupColor,
+        opacity: 0.2,
+      },
+      hidden:true,
+    });
+
+
     const edgeKey = `${loggedInUser.node_id}-${roommate.roommate.node_id}`;
     edges.push({
       from: loggedInUser.node_id,
@@ -132,7 +184,7 @@ const generateEdges = (
       }
     });
   });
-  console.log(edges);
+
   return edges;
 };
 
@@ -162,7 +214,7 @@ export const initDataset = (
   // Add the generated nodes and edges to the datasets
   nodesDataset.add(initialNodes);
   edgesDataset.add(initialEdges);
-
+  console.log(initialEdges);
   console.log("Initial nodes and edges added to the dataset");
 };
 

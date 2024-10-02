@@ -10,6 +10,7 @@ export interface User {
   node_id: string;
   tags: string[];
   username: string;
+  groups: string;
 }
 
 export interface RoomMateData {
@@ -40,4 +41,9 @@ interface Creator {
 export interface GetCastsResponse {
   cast_node: CastNode;
   creator: Creator;
+}
+
+export interface Group {
+  group_name: string;
+  group_color: string;
 }
