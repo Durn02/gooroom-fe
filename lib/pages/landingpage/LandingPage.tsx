@@ -9,7 +9,7 @@ import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
 import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
 import FriendModal from '@/components/Modals/FriendModal/FriendModal';
-import ProfileModal from './ProfileModal';
+import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
 import { IsLoginContext } from '@/lib/context/IsLoginContext';
 
 import { zoomIn, zoomOut, resetPosition, disableGraphInteraction, hardenGraph } from '../../utils/graphInteraction';
@@ -37,21 +37,21 @@ export default function Landing() {
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
 
-  const [isFriendModalOpen, setIsModalOpen] = useState(false);
+  const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isCastModalOpen, setIsCastModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [cast_message, setCastMessage] = useState('');
 
   const closeFriendModal = () => {
-    setIsModalOpen(false);
+    setIsFriendModalOpen(false);
     setSelectedUserId(null);
     resetPosition(networkInstance.current);
   };
 
   const openFriendModal = (userId: string) => {
     setSelectedUserId(userId);
-    setIsModalOpen(true);
+    setIsFriendModalOpen(true);
   };
 
   const fetchAndUpdateData = async () => {
@@ -118,6 +118,13 @@ export default function Landing() {
 
   const closeProfileModal = () => {
     setIsProfileModalOpen(false);
+    setSelectedUserId(null);
+    resetPosition(networkInstance.current);
+  };
+
+  const openProfileModal = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsProfileModalOpen(true);
   };
 
   const verifyAccessToken = async () => {
@@ -187,10 +194,20 @@ export default function Landing() {
 
             setTimeout(() => {
               if (clickedNodeId === loggedInUserRef.current?.node_id) {
-                openFriendModal(clickedNodeId);
+                // openFriendModal(clickedNodeId);
+                openProfileModal(clickedNodeId);
               } else {
-                console.log(clickedNodeId);
-                openFriendModal(clickedNodeId);
+                const isClickedNodePresent = roommatesDataRef.current.some(
+                  (instance) => instance.roommate.node_id === clickedNodeId,
+                );
+                if (isClickedNodePresent) {
+                  alert('roommate입니다.');
+                  openFriendModal(clickedNodeId);
+                } else {
+                  alert('neighbor입니다.');
+                  console.log(clickedNodeId);
+                  openFriendModal(clickedNodeId);
+                }
               }
             }, 800);
           }
@@ -334,7 +351,6 @@ export default function Landing() {
         userNodeId={selectedUserId ? selectedUserId : null}
       />
       <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
-
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
     </>
   );
