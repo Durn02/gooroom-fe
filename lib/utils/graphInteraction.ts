@@ -5,10 +5,10 @@ export const zoomIn = (network: Network | null) => {
   if (network && !isCasting) {
     const scale = network.getScale();
     network.moveTo({
-      scale: scale * 1.2, // 1.2배 확대
+      scale: scale * 1.2,
       animation: {
-        duration: 500, // 애니메이션 지속 시간 (밀리초)
-        easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+        duration: 500,
+        easingFunction: "easeInOutQuad",
       },
     });
   }
@@ -18,10 +18,10 @@ export const zoomOut = (network: Network | null) => {
   if (network && !isCasting) {
     const scale = network.getScale();
     network.moveTo({
-      scale: scale * 0.8, // 0.8배 축소
+      scale: scale * 0.8,
       animation: {
-        duration: 500, // 애니메이션 지속 시간 (밀리초)
-        easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+        duration: 500,
+        easingFunction: "easeInOutQuad",
       },
     });
   }
@@ -31,8 +31,8 @@ export const resetPosition = (network: Network | null) => {
   if (network && !isCasting) {
     network.fit({
       animation: {
-        duration: 1000, // 애니메이션 지속 시간 (밀리초)
-        easingFunction: "easeInOutQuad", // 애니메이션 이징 함수
+        duration: 1000,
+        easingFunction: "easeInOutQuad",
       },
     });
   }

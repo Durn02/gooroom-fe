@@ -8,7 +8,7 @@ export interface User {
   my_memo: string;
   nickname: string;
   node_id: string;
-  concern: string[];
+  tags: string[];
   username: string;
 }
 
@@ -34,7 +34,7 @@ interface Creator {
   nickname: string;
   username: string;
   node_id: string;
-  concern: string[];
+  tags: string[];
 }
 
 export interface GetCastsResponse {
