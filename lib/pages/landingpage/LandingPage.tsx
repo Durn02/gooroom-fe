@@ -10,6 +10,7 @@ import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/Ca
 import style from './LandingPage.module.css';
 import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
+import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
 import { IsLoginContext } from '@/lib/context/IsLoginContext';
 
 import { zoomIn, zoomOut, resetPosition, disableGraphInteraction, hardenGraph } from '../../utils/graphInteraction';
@@ -38,6 +39,7 @@ export default function Landing() {
   const networkInstance = useRef<Network | null>(null);
 
   const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
+  const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
   const [isCastModalOpen, setIsCastModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -52,6 +54,17 @@ export default function Landing() {
   const openRoommateModal = (userId: string) => {
     setSelectedUserId(userId);
     setIsRoommateModalOpen(true);
+  };
+
+  const closeNeighborModal = () => {
+    setIsNeighborModalOpen(false);
+    setSelectedUserId(null);
+    resetPosition(networkInstance.current);
+  };
+
+  const openNeighborModal = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsNeighborModalOpen(true);
   };
 
   const fetchAndUpdateData = async () => {
@@ -203,9 +216,8 @@ export default function Landing() {
                 if (isClickedNodePresent) {
                   openRoommateModal(clickedNodeId);
                 } else {
-                  alert('neighbor입니다.');
                   console.log(clickedNodeId);
-                  openFriendModal(clickedNodeId);
+                  openNeighborModal(clickedNodeId);
                 }
               }
             }, 800);
@@ -351,6 +363,11 @@ export default function Landing() {
         userNodeId={selectedUserId ? selectedUserId : null}
       />
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
+      <NeighborModal
+        isOpen={isNeighborModalOpen}
+        onClose={closeNeighborModal}
+        userNodeId={selectedUserId ? selectedUserId : null}
+      />
     </>
   );
 }
