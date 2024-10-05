@@ -106,17 +106,17 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-  //   if (event.target === event.currentTarget) {
-  //     onClose();
-  //   }
-  // };
+  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
     // <CSSTransition in={isOpen} timeout={300} className={styles.slideFade} mountOnEnter unmountOnExit>
-    <div className={styles.modalOverlay}>
+    <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalContent}>
         <button className={styles.modalClose} onClick={onClose}>
           X
