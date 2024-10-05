@@ -43,7 +43,7 @@
 }
 
 /* Slide and fade in effect */
-.slideFadeEnter {
+/* .slideFadeEnter {
   transform: translateX(100%);
   opacity: 0;
 }
@@ -61,7 +61,7 @@
 .slideFadeExitActive {
   transform: translateX(100%);
   opacity: 0;
-}
+} */
 
 .tagsList {
   /* list-style-type: none;
