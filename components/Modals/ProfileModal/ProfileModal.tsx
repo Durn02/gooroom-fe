@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 // import { CSSTransition } from 'react-transition-group';
-//import "./ProfileModal.css";
 import styles from './ProfileModal.module.css';
 import { API_URL } from '@/lib/utils/config';
 
@@ -154,7 +153,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           type="text"
           value={newTags}
           onChange={handleNewTagsChange}
-          onKeyPress={handleNewTagsKeyPress}
+          onKeyDown={handleNewTagsKeyPress}
           className={styles.modalInput}
           placeholder="Enter a new tags..."
         />
