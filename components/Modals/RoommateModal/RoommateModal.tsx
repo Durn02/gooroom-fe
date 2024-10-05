@@ -104,7 +104,6 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
           readOnly={true}
           type="text"
           value={roommateData.nickname}
-          onChange={handleMemoChange}
           placeholder="nickname"
           className={styles.modalInput}
         />
@@ -113,7 +112,6 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
           readOnly={true}
           type="text"
           value={roommateData.username}
-          onChange={handleMemoChange}
           placeholder="nickname"
           className={styles.modalInput}
         />
@@ -122,7 +120,6 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
           readOnly={true}
           type="text"
           value={roommateData.tags}
-          onChange={handleMemoChange}
           placeholder="nickname"
           className={styles.modalInput}
         />
