@@ -96,6 +96,8 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         const data = await response.json();
         console.log(`Profile updated: ${data.my_memo}`);
         fetchProfileData(); // 저장 후 최신 프로필 데이터 다시 가져오기
+        alert('프로필이 성공적으로 저장되었습니다.');
+        onClose();
       } else {
         console.error('Failed to update profile.');
       }
