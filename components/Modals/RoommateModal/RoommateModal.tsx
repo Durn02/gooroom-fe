@@ -72,10 +72,12 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setResponseMessage(`Memo updated: ${data.memo}`);
+        await response.json();
+        setResponseMessage(`Memo updated: ${roommateData.memo}`);
+        alert('메모가 성공적으로 저장되었습니다.');
         fetchRoommateData();
       } else {
+        alert('메모 저장에 실패했습니다.');
         setResponseMessage('Failed to update memo.');
       }
     } catch (error) {
