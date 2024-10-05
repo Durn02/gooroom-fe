@@ -8,7 +8,7 @@ import DefaultButton from '@/components/Button/DefaultButton';
 import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
 import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import FriendModal from '@/components/Modals/FriendModal/FriendModal';
+import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
 import { IsLoginContext } from '@/lib/context/IsLoginContext';
 
@@ -37,21 +37,21 @@ export default function Landing() {
   const networkContainer = useRef<HTMLDivElement | null>(null);
   const networkInstance = useRef<Network | null>(null);
 
-  const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
+  const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
   const [isCastModalOpen, setIsCastModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [cast_message, setCastMessage] = useState('');
 
-  const closeFriendModal = () => {
-    setIsFriendModalOpen(false);
+  const closeRoommateModal = () => {
+    setIsRoommateModalOpen(false);
     setSelectedUserId(null);
     resetPosition(networkInstance.current);
   };
 
-  const openFriendModal = (userId: string) => {
+  const openRoommateModal = (userId: string) => {
     setSelectedUserId(userId);
-    setIsFriendModalOpen(true);
+    setIsRoommateModalOpen(true);
   };
 
   const fetchAndUpdateData = async () => {
@@ -201,8 +201,7 @@ export default function Landing() {
                   (instance) => instance.roommate.node_id === clickedNodeId,
                 );
                 if (isClickedNodePresent) {
-                  alert('roommate입니다.');
-                  openFriendModal(clickedNodeId);
+                  openRoommateModal(clickedNodeId);
                 } else {
                   alert('neighbor입니다.');
                   console.log(clickedNodeId);
@@ -345,12 +344,12 @@ export default function Landing() {
       )}
 
       {/* 모달 컴포넌트 */}
-      <FriendModal
-        isOpen={isFriendModalOpen}
-        onClose={closeFriendModal}
+      <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
+      <RoommateModal
+        isOpen={isRoommateModalOpen}
+        onClose={closeRoommateModal}
         userNodeId={selectedUserId ? selectedUserId : null}
       />
-      <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
     </>
   );
