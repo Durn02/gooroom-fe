@@ -25,7 +25,7 @@ const NeighborModal: React.FC<NeighborModalProps> = ({ isOpen, onClose, userNode
 
   const fetchNeighborData = async () => {
     try {
-      const response = await fetch(`${API_URL}/domain/friend/get-neighbor`, {
+      const response = await fetch(`${API_URL}/domain/friend/get-member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
