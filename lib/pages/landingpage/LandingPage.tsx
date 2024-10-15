@@ -23,7 +23,7 @@ import FriendModal from '@/components/Modals/FriendModal/FriendModal';
 // import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
 // import { API_URL } from '@/lib/utils/config';
 
-import useNetwork from '@/components/VisNetGraph/visnetGraphContainer';
+import useNetwork from '@/lib/hooks/visnetGraphContainer';
 
 // const APIURL = API_URL;
 

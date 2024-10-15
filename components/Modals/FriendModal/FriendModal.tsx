@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './FriendModal.module.css';
 import { API_URL } from '@/lib/utils/config';
-import { NetworkManager } from '@/components/VisNetGraph/visnetworkManager';
+import { NetworkManager } from '@/lib/utils/VisNetGraph/NetworkManager';
 
 // interface ModalProps {
 //   isOpen: boolean;
