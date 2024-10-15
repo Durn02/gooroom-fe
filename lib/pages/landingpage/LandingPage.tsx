@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useContext } from 'react';
+// import React, { useEffect, useState, useRef, useContext } from 'react';
+import React, { useState } from 'react';
 // import { Network, Node, Edge } from 'vis-network';
 
 // import React from 'react';
@@ -57,10 +58,6 @@ export function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-
-  const closeFriendModal = () => {
-    setSelectedUserId(null);
-  };
 
   const openFriendModal = (userId: string) => {
     setSelectedUserId(userId);

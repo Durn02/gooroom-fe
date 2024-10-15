@@ -122,35 +122,35 @@ export default function Signin() {
   const [userEmailInput, setUserEmailInput] = useState('');
   const [userPwInput, setUserPwInput] = useState('');
   const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  const isLoggedin = useContext(IsLoginContext);
+  // const isLoggedin = useContext(IsLoginContext);
   // 로그인이 되어있는지 확인하는 useEffect
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      if (isLoggedin.isLogin) {
-        alert('이미 로그인 되어있습니다.');
-        window.location.replace('/');
-      } else {
-        try {
-          const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include', // 쿠키를 포함시키기 위해 필요
-          });
+      // if (isLoggedin.isLogin) {
+      //   alert('이미 로그인 되어있습니다.');
+      //   window.location.replace('/');
+      // } else {
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // 쿠키를 포함시키기 위해 필요
+        });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.message === 'access token validation check successfull') {
-              alert('이미 로그인 되어있습니다.');
-              window.location.replace('/');
-            }
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === 'access token validation check successfull') {
+            alert('이미 로그인 되어있습니다.');
+            window.location.replace('/');
           }
-        } catch (error) {
-          alert(error);
         }
+      } catch (error) {
+        alert(error);
       }
+      // }
     };
 
     checkLogin();

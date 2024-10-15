@@ -36,7 +36,7 @@ const useNetwork = (callbacks: { [key: string]: (nodeId: string) => void }) => {
   }, []);
 
   return {
-    networkManager,
+    networkManager: networkManager as NetworkManager,
     networkContainer,
   };
 };
