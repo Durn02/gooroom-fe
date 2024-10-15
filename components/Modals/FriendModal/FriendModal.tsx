@@ -5,29 +5,23 @@ import styles from './FriendModal.module.css';
 import { API_URL } from '@/lib/utils/config';
 import { NetworkManager } from '@/lib/utils/VisNetGraph/NetworkManager';
 
-// interface ModalProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   userNodeId: string | null; // 사용자의 노드 ID
-// }
-
 interface ModalProps {
   networkManager: NetworkManager;
-  nodeId: string;
-  isOpen: boolean;
+  onClose: () => void;
+  nodeId: string | null;
 }
 
 const APIURL = API_URL;
 
-const Modal: React.FC<ModalProps> = ({ networkManager, nodeId, isOpen }) => {
+const Modal: React.FC<ModalProps> = ({ networkManager, nodeId, onClose }) => {
   const [memo, setMemo] = useState('');
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (nodeId && isOpen) {
+    if (nodeId) {
       fetchMemo();
     }
-  }, [nodeId, isOpen]);
+  }, [nodeId]);
 
   const fetchMemo = async () => {
     try {
@@ -81,16 +75,17 @@ const Modal: React.FC<ModalProps> = ({ networkManager, nodeId, isOpen }) => {
     }
   };
 
-  if (!isOpen) return null;
+  if (!nodeId) return null;
 
-  const onClose = () => {
+  const onModalCloseHandler = () => {
+    onClose();
     networkManager.resetPosition();
   };
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
-        <button className={styles.modalClose} onClick={onClose}>
+        <button className={styles.modalClose} onClick={onModalCloseHandler}>
           X
         </button>
         <h2>This is FriendPage. Edit Memo</h2>

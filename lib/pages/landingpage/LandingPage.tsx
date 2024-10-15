@@ -43,31 +43,28 @@ export function Landing() {
   // const networkContainer = useRef<HTMLDivElement | null>(null);
   // const networkInstance = useRef<Network | null>(null);
 
-  const [isFriendModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   // const [isCastModalOpen, setIsCastModalOpen] = useState(false);
-  // const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   // const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   // const [cast_message, setCastMessage] = useState('');
 
   const callbacks = {
     onNodeDoubleClick: (nodeId: string) => {
-      setIsModalOpen(true);
+      openFriendModal(nodeId);
     },
     // 다른 콜백 함수들 추가 가능
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
 
-  // const closeFriendModal = () => {
-  //   setIsModalOpen(false);
-  //   setSelectedUserId(null);
-  //   resetPosition(networkInstance.current);
-  // };
+  const closeFriendModal = () => {
+    setSelectedUserId(null);
+  };
 
-  // const openFriendModal = (userId: string) => {
-  //   setSelectedUserId(userId);
-  //   setIsModalOpen(true);
-  // };
+  const openFriendModal = (userId: string) => {
+    setSelectedUserId(userId);
+  };
 
   // const fetchAndUpdateData = async () => {
   //   const friendsData = await fetchFriends();
@@ -338,7 +335,13 @@ export function Landing() {
       {/* )} */}
 
       {/* 모달 컴포넌트 */}
-      <FriendModal isOpen={isFriendModalOpen} networkManager={networkManager} />
+      <FriendModal
+        networkManager={networkManager}
+        onClose={() => {
+          setSelectedUserId(null);
+        }}
+        nodeId={selectedUserId}
+      />
     </>
   );
 }
