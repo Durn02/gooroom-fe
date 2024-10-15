@@ -293,7 +293,7 @@ export const reloadDataset = (
   }
 };
 
-export const fetchFriendsInManger = async (): Promise<{
+export const fetchFriendsInManager = async (): Promise<{
   loggedInUser: User | undefined;
   roommatesData: RoomMateData[];
   neighborsData: User[];

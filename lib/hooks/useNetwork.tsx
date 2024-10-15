@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network/standalone/esm/vis-network';
-import { fetchFriendsInManger } from '@/lib/utils/handleFriends';
+import { fetchFriendsInManager } from '@/lib/utils/handleFriends';
 import visnet_options from '../assets/styles/visnetGraphOptions';
 import { NetworkManager } from '../utils/VisNetGraph/NetworkManager';
 
@@ -11,7 +11,7 @@ const useNetwork = (callbacks: { [key: string]: (nodeId: string) => void }) => {
   useLayoutEffect(() => {
     const init = async () => {
       //data fetch
-      const { loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors } = await fetchFriendsInManger();
+      const { loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors } = await fetchFriendsInManager();
 
       //networkContainer(html element)와 binding된 빈 networkInstance생성
       if (networkContainer.current) {
@@ -33,7 +33,7 @@ const useNetwork = (callbacks: { [key: string]: (nodeId: string) => void }) => {
     };
     init();
     return () => networkManager?.destroy();
-  });
+  }, []);
 
   return {
     networkManager,
