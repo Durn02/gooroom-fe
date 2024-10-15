@@ -1,21 +1,21 @@
 const visnet_options = {
   nodes: {
-    shape: "dot",
+    shape: 'dot',
     size: 12,
     shadow: true,
     color: {
-      border: "white",
-      background: "skyblue",
+      border: 'white',
+      background: 'skyblue',
     },
     font: {
-      color: "#000",
+      color: '#000',
     },
   },
   edges: {
-    color: "gray",
+    color: 'gray',
     smooth: {
       enabled: true,
-      type: "dynamic",
+      type: 'dynamic',
       roundness: 0.5,
     },
   },

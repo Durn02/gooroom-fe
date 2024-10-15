@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
-import { CSSTransition } from "react-transition-group";
+import React, { useState, useEffect } from 'react';
+import { CSSTransition } from 'react-transition-group';
 //import "./ProfileModal.css";
-import style from "./ProfileModal.module.css";
-import { API_URL } from "@/lib/utils/config";
+import style from './ProfileModal.module.css';
+import { API_URL } from '@/lib/utils/config';
 
 interface ModalProps {
   isOpen: boolean;
@@ -14,12 +14,12 @@ const APIURL = API_URL;
 
 const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [profileData, setProfileData] = useState({
-    my_memo: "",
-    nickname: "",
-    username: "",
+    my_memo: '',
+    nickname: '',
+    username: '',
     concern: [] as string[], // concern을 배열로 초기화
   });
-  const [newConcern, setNewConcern] = useState<string>(""); // 새로운 concern 입력값
+  const [newConcern, setNewConcern] = useState<string>(''); // 새로운 concern 입력값
 
   useEffect(() => {
     if (isOpen) {
@@ -30,16 +30,16 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const fetchProfileData = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/user/my/info`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
       });
       const data = await response.json();
       setProfileData(data);
     } catch (error) {
-      console.error("An error occurred while fetching profile data.", error);
+      console.error('An error occurred while fetching profile data.', error);
     }
   };
 
@@ -51,16 +51,12 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
-  const handleNewConcernChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleNewConcernChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewConcern(event.target.value);
   };
 
-  const handleNewConcernKeyPress = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === "Enter" && newConcern.trim() !== "") {
+  const handleNewConcernKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && newConcern.trim() !== '') {
       addConcern();
     }
   };
@@ -70,7 +66,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
       ...prevData,
       concern: [...prevData.concern, newConcern.trim()],
     }));
-    setNewConcern(""); // 입력 필드를 초기화
+    setNewConcern(''); // 입력 필드를 초기화
   };
 
   const removeConcern = (index: number) => {
@@ -83,9 +79,9 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const handleSave = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/user/info/change`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           my_memo: profileData.my_memo,
@@ -93,7 +89,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           username: profileData.username,
           concern: profileData.concern,
         }),
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -101,10 +97,10 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         console.log(`Profile updated: ${data.my_memo}`);
         fetchProfileData(); // 저장 후 최신 프로필 데이터 다시 가져오기
       } else {
-        console.error("Failed to update profile.");
+        console.error('Failed to update profile.');
       }
     } catch (error) {
-      console.error("An error occurred while saving profile.", error);
+      console.error('An error occurred while saving profile.', error);
     }
   };
 
@@ -115,13 +111,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <CSSTransition
-      in={isOpen}
-      timeout={300}
-      className={style.slideFade}
-      mountOnEnter
-      unmountOnExit
-    >
+    <CSSTransition in={isOpen} timeout={300} className={style.slideFade} mountOnEnter unmountOnExit>
       <div className="modal-overlay" onClick={handleOverlayClick}>
         <div className="modal-content">
           <button className="modal-close" onClick={onClose}>
