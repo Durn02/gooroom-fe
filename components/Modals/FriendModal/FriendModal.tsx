@@ -1,47 +1,54 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
-import styles from "./FriendModal.module.css";
-import { API_URL } from "@/lib/utils/config";
+import React, { useState, useEffect } from 'react';
+import styles from './FriendModal.module.css';
+import { API_URL } from '@/lib/utils/config';
+import { NetworkManager } from '@/components/VisNetGraph/visnetworkManager';
+
+// interface ModalProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   userNodeId: string | null; // 사용자의 노드 ID
+// }
 
 interface ModalProps {
+  networkManager: NetworkManager;
+  nodeId: string;
   isOpen: boolean;
-  onClose: () => void;
-  userNodeId: string | null; // 사용자의 노드 ID
 }
 
 const APIURL = API_URL;
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
-  const [memo, setMemo] = useState("");
+const Modal: React.FC<ModalProps> = ({ networkManager, nodeId, isOpen }) => {
+  const [memo, setMemo] = useState('');
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userNodeId && isOpen) {
+    if (nodeId && isOpen) {
       fetchMemo();
     }
-  }, [userNodeId, isOpen]);
+  }, [nodeId, isOpen]);
 
   const fetchMemo = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/friend/memo/get-content`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_node_id: userNodeId }),
-        credentials: "include",
+        body: JSON.stringify({ user_node_id: nodeId }),
+        credentials: 'include',
       });
 
       if (response.ok) {
         const data = await response.json();
         setMemo(data.memo);
       } else {
-        console.error("에러가 발생했습니다.");
-        setResponseMessage("Failed to load memo.");
+        console.error('에러가 발생했습니다.');
+        setResponseMessage('Failed to load memo.');
       }
     } catch (error) {
-      setResponseMessage("An error occurred while fetching memo.");
+      setResponseMessage('An error occurred while fetching memo.');
       console.error(error);
     }
   };
@@ -53,12 +60,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const handleSave = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/friend/memo/modify`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_node_id: userNodeId, new_memo: memo }),
-        credentials: "include",
+        body: JSON.stringify({ user_node_id: nodeId, new_memo: memo }),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -66,15 +73,19 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
         setResponseMessage(`Memo updated: ${data.new_memo}`);
         fetchMemo();
       } else {
-        setResponseMessage("Failed to update memo.");
+        setResponseMessage('Failed to update memo.');
       }
     } catch (error) {
-      setResponseMessage("An error occurred while saving memo.");
+      setResponseMessage('An error occurred while saving memo.');
       console.error(error);
     }
   };
 
   if (!isOpen) return null;
+
+  const onClose = () => {
+    networkManager.resetPosition();
+  };
 
   return (
     <div className={styles.modalOverlay}>
@@ -93,9 +104,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, userNodeId }) => {
         <button onClick={handleSave} className={styles.modalSaveButton}>
           ✔️
         </button>
-        {responseMessage && (
-          <p className={styles.modalResponse}>{responseMessage}</p>
-        )}
+        {responseMessage && <p className={styles.modalResponse}>{responseMessage}</p>}
       </div>
     </div>
   );
