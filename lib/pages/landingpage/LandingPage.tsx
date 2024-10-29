@@ -1,14 +1,14 @@
 'use client';
 
 // import React, { useEffect, useState, useRef, useContext } from 'react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // import { Network, Node, Edge } from 'vis-network';
 
 // import React from 'react';
 // import { Network } from 'vis-network';
 // import { DataSet } from 'vis-data';
 // import Link from 'next/link';
-// import DefaultButton from '@/components/Button/DefaultButton';
+import DefaultButton from '@/components/Button/DefaultButton';
 // import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
 // import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
@@ -22,13 +22,15 @@ import FriendModal from '@/components/Modals/FriendModal/FriendModal';
 // import { fetchUnreadCasts } from '../../utils/alertCasting';
 // import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
 // import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
-// import { API_URL } from '@/lib/utils/config';
+import { API_URL } from '@/lib/utils/config';
 
 import useNetwork from '@/lib/hooks/useNetwork';
+import { useIsLoginState } from '@/lib/hooks/useIsLoginState';
 
-// const APIURL = API_URL;
+const APIURL = API_URL;
 
 export function Landing() {
+  const isLoggedIn = useIsLoginState();
   // const isLoggedIn = useContext(IsLoginContext);
 
   // const loggedInUserRef = useRef<User>();
@@ -128,44 +130,47 @@ export function Landing() {
   //   setIsProfileModalOpen(false);
   // };
 
-  // const verifyAccessToken = async () => {
-  //   try {
-  //     const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       credentials: 'include',
-  //     });
+  const verifyAccessToken = async () => {
+    try {
+      const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       console.log(data);
-  //       if (data.message == 'access token validation check successfull') {
-  //         isLoggedIn.isLogin = true;
-  //       }
-  //     } else {
-  //       const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         credentials: 'include',
-  //       });
-  //       if (refresh_response.ok) {
-  //         isLoggedIn.isLogin = true;
-  //       } else {
-  //         isLoggedIn.isLogin = false;
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
-  //   }
-  // };
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        if (data.message == 'access token validation check successfull') {
+          // isLoggedIn = true;
+          console.log('isLoggedIn : ', isLoggedIn);
+        }
+      } else {
+        const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (refresh_response.ok) {
+          // isLoggedIn = true;
+          console.log('isLoggedIn : ', isLoggedIn);
+        } else {
+          // isLoggedIn = false;
+          console.log('isLoggedIn : ', isLoggedIn);
+        }
+      }
+    } catch (error) {
+      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
+    }
+  };
 
-  // useEffect(() => {
-
-  // }, []);
+  useEffect(() => {
+    verifyAccessToken();
+  }, []);
 
   // useEffect(() => {
   //   if (networkContainer.current) {
@@ -212,29 +217,30 @@ export function Landing() {
   //   };
   // }, [networkContainer.current]);
 
-  // const onLogoutButtonClickHandler = async () => {
-  //   try {
-  //     const response = await fetch(`${APIURL}/domain/auth/logout`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       credentials: 'include',
-  //     });
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       if (data.message === 'logout success') {
-  //         // 서버가 보낸 메시지에 따라 조건 수정
-  //         alert('로그아웃합니다.');
-  //         isLoggedIn.setUserId(null);
-  //         console.log('isLoggedIn : ', isLoggedIn);
-  //         window.location.href = '/';
-  //       }
-  //     }
-  //   } catch (error) {
-  //     alert(error);
-  //   }
-  // };
+  const onLogoutButtonClickHandler = async () => {
+    try {
+      const response = await fetch(`${APIURL}/domain/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.message === 'logout success') {
+          // 서버가 보낸 메시지에 따라 조건 수정
+          alert('로그아웃합니다.');
+          localStorage.clear();
+          sessionStorage.clear();
+          console.log('isLoggedIn : ', isLoggedIn);
+          window.location.href = '/';
+        }
+      }
+    } catch (error) {
+      alert(error);
+    }
+  };
 
   // const addFriend = async () => {
   // Simulate adding a friend
@@ -317,12 +323,12 @@ export function Landing() {
               <DefaultButton placeholder="O" onClick={() => resetPosition(networkInstance.current)} />
               <DefaultButton placeholder="-" onClick={() => zoomOut(networkInstance.current)} />
             </div> */}
-          {/* <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
-            </div>
-            <div className={style.signoutButtonContainer}>
-              <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
-            </div> */}
+          <div className={style.logoutButtonContainer}>
+            <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
+          </div>
+          {/* <div className={style.signoutButtonContainer}>
+            <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
+          </div> */}
           {/* <button onClick={addFriend}>Add Friend Test</button> */}
           <div className={style.visNetContainer}>
             <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
