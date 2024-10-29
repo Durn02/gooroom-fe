@@ -3,6 +3,15 @@ import { Network, Node, Edge } from 'vis-network';
 import { DataSet } from 'vis-data';
 import { RoomMateData, User, RoommateWithNeighbors } from '@/lib/types/landingPage.type';
 import { generateNodes, generateEdges } from './constructNetwork';
+import {
+  zoomIn,
+  zoomOut,
+  resetPosition,
+  disableGraphInteraction,
+  enableGraphInteraction,
+  hardenGraph,
+  softenGraph,
+} from '../graphInteraction';
 
 export class NetworkManager {
   private network: Network;
@@ -55,7 +64,6 @@ export class NetworkManager {
       }
     });
   }
-
   public destroy() {
     console.log('NetworkManager is being destroyed.');
 
@@ -77,8 +85,21 @@ export class NetworkManager {
     roommatesWithNeighbors: RoommateWithNeighbors[],
   ) => Edge[];
 
-  declare resetPosition: (this: NetworkManager) => void;
+  declare zoomIn: (network: Network) => void;
+  declare zoomOut: (network: Network) => void;
+  declare resetPosition: (network: Network) => void;
+  declare disableGraphInteraction: (network: Network) => void;
+  declare enableGraphInteraction: (network: Network) => void;
+  declare hardenGraph: (network: Network) => void;
+  declare softenGraph: (network: Network) => void;
 }
 
 NetworkManager.prototype.generateNodes = generateNodes;
 NetworkManager.prototype.generateEdges = generateEdges;
+NetworkManager.prototype.zoomIn = zoomIn;
+NetworkManager.prototype.zoomOut = zoomOut;
+NetworkManager.prototype.resetPosition = resetPosition;
+NetworkManager.prototype.disableGraphInteraction = disableGraphInteraction;
+NetworkManager.prototype.enableGraphInteraction = enableGraphInteraction;
+NetworkManager.prototype.hardenGraph = hardenGraph;
+NetworkManager.prototype.softenGraph = softenGraph;
