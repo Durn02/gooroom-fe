@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 // import React from 'react';
 // import { Network } from 'vis-network';
 // import { DataSet } from 'vis-data';
-// import Link from 'next/link';
+import Link from 'next/link';
 import DefaultButton from '@/components/Button/DefaultButton';
 // import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
 // import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
@@ -294,9 +294,7 @@ export function Landing() {
   // };
   return (
     <>
-      {/* {console.log('networkManager : ', networkManager.current)} */}
-      {/* {console.log('networkManager : ', networkManager)}
-      {!isLoggedIn.isLogin && (
+      {!isLoggedIn && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -310,32 +308,32 @@ export function Landing() {
             </Link>
           </div>
         </>
-      )} */}
+      )}
 
-      {/* {isLoggedIn.isLogin && ( */}
-      <>
-        <div>
-          {/* <div className={style.castPostStickerDropdownButton}>
+      {isLoggedIn && (
+        <>
+          <div>
+            {/* <div className={style.castPostStickerDropdownButton}>
               <CastPostStickerDropdownButton cast_fuction={openCastModal} />
             </div> */}
-          {/* <div className={style.magnifyButtonContainer}>
+            {/* <div className={style.magnifyButtonContainer}>
               <DefaultButton placeholder="+" onClick={() => zoomIn(networkInstance.current)} />
               <DefaultButton placeholder="O" onClick={() => resetPosition(networkInstance.current)} />
               <DefaultButton placeholder="-" onClick={() => zoomOut(networkInstance.current)} />
             </div> */}
-          <div className={style.logoutButtonContainer}>
-            <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
-          </div>
-          {/* <div className={style.signoutButtonContainer}>
+            <div className={style.logoutButtonContainer}>
+              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
+            </div>
+            {/* <div className={style.signoutButtonContainer}>
             <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
           </div> */}
-          {/* <button onClick={addFriend}>Add Friend Test</button> */}
-          <div className={style.visNetContainer}>
-            <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+            {/* <button onClick={addFriend}>Add Friend Test</button> */}
+            <div className={style.visNetContainer}>
+              <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+            </div>
           </div>
-        </div>
-      </>
-      {/* )} */}
+        </>
+      )}
 
       {/* 모달 컴포넌트 */}
       <FriendModal
