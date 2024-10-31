@@ -11,20 +11,16 @@ import {
   enableGraphInteraction,
   hardenGraph,
   softenGraph,
-} from '../graphInteraction';
+} from './graphInteraction';
 
 export class NetworkManager {
   private network: Network;
-
   private loggedInUser: User;
   private roommatesData: RoomMateData[];
   private neighborsData: User[];
   private roommatesWithNeighborsRef: RoommateWithNeighbors[];
-
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
-
-  private isCasting = false;
 
   constructor(
     network: Network,
@@ -44,6 +40,8 @@ export class NetworkManager {
     network.setData(data);
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesData, neighborsData));
     this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesData, roommatesWithNeighborsRef));
+
+    this.bind();
 
     this.network.on('doubleClick', (event: { nodes: string[] }) => {
       const { nodes: clickedNodes } = event;
@@ -65,41 +63,56 @@ export class NetworkManager {
     });
   }
   public destroy() {
-    console.log('NetworkManager is being destroyed.');
-
     if (this.network) {
       this.network.destroy();
       console.log('Network destroyed.');
     }
-
     this.nodesDataSet.clear();
     this.edgesDataSet.clear();
     console.log('Nodes and edges cleared.');
   }
 
-  declare generateNodes: (loggedInUser: User, roommatesData: RoomMateData[], neighborsData: User[]) => Node[];
+  public getNetwork() {
+    return this.network;
+  }
+  public setNetwork() {}
+  public getLoggeInUser() {}
+  public setLoggeInUser() {}
+  public getRoommatesData() {}
+  public setRoommatesData() {}
+  public getNeighborsata() {}
+  public setNeighborsata() {}
+  public getRoommatesWithNeighbors() {}
+  public setRoommatesWithNeighbors() {}
+  public getNodesDataSet() {}
+  public setNodesDataSet() {}
+  public getEdgesDataSet() {}
+  public setEdgesDataSet() {}
 
+  declare generateNodes: (loggedInUser: User, roommatesData: RoomMateData[], neighborsData: User[]) => Node[];
   declare generateEdges: (
     loggedInUser: User,
     roommates: RoomMateData[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
   ) => Edge[];
+  declare zoomIn: () => void;
+  declare zoomOut: () => void;
+  declare resetPosition: () => void;
+  declare disableGraphInteraction: () => void;
+  declare enableGraphInteraction: () => void;
+  declare hardenGraph: () => void;
+  declare softenGraph: () => void;
 
-  declare zoomIn: (network: Network) => void;
-  declare zoomOut: (network: Network) => void;
-  declare resetPosition: (network: Network) => void;
-  declare disableGraphInteraction: (network: Network) => void;
-  declare enableGraphInteraction: (network: Network) => void;
-  declare hardenGraph: (network: Network) => void;
-  declare softenGraph: (network: Network) => void;
+  private bind() {
+    this.zoomIn = zoomIn.bind(this);
+    this.zoomOut = zoomOut.bind(this);
+    this.resetPosition = resetPosition.bind(this);
+    this.disableGraphInteraction = disableGraphInteraction.bind(this);
+    this.enableGraphInteraction = enableGraphInteraction.bind(this);
+    this.hardenGraph = hardenGraph.bind(this);
+    this.softenGraph = softenGraph.bind(this);
+  }
 }
 
 NetworkManager.prototype.generateNodes = generateNodes;
 NetworkManager.prototype.generateEdges = generateEdges;
-NetworkManager.prototype.zoomIn = zoomIn;
-NetworkManager.prototype.zoomOut = zoomOut;
-NetworkManager.prototype.resetPosition = resetPosition;
-NetworkManager.prototype.disableGraphInteraction = disableGraphInteraction;
-NetworkManager.prototype.enableGraphInteraction = enableGraphInteraction;
-NetworkManager.prototype.hardenGraph = hardenGraph;
-NetworkManager.prototype.softenGraph = softenGraph;

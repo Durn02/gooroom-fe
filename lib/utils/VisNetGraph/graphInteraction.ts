@@ -1,6 +1,7 @@
-import { Network } from 'vis-network';
+import { NetworkManager } from './NetworkManager';
 
-export const zoomIn = (network: Network) => {
+export const zoomIn = function (this: NetworkManager) {
+  const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
     scale: scale * 1.2,
@@ -11,7 +12,8 @@ export const zoomIn = (network: Network) => {
   });
 };
 
-export const zoomOut = (network: Network) => {
+export const zoomOut = function (this: NetworkManager) {
+  const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
     scale: scale * 0.8,
@@ -22,7 +24,8 @@ export const zoomOut = (network: Network) => {
   });
 };
 
-export const resetPosition = (network: Network) => {
+export const resetPosition = function (this: NetworkManager) {
+  const network = this.getNetwork();
   network.fit({
     animation: {
       duration: 1000,
@@ -31,7 +34,8 @@ export const resetPosition = (network: Network) => {
   });
 };
 
-export const disableGraphInteraction = (network: Network) => {
+export const disableGraphInteraction = function (this: NetworkManager) {
+  const network = this.getNetwork();
   network.setOptions({
     interaction: {
       dragNodes: false,
@@ -42,7 +46,8 @@ export const disableGraphInteraction = (network: Network) => {
   });
 };
 
-export const enableGraphInteraction = (network: Network) => {
+export const enableGraphInteraction = function (this: NetworkManager) {
+  const network = this.getNetwork();
   network.setOptions({
     interaction: {
       dragNodes: true,
@@ -53,7 +58,8 @@ export const enableGraphInteraction = (network: Network) => {
   });
 };
 
-export const hardenGraph = (network: Network) => {
+export const hardenGraph = function (this: NetworkManager) {
+  const network = this.getNetwork();
   network.setOptions({
     edges: {
       smooth: {
@@ -65,7 +71,8 @@ export const hardenGraph = (network: Network) => {
   });
 };
 
-export const softenGraph = (network: Network) => {
+export const softenGraph = function (this: NetworkManager) {
+  const network = this.getNetwork();
   network.setOptions({
     edges: {
       smooth: {
