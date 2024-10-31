@@ -1,5 +1,5 @@
 //NetworkManager.ts
-import { Network, Node, Edge } from 'vis-network';
+import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
 import { RoomMateData, User, RoommateWithNeighbors } from '@/lib/types/landingPage.type';
 import { generateNodes, generateEdges } from './constructNetwork';
@@ -12,13 +12,14 @@ import {
   hardenGraph,
   softenGraph,
 } from './graphInteraction';
+import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 
 export class NetworkManager {
   private network: Network;
   private loggedInUser: User;
   private roommatesData: RoomMateData[];
   private neighborsData: User[];
-  private roommatesWithNeighborsRef: RoommateWithNeighbors[];
+  private roommatesWithNeighbors: RoommateWithNeighbors[];
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
 
@@ -27,19 +28,19 @@ export class NetworkManager {
     loggedInUser: User,
     roommatesData: RoomMateData[],
     neighborsData: User[],
-    roommatesWithNeighborsRef: RoommateWithNeighbors[],
+    roommatesWithNeighbors: RoommateWithNeighbors[],
     callbacks: { [key: string]: (nodeId: string) => void },
   ) {
     this.network = network;
     this.loggedInUser = loggedInUser;
     this.roommatesData = roommatesData;
     this.neighborsData = neighborsData;
-    this.roommatesWithNeighborsRef = roommatesWithNeighborsRef;
+    this.roommatesWithNeighbors = roommatesWithNeighbors;
 
     const data = { nodes: this.nodesDataSet, edges: this.edgesDataSet };
     network.setData(data);
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesData, neighborsData));
-    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesData, roommatesWithNeighborsRef));
+    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesData, roommatesWithNeighbors));
 
     this.bind();
 
@@ -76,13 +77,21 @@ export class NetworkManager {
     return this.network;
   }
   public setNetwork() {}
-  public getLoggeInUser() {}
+  public getLoggeInUser() {
+    return this.loggedInUser;
+  }
   public setLoggeInUser() {}
-  public getRoommatesData() {}
+  public getRoommatesData() {
+    return this.roommatesData;
+  }
   public setRoommatesData() {}
-  public getNeighborsata() {}
+  public getNeighborsata() {
+    return this.neighborsData;
+  }
   public setNeighborsata() {}
-  public getRoommatesWithNeighbors() {}
+  public getRoommatesWithNeighbors() {
+    return this.roommatesWithNeighbors;
+  }
   public setRoommatesWithNeighbors() {}
   public getNodesDataSet() {}
   public setNodesDataSet() {}
@@ -102,6 +111,9 @@ export class NetworkManager {
   declare enableGraphInteraction: () => void;
   declare hardenGraph: () => void;
   declare softenGraph: () => void;
+  declare getLoggedInUserPosition: () => Position;
+  declare getRoommatesPosition: () => Position[];
+  declare getRoommatesByNeighborsPositions: () => { [x: string]: Position[] }[];
 
   private bind() {
     this.zoomIn = zoomIn.bind(this);
@@ -111,6 +123,9 @@ export class NetworkManager {
     this.enableGraphInteraction = enableGraphInteraction.bind(this);
     this.hardenGraph = hardenGraph.bind(this);
     this.softenGraph = softenGraph.bind(this);
+    this.getLoggedInUserPosition = getLoggedInUserPosition.bind(this);
+    this.getRoommatesPosition = getRoommatesPosition.bind(this);
+    this.getRoommatesByNeighborsPositions = getRoommatesByNeighborsPositions.bind(this);
   }
 }
 
