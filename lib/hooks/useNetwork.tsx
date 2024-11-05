@@ -4,7 +4,7 @@ import { fetchFriendsInManager } from '@/lib/utils/handleFriends';
 import visnet_options from '../assets/styles/visnetGraphOptions';
 import { NetworkManager } from '../utils/VisNetGraph/NetworkManager';
 
-const useNetwork = (callbacks: { [key: string]: (nodeId: string) => void }) => {
+const useNetwork = (callbacks: { [key: string]: (...args: unknown[]) => void }) => {
   const [networkManager, initNetworkManager] = useState<NetworkManager>();
   const networkContainer = useRef<HTMLDivElement>(null);
 

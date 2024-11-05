@@ -12,8 +12,6 @@ export const fetchFriends = async (): Promise<{
   roommatesWithNeighbors: RoommateWithNeighbors[];
 }> => {
   const APIURL = API_URL;
-  console.log('API URL: ', APIURL);
-  console.log('fetchFriends called!');
   try {
     const response = await fetch(`${APIURL}/domain/friend/get-members`, {
       method: 'GET',
@@ -292,5 +290,51 @@ export const reloadDataset = (
   if (edgesToRemove.length > 0) {
     edgesDataset.remove(edgesToRemove);
     console.log('Removed edges: ', edgesToRemove);
+  }
+};
+
+export const fetchFriendsInManager = async (): Promise<{
+  loggedInUser: User | undefined;
+  roommatesData: RoomMateData[];
+  neighborsData: User[];
+  roommatesWithNeighbors: RoommateWithNeighbors[];
+}> => {
+  const APIURL = API_URL;
+  try {
+    const response = await fetch(`${APIURL}/domain/friend/get-members`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (response.ok) {
+      let data = await response.json();
+      if (data.length > 0) {
+        data = data[0];
+        return {
+          loggedInUser: data.u,
+          roommatesData: data.roommates,
+          neighborsData: data.neighbors,
+          roommatesWithNeighbors: data.roommates_with_neighbors,
+        };
+      }
+    }
+    // If response is not OK or data is not as expected, return empty values
+    return {
+      loggedInUser: undefined,
+      roommatesData: [],
+      neighborsData: [],
+      roommatesWithNeighbors: [],
+    };
+  } catch (error) {
+    alert(`Failed to fetch friends: ${error}`);
+    return {
+      loggedInUser: undefined,
+      roommatesData: [],
+      neighborsData: [],
+      roommatesWithNeighbors: [],
+    };
   }
 };

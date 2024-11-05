@@ -29,7 +29,7 @@ export class NetworkManager {
     roommatesData: RoomMateData[],
     neighborsData: User[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
-    callbacks: { [key: string]: (nodeId: string) => void },
+    callbacks: { [key: string]: (...args: unknown[]) => void },
   ) {
     this.network = network;
     this.loggedInUser = loggedInUser;
@@ -58,7 +58,7 @@ export class NetworkManager {
         });
 
         setTimeout(() => {
-          callbacks.onNodeDoubleClick(clickedNodeId);
+          callbacks.onNodeDoubleClick(clickedNodeId, this.loggedInUser, this.roommatesData);
         }, 800);
       }
     });
@@ -85,10 +85,10 @@ export class NetworkManager {
     return this.roommatesData;
   }
   public setRoommatesData() {}
-  public getNeighborsata() {
+  public getNeighborsData() {
     return this.neighborsData;
   }
-  public setNeighborsata() {}
+  public setNeighborsData() {}
   public getRoommatesWithNeighbors() {
     return this.roommatesWithNeighbors;
   }

@@ -8,9 +8,11 @@ import React, { useState, useEffect } from 'react';
 // import { Network } from 'vis-network';
 // import { DataSet } from 'vis-data';
 import Link from 'next/link';
+import type { RoomMateData } from '@/lib/types/landingPage.type';
 import DefaultButton from '@/components/Button/DefaultButton';
 // import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
 // import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
+import type { User } from '@/lib/types/landingPage.type';
 import style from './LandingPage.module.css';
 import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
@@ -40,16 +42,18 @@ export function Landing() {
   // const [cast_message, setCastMessage] = useState('');
   // const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   // const [cast_message, setCastMessage] = useState('');
+  const callbacks = {
+    onNodeDoubleClick: (nodeId: string, user: User, rmd: RoomMateData[]) => {
+      return openFriendModal(nodeId, user, rmd);
+    },
+  };
+
+  const { networkManager, networkContainer } = useNetwork(callbacks);
 
   const closeRoommateModal = () => {
     setIsRoommateModalOpen(false);
     setSelectedUserId(null);
     networkManager.resetPosition();
-  };
-
-  const openRoommateModal = (userId: string) => {
-    setSelectedUserId(userId);
-    setIsRoommateModalOpen(true);
   };
 
   const closeNeighborModal = () => {
@@ -58,22 +62,18 @@ export function Landing() {
     networkManager.resetPosition();
   };
 
-  const openNeighborModal = (userId: string) => {
+  const openFriendModal = (userId: string, loggedInUser: User, roommateData: RoomMateData[]) => {
     setSelectedUserId(userId);
-    setIsNeighborModalOpen(true);
-  };
-
-  const callbacks = {
-    onNodeDoubleClick: (nodeId: string) => {
-      openFriendModal(nodeId);
-    },
-    // 다른 콜백 함수들 추가 가능
-  };
-
-  const { networkManager, networkContainer } = useNetwork(callbacks);
-
-  const openFriendModal = (userId: string) => {
-    setSelectedUserId(userId);
+    // console.log('networkManager :', networkManager);
+    // const loggedInUser = networkManager.getLoggeInUser();
+    console.log('loggedInUser :', loggedInUser);
+    if (userId === loggedInUser.node_id) {
+      setIsProfileModalOpen(true);
+    } else if (roommateData.some((instance) => instance.roommate.node_id === userId)) {
+      setIsRoommateModalOpen(true);
+    } else {
+      setIsNeighborModalOpen(true);
+    }
   };
 
   // const closeCastModal = () => {
@@ -114,11 +114,6 @@ export function Landing() {
     setIsProfileModalOpen(false);
     setSelectedUserId(null);
     networkManager.resetPosition();
-  };
-
-  const openProfileModal = (userId: string) => {
-    setSelectedUserId(userId);
-    setIsProfileModalOpen(true);
   };
 
   const verifyAccessToken = async () => {
