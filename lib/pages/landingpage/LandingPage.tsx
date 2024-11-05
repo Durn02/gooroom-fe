@@ -1,54 +1,50 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useContext } from 'react';
-import { Network, Node, Edge } from 'vis-network';
-import { DataSet } from 'vis-data';
+// import React, { useEffect, useState, useRef, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+// import { Network, Node, Edge } from 'vis-network';
+
+// import React from 'react';
+// import { Network } from 'vis-network';
+// import { DataSet } from 'vis-data';
 import Link from 'next/link';
 import DefaultButton from '@/components/Button/DefaultButton';
-import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
-import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
+// import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
+// import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
 import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
 import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
-import { IsLoginContext } from '@/lib/context/IsLoginContext';
 
-import { zoomIn, zoomOut, resetPosition, disableGraphInteraction, hardenGraph } from '../../utils/graphInteraction';
-import CastModal from '@/components/Modals/CastModal/CastModal';
-import { castAnimation } from '../../utils/casting';
-import { fetchUnreadCasts } from '../../utils/alertCasting';
-import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
-import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
+// import CastModal from '@/components/Modals/CastModal/CastModal';
+// import { castAnimation } from '../../utils/casting';
+// import { fetchUnreadCasts } from '../../utils/alertCasting';
+// import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
+// import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
 import { API_URL } from '@/lib/utils/config';
+
+import useNetwork from '@/lib/hooks/useNetwork';
+import { useIsLoginState } from '@/lib/hooks/useIsLoginState';
 
 const APIURL = API_URL;
 
-export default function Landing() {
-  const isLoggedIn = useContext(IsLoginContext);
+export function Landing() {
+  const isLoggedIn = useIsLoginState();
 
-  const loggedInUserRef = useRef<User>();
-  const roommatesDataRef = useRef<RoomMateData[]>([]);
-  const neighborsDataRef = useRef<User[]>([]);
-  const friendsData: string[] = [];
-  const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
-
-  const nodesDataset = useRef(new DataSet<Node>());
-  const edgesDataset = useRef(new DataSet<Edge>());
-
-  const networkContainer = useRef<HTMLDivElement | null>(null);
-  const networkInstance = useRef<Network | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
   const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
-  const [isCastModalOpen, setIsCastModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [cast_message, setCastMessage] = useState('');
+  // const [isCastModalOpen, setIsCastModalOpen] = useState(false);
+  // const [cast_message, setCastMessage] = useState('');
+  // const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  // const [cast_message, setCastMessage] = useState('');
 
   const closeRoommateModal = () => {
     setIsRoommateModalOpen(false);
     setSelectedUserId(null);
-    resetPosition(networkInstance.current);
+    networkManager.resetPosition();
   };
 
   const openRoommateModal = (userId: string) => {
@@ -59,7 +55,7 @@ export default function Landing() {
   const closeNeighborModal = () => {
     setIsNeighborModalOpen(false);
     setSelectedUserId(null);
-    resetPosition(networkInstance.current);
+    networkManager.resetPosition();
   };
 
   const openNeighborModal = (userId: string) => {
@@ -67,41 +63,26 @@ export default function Landing() {
     setIsNeighborModalOpen(true);
   };
 
-  const fetchAndUpdateData = async () => {
-    const friendsData = await fetchFriends();
-
-    if (loggedInUserRef.current) {
-      reloadDataset(
-        {
-          loggedInUser: loggedInUserRef.current,
-          roommates: roommatesDataRef.current,
-          neighbors: neighborsDataRef.current,
-          roommatesWithNeighbors: roommatesWithNeighborsRef.current,
-        },
-        friendsData,
-        nodesDataset.current,
-        edgesDataset.current,
-      );
-    }
-    roommatesDataRef.current = friendsData.roommates;
-    neighborsDataRef.current = friendsData.neighbors;
-    roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-
-    // Check if loggedInUser exists. If it doesn't, this is the first load.
-    if (!loggedInUserRef.current) {
-      console.log(loggedInUserRef.current);
-      loggedInUserRef.current = friendsData.loggedInUser;
-      console.log(loggedInUserRef.current);
-      initDataset(friendsData, nodesDataset.current, edgesDataset.current);
-    }
-  };
-  const closeCastModal = () => {
-    setIsCastModalOpen(false);
+  const callbacks = {
+    onNodeDoubleClick: (nodeId: string) => {
+      openFriendModal(nodeId);
+    },
+    // 다른 콜백 함수들 추가 가능
   };
 
-  const openCastModal = () => {
-    setIsCastModalOpen(true);
+  const { networkManager, networkContainer } = useNetwork(callbacks);
+
+  const openFriendModal = (userId: string) => {
+    setSelectedUserId(userId);
   };
+
+  // const closeCastModal = () => {
+  //   setIsCastModalOpen(false);
+  // };
+
+  // const openCastModal = () => {
+  //   setIsCastModalOpen(true);
+  // };
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
@@ -132,7 +113,7 @@ export default function Landing() {
   const closeProfileModal = () => {
     setIsProfileModalOpen(false);
     setSelectedUserId(null);
-    resetPosition(networkInstance.current);
+    networkManager.resetPosition();
   };
 
   const openProfileModal = (userId: string) => {
@@ -154,7 +135,8 @@ export default function Landing() {
         const data = await response.json();
         console.log(data);
         if (data.message == 'access token validation check successfull') {
-          isLoggedIn.isLogin = true;
+          // isLoggedIn = true;
+          console.log('isLoggedIn : ', isLoggedIn);
         }
       } else {
         const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
@@ -165,9 +147,11 @@ export default function Landing() {
           credentials: 'include',
         });
         if (refresh_response.ok) {
-          isLoggedIn.isLogin = true;
+          // isLoggedIn = true;
+          console.log('isLoggedIn : ', isLoggedIn);
         } else {
-          isLoggedIn.isLogin = false;
+          // isLoggedIn = false;
+          console.log('isLoggedIn : ', isLoggedIn);
         }
       }
     } catch (error) {
@@ -178,64 +162,6 @@ export default function Landing() {
   useEffect(() => {
     verifyAccessToken();
   }, []);
-
-  useEffect(() => {
-    if (networkContainer.current) {
-      if (!networkInstance.current) {
-        networkInstance.current = new Network(
-          networkContainer.current,
-          {
-            nodes: nodesDataset.current,
-            edges: edgesDataset.current,
-          },
-          visnet_options,
-        );
-        fetchAndUpdateData();
-
-        networkInstance.current.on('doubleClick', (event: { nodes: string[] }) => {
-          const { nodes: clickedNodes } = event;
-          if (clickedNodes.length > 0) {
-            const clickedNodeId = clickedNodes[0];
-
-            networkInstance.current?.focus(clickedNodeId, {
-              scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
-              animation: {
-                duration: 1000, // 애니메이션 지속 시간 (밀리초)
-                easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
-              },
-            });
-
-            setTimeout(() => {
-              if (clickedNodeId === loggedInUserRef.current?.node_id) {
-                // openFriendModal(clickedNodeId);
-                openProfileModal(clickedNodeId);
-              } else {
-                const isClickedNodePresent = roommatesDataRef.current.some(
-                  (instance) => instance.roommate.node_id === clickedNodeId,
-                );
-                if (isClickedNodePresent) {
-                  openRoommateModal(clickedNodeId);
-                } else {
-                  console.log(clickedNodeId);
-                  openNeighborModal(clickedNodeId);
-                }
-              }
-            }, 800);
-          }
-        });
-        fetchUnreadCasts(nodesDataset.current);
-      } else {
-        fetchAndUpdateData();
-        console.log('fetchAndUpdateData called');
-      }
-    }
-    return () => {
-      if (networkInstance.current) {
-        networkInstance.current.destroy();
-        networkInstance.current = null;
-      }
-    };
-  }, [networkContainer.current]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
@@ -251,7 +177,8 @@ export default function Landing() {
         if (data.message === 'logout success') {
           // 서버가 보낸 메시지에 따라 조건 수정
           alert('로그아웃합니다.');
-          isLoggedIn.setUserId(null);
+          localStorage.clear();
+          sessionStorage.clear();
           console.log('isLoggedIn : ', isLoggedIn);
           window.location.href = '/';
         }
@@ -261,60 +188,9 @@ export default function Landing() {
     }
   };
 
-  const addFriend = async () => {
-    // Simulate adding a friend
-
-    fetchAndUpdateData(); // Re-fetch and reload the dataset
-  };
-
-  const cast = () => {
-    disableGraphInteraction(networkInstance.current);
-    hardenGraph(networkInstance.current);
-
-    networkInstance.current?.once('stabilized', () => {
-      castAnimation(
-        networkInstance.current,
-        networkContainer.current,
-        loggedInUserRef.current?.node_id,
-        roommatesDataRef.current,
-        neighborsDataRef.current,
-      );
-    });
-
-    roommatesDataRef.current.forEach((element) => {
-      friendsData.push(element.roommate.node_id);
-    });
-    neighborsDataRef.current.forEach((element) => {
-      friendsData.push(element.node_id);
-    });
-
-    fetch(`${APIURL}/domain/content/cast/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        friends: friendsData,
-        message: cast_message,
-        duration: 1,
-      }),
-      credentials: 'include',
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log('cast success');
-        } else {
-          console.error('cast failed');
-        }
-      })
-      .catch((error) => {
-        console.error('error : ', error);
-      });
-  };
   return (
     <>
-      {console.log('isLoggedIn.isLogin : ', isLoggedIn.isLogin)}
-      {!isLoggedIn.isLogin && (
+      {!isLoggedIn && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -330,16 +206,16 @@ export default function Landing() {
         </>
       )}
 
-      {isLoggedIn.isLogin && (
+      {isLoggedIn && (
         <>
           <div>
-            <div className={style.castPostStickerDropdownButton}>
+            {/* <div className={style.castPostStickerDropdownButton}>
               <CastPostStickerDropdownButton cast_fuction={openCastModal} />
-            </div>
+            </div> */}
             <div className={style.magnifyButtonContainer}>
-              <DefaultButton placeholder="+" onClick={() => zoomIn(networkInstance.current)} />
-              <DefaultButton placeholder="O" onClick={() => resetPosition(networkInstance.current)} />
-              <DefaultButton placeholder="-" onClick={() => zoomOut(networkInstance.current)} />
+              <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
+              <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
+              <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
             <div className={style.logoutButtonContainer}>
               <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
@@ -347,16 +223,16 @@ export default function Landing() {
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
             </div>
-            <button onClick={addFriend}>Add Friend Test</button>
+            {/* <button onClick={addFriend}>Add Friend Test</button> */}
             <div className={style.visNetContainer}>
-              <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
             </div>
           </div>
         </>
       )}
 
       {/* 모달 컴포넌트 */}
-      <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
+      {/* <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} /> */}
       <RoommateModal
         isOpen={isRoommateModalOpen}
         onClose={closeRoommateModal}
@@ -371,3 +247,14 @@ export default function Landing() {
     </>
   );
 }
+
+// {
+/* <FriendModal
+isOpen={isFriendModalOpen}
+onClose={closeFriendModal}
+userNodeId={selectedUserId ? selectedUserId : null}
+/>
+<CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
+
+<ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} /> */
+// }
