@@ -10,15 +10,16 @@ const KEY_FOR_IS_LOGIN = 'islogin';
 
 export default function IsLoginProvider({ children }: React.PropsWithChildren) {
   const [userId, setUserId] = useTabSharedState<string | null>(KEY_FOR_USERID, null);
-  const [accessToken, setAccessToken] = useTabSharedState<string | null>(KEY_FOR_ACCESS_TOKEN, null);
+  // const [accessToken, setAccessToken] = useTabSharedState<string | null>(KEY_FOR_ACCESS_TOKEN, null);
 
   const value = useMemo(
     () => ({
-      isLogin: userId === null && accessToken === null ? false : true,
+      isLogin: userId === null ? false : true,
+      // isLogin: userId === null && accessToken === null ? false : true,
       userId,
       setUserId,
-      accessToken,
-      setAccessToken,
+      // accessToken,
+      // setAccessToken,
     }),
     [],
   );
