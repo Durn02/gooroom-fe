@@ -100,31 +100,31 @@ export function Landing() {
   //   setIsCastModalOpen(true);
   // };
 
-  // const onSignoutButtonClickHandler = async () => {
-  //   const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
-  //   if (isSignout) {
-  //     alert('회원탈퇴를 진행합니다!');
-  //     try {
-  //       const response = await fetch(`${APIURL}/domain/auth/signout`, {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         credentials: 'include',
-  //       });
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         if (data.message === 'signout success') {
-  //           alert('회원탈퇴가 완료되었습니다.');
-  //           window.location.href = '/';
-  //         }
-  //       }
-  //     } catch (error) {
-  //       alert('unknown error occurred in onSignoutButtonClickHandler');
-  //       console.error(error);
-  //     }
-  //   }
-  // };
+  const onSignoutButtonClickHandler = async () => {
+    const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
+    if (isSignout) {
+      alert('회원탈퇴를 진행합니다!');
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/signout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === 'signout success') {
+            alert('회원탈퇴가 완료되었습니다.');
+            window.location.href = '/';
+          }
+        }
+      } catch (error) {
+        alert('unknown error occurred in onSignoutButtonClickHandler');
+        console.error(error);
+      }
+    }
+  };
 
   // const closeProfileModal = () => {
   //   setIsProfileModalOpen(false);
@@ -172,51 +172,6 @@ export function Landing() {
     verifyAccessToken();
   }, []);
 
-  // useEffect(() => {
-  //   if (networkContainer.current) {
-  //     if (!networkInstance.current) {
-  //       networkInstance.current = new Network(
-  //         networkContainer.current,
-  //         {
-  //           nodes: nodesDataset.current,
-  //           edges: edgesDataset.current,
-  //         },
-  //         visnet_options,
-  //       );
-  //       fetchAndUpdateData();
-
-  //       networkInstance.current.on('doubleClick', (event: { nodes: string[] }) => {
-  //         const { nodes: clickedNodes } = event;
-  //         if (clickedNodes.length > 0) {
-  //           const clickedNodeId = clickedNodes[0];
-
-  //           networkInstance.current?.focus(clickedNodeId, {
-  //             scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
-  //             animation: {
-  //               duration: 1000, // 애니메이션 지속 시간 (밀리초)
-  //               easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
-  //             },
-  //           });
-
-  //           setTimeout(() => {
-  //             openFriendModal(clickedNodeId);
-  //           }, 800);
-  //         }
-  //       });
-  //       fetchUnreadCasts(nodesDataset.current);
-  //     } else {
-  //       fetchAndUpdateData();
-  //       console.log('fetchAndUpdateData called');
-  //     }
-  //   }
-  //   return () => {
-  //     if (networkInstance.current) {
-  //       networkInstance.current.destroy();
-  //       networkInstance.current = null;
-  //     }
-  //   };
-  // }, [networkContainer.current]);
-
   const onLogoutButtonClickHandler = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/auth/logout`, {
@@ -242,56 +197,6 @@ export function Landing() {
     }
   };
 
-  // const addFriend = async () => {
-  // Simulate adding a friend
-
-  //   fetchAndUpdateData(); // Re-fetch and reload the dataset
-  // };
-
-  // const cast = () => {
-  //   disableGraphInteraction(networkInstance.current);
-  //   hardenGraph(networkInstance.current);
-
-  //   networkInstance.current?.once('stabilized', () => {
-  //     castAnimation(
-  //       networkInstance.current,
-  //       networkContainer.current,
-  //       loggedInUserRef.current?.node_id,
-  //       roommatesDataRef.current,
-  //       neighborsDataRef.current,
-  //     );
-  //   });
-
-  //   roommatesDataRef.current.forEach((element) => {
-  //     friendsData.push(element.roommate.node_id);
-  //   });
-  //   neighborsDataRef.current.forEach((element) => {
-  //     friendsData.push(element.node_id);
-  //   });
-
-  //   fetch(`${APIURL}/domain/content/cast/send`, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({
-  //       friends: friendsData,
-  //       message: cast_message,
-  //       duration: 1,
-  //     }),
-  //     credentials: 'include',
-  //   })
-  //     .then((response) => {
-  //       if (response.ok) {
-  //         console.log('cast success');
-  //       } else {
-  //         console.error('cast failed');
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.error('error : ', error);
-  //     });
-  // };
   return (
     <>
       {!isLoggedIn && (
@@ -316,20 +221,20 @@ export function Landing() {
             {/* <div className={style.castPostStickerDropdownButton}>
               <CastPostStickerDropdownButton cast_fuction={openCastModal} />
             </div> */}
-            {/* <div className={style.magnifyButtonContainer}>
-              <DefaultButton placeholder="+" onClick={() => zoomIn(networkInstance.current)} />
-              <DefaultButton placeholder="O" onClick={() => resetPosition(networkInstance.current)} />
-              <DefaultButton placeholder="-" onClick={() => zoomOut(networkInstance.current)} />
-            </div> */}
+            <div className={style.magnifyButtonContainer}>
+              <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
+              <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
+              <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
+            </div>
             <div className={style.logoutButtonContainer}>
               <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
             </div>
-            {/* <div className={style.signoutButtonContainer}>
-            <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
-          </div> */}
+            <div className={style.signoutButtonContainer}>
+              <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
+            </div>
             {/* <button onClick={addFriend}>Add Friend Test</button> */}
             <div className={style.visNetContainer}>
-              <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
             </div>
           </div>
         </>

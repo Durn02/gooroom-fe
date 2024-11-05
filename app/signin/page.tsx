@@ -8,7 +8,6 @@ import PwInput from '@/components/Input/PwInput/PwInput';
 import { useState, useEffect } from 'react';
 // import { IsLoginContext } from '@/lib/context/IsLoginContext';
 import { API_URL } from '@/lib/utils/config';
-import { getAccessTokenFromCookie } from '@/lib/utils/getAccessTokenFromCookie';
 
 type signinRequestData = {
   email: string;
