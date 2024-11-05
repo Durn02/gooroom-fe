@@ -1,3 +1,4 @@
+/* Modal container styling */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -33,12 +34,72 @@
 }
 
 .modalInput {
-  width: calc(100% - 30px);
+  width: calc(100% - 70px);
   padding: 10px;
   margin: 8px 0 15px 0;
   border-radius: 5px;
   border: 1px solid #ccc;
   font-size: 16px;
+}
+
+/* Slide and fade in effect */
+/* .slideFadeEnter {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slideFadeEnterActive {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.slideFadeExit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.slideFadeExitActive {
+  transform: translateX(100%);
+  opacity: 0;
+} */
+
+.tagsList {
+  /* list-style-type: none;
+  padding: 0; */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2개의 열로 설정 */
+  gap: 10px; /* li 간의 간격 */
+  padding: 0 0 10px 0;
+  list-style: none;
+}
+
+.tagsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+}
+
+.tagsItem button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.modalAddButton {
+  background-color: #008cba;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px;
 }
 
 .modalSaveButton {
@@ -54,12 +115,6 @@
 
 .modalSaveButton:hover {
   background-color: #45a049;
-}
-
-.modalResponse {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #555;
 }
 
 @keyframes fadeIn {
