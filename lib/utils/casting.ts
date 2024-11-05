@@ -1,16 +1,15 @@
 'use client';
 
-import { Network, IdType } from "vis-network";
-import { RoomMateData, User } from "../types/landingPage.type";
-import style from "../pages/landingpage/LandingPage.module.css";
-import gsap from "gsap";
-import { softenGraph, enableGraphInteraction } from "./graphInteraction";
+import { Network, IdType } from 'vis-network';
+import { RoomMateData, User } from '../types/landingPage.type';
+import style from '../pages/landingpage/LandingPage.module.css';
+import gsap from 'gsap';
+import { softenGraph, enableGraphInteraction } from './graphInteraction';
 const getPosition = (node_id: IdType, network: Network | null) => {
   if (!network) {
     console.error("error in getPosition. there's no networkInstance.current");
     return;
   }
-
   const canvasPosition = network.getPosition(node_id);
   const domPosition = network.canvasToDOM(canvasPosition);
   return domPosition;
@@ -21,7 +20,7 @@ export const castAnimation = (
   networkContainer: HTMLDivElement | null,
   loggedInUserNodeId: string | undefined,
   roommatesData: RoomMateData[],
-  neighborsData: User[]
+  neighborsData: User[],
 ) => {
   if (!network) {
     console.error("error in castAnimation. there's no network");
@@ -36,10 +35,7 @@ export const castAnimation = (
     return;
   }
 
-  const loggedInUserPosition = getPosition(
-    loggedInUserNodeId as IdType,
-    network
-  );
+  const loggedInUserPosition = getPosition(loggedInUserNodeId as IdType, network);
   if (!loggedInUserPosition) {
     console.error("error in castAnimation. there's no loggedInUserPosition");
     return;
@@ -53,14 +49,10 @@ export const castAnimation = (
     .filter((position) => position !== null);
 
   const roommatesByNeighborsPositions = neighborsData.map((neighbor) => {
-    const connectedRoommates = network?.getConnectedNodes(
-      neighbor.node_id
-    ) as IdType[];
-    const connectedRoommatesPositions = connectedRoommates.map(
-      (connnectedRoommate) => {
-        return getPosition(connnectedRoommate, network);
-      }
-    );
+    const connectedRoommates = network?.getConnectedNodes(neighbor.node_id) as IdType[];
+    const connectedRoommatesPositions = connectedRoommates.map((connnectedRoommate) => {
+      return getPosition(connnectedRoommate, network);
+    });
     return { [neighbor.node_id]: connectedRoommatesPositions };
   });
 
@@ -69,7 +61,7 @@ export const castAnimation = (
 
     roommatesPositions.forEach((roommatePos) => {
       if (roommatePos && loggedInUserPosition) {
-        const element = document.createElement("span");
+        const element = document.createElement('span');
         element.classList.add(style.blinkingElement);
         networkContainer.appendChild(element);
 
@@ -86,7 +78,7 @@ export const castAnimation = (
             x: roommatePos.x - loggedInUserPosition.x,
             y: roommatePos.y - loggedInUserPosition.y,
             duration: 2,
-            ease: "power1.inOut",
+            ease: 'power1.inOut',
             onComplete: () => {
               networkContainer.removeChild(element);
               animationsCompleted += 1;
@@ -94,7 +86,7 @@ export const castAnimation = (
                 onComplete();
               }
             },
-          }
+          },
         );
       }
     });
@@ -102,14 +94,12 @@ export const castAnimation = (
 
   const runSecondAnimation = () => {
     roommatesByNeighborsPositions.forEach((roommatesByNeighborPos, index) => {
-      const [[neighborId, connectedRoommates]] = Object.entries(
-        roommatesByNeighborPos
-      );
+      const [[neighborId, connectedRoommates]] = Object.entries(roommatesByNeighborPos);
       const neighborPosition = getPosition(neighborId, network);
 
       connectedRoommates.forEach((connectedRoommate) => {
         if (neighborPosition && connectedRoommate) {
-          const element = document.createElement("span");
+          const element = document.createElement('span');
           element.classList.add(style.blinkingElement);
           networkContainer.appendChild(element);
 
@@ -126,7 +116,7 @@ export const castAnimation = (
               x: neighborPosition.x - connectedRoommate.x,
               y: neighborPosition.y - connectedRoommate.y,
               duration: 2,
-              ease: "power1.inOut",
+              ease: 'power1.inOut',
               onComplete: () => {
                 networkContainer.removeChild(element);
                 if (index === roommatesByNeighborsPositions.length - 1) {
@@ -134,7 +124,7 @@ export const castAnimation = (
                   softenGraph(network);
                 }
               },
-            }
+            },
           );
         }
       });

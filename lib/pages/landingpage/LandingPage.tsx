@@ -31,20 +31,6 @@ const APIURL = API_URL;
 
 export function Landing() {
   const isLoggedIn = useIsLoginState();
-  // const isLoggedIn = useContext(IsLoginContext);
-
-  // const loggedInUserRef = useRef<User>();
-  // const roommatesDataRef = useRef<RoomMateData[]>([]);
-  // const neighborsDataRef = useRef<User[]>([]);
-
-  // const friendsData: string[] = [];
-  // const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
-
-  // const nodesDataset = useRef(new DataSet<Node>());
-  // const edgesDataset = useRef(new DataSet<Edge>());
-
-  // const networkContainer = useRef<HTMLDivElement | null>(null);
-  // const networkInstance = useRef<Network | null>(null);
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
@@ -64,33 +50,6 @@ export function Landing() {
   const openFriendModal = (userId: string) => {
     setSelectedUserId(userId);
   };
-
-  // const fetchAndUpdateData = async () => {
-  //   const friendsData = await fetchFriends();
-
-  //   if (loggedInUserRef.current) {
-  //     reloadDataset(
-  //       {
-  //         loggedInUser: loggedInUserRef.current,
-  //         roommates: roommatesDataRef.current,
-  //         neighbors: neighborsDataRef.current,
-  //         roommatesWithNeighbors: roommatesWithNeighborsRef.current,
-  //       },
-  //       friendsData,
-  //       nodesDataset.current,
-  //       edgesDataset.current,
-  //     );
-  //   }
-  //   roommatesDataRef.current = friendsData.roommates;
-  //   neighborsDataRef.current = friendsData.neighbors;
-  //   roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-
-  //   // Check if loggedInUser exists. If it doesn't, this is the first load.
-  //   if (!loggedInUserRef.current) {
-  //     loggedInUserRef.current = friendsData.loggedInUser;
-  //     initDataset(friendsData, nodesDataset.current, edgesDataset.current);
-  //   }
-  // };
 
   // const closeCastModal = () => {
   //   setIsCastModalOpen(false);
