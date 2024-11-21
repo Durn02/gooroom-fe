@@ -23,7 +23,7 @@ export const getRoommatesPosition = function (this: NetworkManager): Position[] 
 };
 
 export const getRoommatesByNeighborsPositions = function (this: NetworkManager): { [x: string]: Position[] }[] {
-  const neighbors = this.getNeighborsata();
+  const neighbors = this.getNeighborsData();
   const network = this.getNetwork();
   return neighbors.map((neighbor) => {
     const connectedRoommates = network.getConnectedNodes(neighbor.node_id) as IdType[];

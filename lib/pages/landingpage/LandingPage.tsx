@@ -161,6 +161,10 @@ export function Landing() {
     }
   }, [selectedUserId, networkManager]);
 
+  useEffect(()=>{
+    //networkManager.readUnsentCast()
+  },[networkManager])
+
   const onLogoutButtonClickHandler = async () => {
     try {
       const response = await fetch(`${APIURL}/domain/auth/logout`, {
