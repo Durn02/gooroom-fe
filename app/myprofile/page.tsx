@@ -5,30 +5,7 @@ import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
-
-interface UserInfo {
-  my_memo: string;
-  nickname: string;
-  username: string;
-  node_id: string;
-  tags: string[];
-}
-
-interface Sticker {
-  sticker_node_id: string;
-  content: string;
-  image_url: string[];
-  created_at: string;
-}
-
-interface Post {
-  post_node_id: string;
-  content: string;
-  image_url: string[];
-  created_at: string;
-  tag: string[];
-  title: string;
-}
+import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -207,7 +184,6 @@ export default function MyProfile() {
       alert('게시글 작성에 실패했습니다.');
     }
   };
-
   const deletePostButtonHandler = async (postId: string) => {
     const isDelete = window.confirm('게시글을 삭제하시겠습니까?');
     if (!isDelete) {
