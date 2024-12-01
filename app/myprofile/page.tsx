@@ -6,6 +6,7 @@ import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
 import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
+import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -14,10 +15,11 @@ export default function MyProfile() {
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
   const [width, setWidth] = useState(30);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
 
   const handleStickerDoubleClick = () => {
-    alert('clicked');
+    setIsStickerModalOpen(true);
   };
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -69,7 +71,7 @@ export default function MyProfile() {
     };
   }, [isResizing, handleMouseMove]);
 
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     const response = await fetch(`${API_URL}/domain/user/my/info`, {
       method: 'GET',
       headers: {
@@ -79,14 +81,15 @@ export default function MyProfile() {
     });
     if (!response.ok) {
       alert('사용자 정보를 불러오는데 실패했습니다.');
+      window.location.href = '/';
       return;
     } else {
       const data = await response.json();
       setUserInfo(data);
     }
-  };
+  }, []);
 
-  const fetchStickers = async () => {
+  const fetchStickers = useCallback(async () => {
     const response = await fetch(`${API_URL}/domain/content/sticker/get-my-contents`, {
       method: 'GET',
       headers: {
@@ -101,9 +104,9 @@ export default function MyProfile() {
       const data = await response.json();
       setStickers(data);
     }
-  };
+  }, []);
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     const response = await fetch(`${API_URL}/domain/content/post/get-my-contents`, {
       method: 'GET',
       headers: {
@@ -113,13 +116,13 @@ export default function MyProfile() {
     });
     const data = await response.json();
     setPosts(data);
-  };
+  }, []);
 
-  const handleEditProfile = () => {
-    setIsOpen(true);
-  };
+  const handleEditProfile = useCallback(() => {
+    setIsProfileModalOpen(true);
+  }, []);
 
-  const handleCreateSticker = async () => {
+  const handleCreateSticker = useCallback(async () => {
     const data = {
       content: '내용',
       image_url: ['이미지1', '이미지2'],
@@ -139,30 +142,34 @@ export default function MyProfile() {
       alert('스티커가 작성되었습니다.');
       fetchStickers();
     }
-  };
-  const handleDeleteSticker = async (stickerId: string) => {
-    const response = window.confirm('스티커를 삭제하시겠습니까?');
-    if (!response) {
-      return;
-    }
-    const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ sticker_node_id: stickerId }),
-    });
-    if (!result.ok) {
-      alert('스티커 삭제에 실패했습니다.');
-      return;
-    } else {
-      alert('스티커가 삭제되었습니다.');
-      await fetchStickers();
-    }
-  };
+  }, [fetchStickers]);
 
-  const handleCreatePost = async () => {
+  const handleDeleteSticker = useCallback(
+    async (stickerId: string) => {
+      const response = window.confirm('스티커를 삭제하시겠습니까?');
+      if (!response) {
+        return;
+      }
+      const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ sticker_node_id: stickerId }),
+      });
+      if (!result.ok) {
+        alert('스티커 삭제에 실패했습니다.');
+        return;
+      } else {
+        alert('스티커가 삭제되었습니다.');
+        await fetchStickers();
+      }
+    },
+    [fetchStickers],
+  );
+
+  const handleCreatePost = useCallback(async () => {
     const data = {
       title: '제목1',
       content: '내용',
@@ -183,8 +190,9 @@ export default function MyProfile() {
     } else {
       alert('게시글 작성에 실패했습니다.');
     }
-  };
-  const deletePostButtonHandler = async (postId: string) => {
+  }, [fetchPosts]);
+
+  const deletePostButtonHandler = useCallback(async (postId: string) => {
     const isDelete = window.confirm('게시글을 삭제하시겠습니까?');
     if (!isDelete) {
       return;
@@ -208,14 +216,14 @@ export default function MyProfile() {
       console.error('Error deleting post:', error);
       alert('게시글 삭제 중 오류가 발생했습니다.');
     }
-  };
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Home Button */}
       <button
         onClick={gohomeButtonHandler}
-        className="fixed top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow z-50"
+        className="fixed top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
       >
         홈으로
       </button>
@@ -230,14 +238,16 @@ export default function MyProfile() {
                   <h1 className="text-3xl font-bold">@{userInfo.nickname}</h1>
                   <button
                     onClick={handleEditProfile}
-                    className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow z-50"
+                    className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
                   >
                     정보 변경
                   </button>
                 </div>
                 <Image src={userImage} alt="User profile" width={100} height={100} className="rounded-full" />
-                <p className="text-gray-600 mb-2">{userInfo.username}</p>
-                <p className="mb-4 text-gray-700">{userInfo.my_memo}</p>
+                <p className="text-gray-600 mb-2 font-bold">{userInfo.username}</p>
+                <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
+                  {userInfo.my_memo}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {userInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
@@ -371,11 +381,22 @@ export default function MyProfile() {
         </>
       </div>
       <ProfileModal
-        isOpen={isOpen}
+        isOpen={isProfileModalOpen}
         onClose={() => {
-          setIsOpen(false);
+          setIsProfileModalOpen(false);
           fetchUserInfo();
         }}
+        myProfile={userInfo}
+      />
+      <StickerModal
+        isOpen={isStickerModalOpen}
+        onClose={() => {
+          setIsStickerModalOpen(false);
+          fetchStickers();
+        }}
+        sticker={
+          stickers.length > 0 ? stickers[0] : { sticker_node_id: '', content: '', image_url: [], created_at: '' }
+        }
       />
     </div>
   );
