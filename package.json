@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.703.0",
     "@types/react-transition-group": "^4.4.11",
     "gsap": "^3.12.5",
     "ky": "^1.7.2",
