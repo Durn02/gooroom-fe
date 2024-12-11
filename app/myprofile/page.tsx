@@ -310,7 +310,9 @@ export default function MyProfile() {
                   <div className="transform transition-transform duration-300 ease-in-out group-hover:scale-105">
                     <div>
                       <div className="relative">
-                        <p className="font-semibold mb-2 text-gray-800">{sticker.content}</p>
+                        <p className="font-semibold mb-2 text-gray-800 max-w-48 truncate overflow-hidden">
+                          {sticker.content}
+                        </p>
                         <button
                           className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center text-gray-600"
                           onClick={() => handleDeleteSticker(sticker)}
