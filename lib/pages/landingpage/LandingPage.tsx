@@ -21,6 +21,7 @@ export function Landing() {
   const isLoggedIn = useIsLoginState();
 
   const { selectedUserId, setSelectedUserId } = useContext(UserProfileContext);
+  const [loggedInuser, setLoggedInUser] = useState(null);
 
   const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
   const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
@@ -116,6 +117,9 @@ export function Landing() {
 
   useEffect(() => {
     verifyAccessToken();
+    if (networkManager) {
+      setLoggedInUser(networkManager.getLoggeInUser());
+    }
   }, []);
 
   useEffect(() => {
@@ -208,7 +212,7 @@ export function Landing() {
         onClose={closeRoommateModal}
         userNodeId={selectedUserId ? selectedUserId : null}
       />
-      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
+      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} myProfile={loggedInuser} />
       <NeighborModal
         isOpen={isNeighborModalOpen}
         onClose={closeNeighborModal}
