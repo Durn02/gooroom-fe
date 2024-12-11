@@ -118,7 +118,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         fetchProfileData();
         alert('프로필이 성공적으로 저장되었습니다.');
         onClose();
@@ -147,7 +147,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
       onClick={handleOverlayClick}
     >
       <div
-        className="bg-white p-6 rounded-lg relative w-4/5 max-w-md shadow-lg transition-transform duration-300 transform ${
+        className="bg-white p-6 rounded-lg relative w-4/5 max-w-md shadow-lg transition-transform duration-300  overflow-y-auto max-h-[70vh] p-4 transform ${
         isOpen ? 'scale-100' : 'scale-95'
       }"
       >
@@ -193,7 +193,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-1"
             placeholder="Edit my memo..."
-            rows={4}
+            rows={3}
           />
         </div>
         <div className="mb-4">
