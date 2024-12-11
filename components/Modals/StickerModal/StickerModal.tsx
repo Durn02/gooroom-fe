@@ -69,7 +69,7 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, sticker })
           {sticker.image_url.map((url, index) => (
             <Image
               key={index}
-              src={`/${url}`}
+              src={url}
               alt={`Sticker image ${index + 1}`}
               width={100}
               height={100}

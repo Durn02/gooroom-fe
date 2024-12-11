@@ -7,6 +7,8 @@ import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
 import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
 import StickerModal from '@/components/Modals/StickerModal/StickerModal';
+import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
+import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -17,10 +19,15 @@ export default function MyProfile() {
   const [width, setWidth] = useState(30);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
+  const [isCreateStickerModalOpen, setIsCreateStickerModalOpen] = useState(false);
+  const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
 
-  const handleStickerDoubleClick = () => {
-    setIsStickerModalOpen(true);
-  };
+  useEffect(() => {
+    fetchUserInfo();
+    fetchStickers();
+    fetchPosts();
+  }, []);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -46,15 +53,37 @@ export default function MyProfile() {
     [isResizing, initialX, width],
   );
 
+  const handleStickerDoubleClick = (selected_sticker: Sticker) => {
+    setSelectedSticker(selected_sticker);
+    setIsStickerModalOpen(true);
+  };
+
   const gohomeButtonHandler = () => {
     window.location.href = '/';
   };
+  const s3Client = new S3Client({
+    region: process.env.NEXT_PUBLIC_AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID as string,
+      secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY as string,
+    },
+  });
+  const deleteImageFromS3 = async (imageUrl: string) => {
+    const key = imageUrl.split('/').slice(3).join('/');
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.NEXT_PUBLIC_AMPLIFY_BUCKET,
+        Key: key,
+      });
 
-  useEffect(() => {
-    fetchUserInfo();
-    fetchStickers();
-    fetchPosts();
-  }, []);
+      const res = await s3Client.send(command);
+      console.log(res);
+      console.log(`Image ${key} deleted successfully from S3`);
+    } catch (error) {
+      console.error('Error deleting image from S3:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (isResizing) {
@@ -99,7 +128,7 @@ export default function MyProfile() {
     });
     if (!response.ok) {
       alert('스티커를 불러오는데 실패했습니다.');
-      return;
+      window.location.href = '/';
     } else {
       const data = await response.json();
       setStickers(data);
@@ -123,51 +152,41 @@ export default function MyProfile() {
   }, []);
 
   const handleCreateSticker = useCallback(async () => {
-    const data = {
-      content: '내용',
-      image_url: ['이미지1', '이미지2'],
-    };
-    const result = await fetch(`${API_URL}/domain/content/sticker/create`, {
-      method: 'POST',
+    setIsCreateStickerModalOpen(true);
+  }, []);
+
+  const handleDeleteSticker = async (sticker: Sticker) => {
+    const response = window.confirm('스티커를 삭제하시겠습니까?');
+    if (!response) {
+      return;
+    }
+    try {
+      // S3에서 이미지 삭제
+      for (const imageUrl of sticker.image_url) {
+        await deleteImageFromS3(imageUrl);
+      }
+    } catch (error) {
+      console.error('Error deleting sticker:', error);
+      alert('스티커 삭제 중 오류가 발생했습니다.');
+      return;
+    }
+
+    const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id }),
     });
     if (!result.ok) {
-      alert('스티커 작성에 실패했습니다.');
+      alert('스티커 삭제에 실패했습니다.');
       return;
     } else {
-      alert('스티커가 작성되었습니다.');
-      fetchStickers();
+      alert('스티커가 삭제되었습니다.');
+      await fetchStickers();
     }
-  }, [fetchStickers]);
-
-  const handleDeleteSticker = useCallback(
-    async (stickerId: string) => {
-      const response = window.confirm('스티커를 삭제하시겠습니까?');
-      if (!response) {
-        return;
-      }
-      const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ sticker_node_id: stickerId }),
-      });
-      if (!result.ok) {
-        alert('스티커 삭제에 실패했습니다.');
-        return;
-      } else {
-        alert('스티커가 삭제되었습니다.');
-        await fetchStickers();
-      }
-    },
-    [fetchStickers],
-  );
+  };
 
   const handleCreatePost = useCallback(async () => {
     const data = {
@@ -284,33 +303,38 @@ export default function MyProfile() {
                 <div
                   key={sticker.sticker_node_id}
                   className="inline-block bg-white border rounded-lg p-4 w-64 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group"
+                  onDoubleClick={() => {
+                    handleStickerDoubleClick(sticker);
+                  }}
                 >
-                  <div
-                    className="transform transition-transform duration-300 ease-in-out group-hover:scale-105"
-                    onDoubleClick={handleStickerDoubleClick}
-                  >
+                  <div className="transform transition-transform duration-300 ease-in-out group-hover:scale-105">
                     <div>
                       <div className="relative">
                         <p className="font-semibold mb-2 text-gray-800">{sticker.content}</p>
                         <button
                           className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center text-gray-600"
-                          onClick={() => handleDeleteSticker(sticker.sticker_node_id)}
+                          onClick={() => handleDeleteSticker(sticker)}
                         >
                           X
                         </button>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {sticker.image_url.map((url, index) => (
+                      {sticker.image_url.slice(0, 1).map((url, index) => (
                         <Image
                           key={index}
                           alt={`Sticker ${index + 1}`}
                           className="object-cover rounded shadow"
-                          src={`/${url}`}
+                          src={url}
                           width={100}
                           height={100}
                         />
                       ))}
+                      {sticker.image_url.length > 1 && (
+                        <div className="w-[50px] h-[50px] flex items-center justify-center bg-gray-200 rounded shadow">
+                          +{sticker.image_url.length - 1}
+                        </div>
+                      )}
                     </div>
                     <p className="text-sm text-gray-500 mt-2">{new Date(sticker.created_at).toLocaleDateString()}</p>
                   </div>
@@ -395,8 +419,13 @@ export default function MyProfile() {
           fetchStickers();
         }}
         sticker={
-          stickers.length > 0 ? stickers[0] : { sticker_node_id: '', content: '', image_url: [], created_at: '' }
+          stickers.length > 0 ? selectedSticker : { sticker_node_id: '', content: '', image_url: [], created_at: '' }
         }
+      />
+      <CreateStickerModal
+        isOpen={isCreateStickerModalOpen}
+        onClose={() => setIsCreateStickerModalOpen(false)}
+        fetchStickers={fetchStickers}
       />
     </div>
   );
