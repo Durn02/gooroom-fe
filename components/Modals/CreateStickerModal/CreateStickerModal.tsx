@@ -16,13 +16,13 @@ const s3Client = new S3Client({
   },
 });
 
-interface StickerModalProps {
+interface CreateStickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   fetchStickers: () => void;
 }
 
-const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, fetchStickers }) => {
+const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose, fetchStickers }) => {
   const { selectedUserId } = useContext(UserProfileContext);
   const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
@@ -204,4 +204,4 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, fetchStick
     </div>
   );
 };
-export default StickerModal;
+export default CreateStickerModal;
