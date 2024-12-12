@@ -82,7 +82,7 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, fetchStick
       const command = new PutObjectCommand({
         Bucket: Bucket,
         Key: fileName,
-        Body: (await file.arrayBuffer()) as Buffer,
+        Body: Buffer.from(await file.arrayBuffer()),
         ContentType: file.type,
       });
       await s3Client.send(command);
@@ -133,7 +133,7 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, fetchStick
       }`}
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-lg p-6 w-96 overflow-y-auto max-h-[70vh] max-w-full relative">
+      <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-full min-w-[520px] relative">
         <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
           <svg
             className="w-6 h-6"
@@ -145,52 +145,61 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, fetchStick
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 className="text-2xl font-bold mb-4">Create Sticker</h2>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Sticker content"
-          className="w-full mb-4 p-2 border rounded resize-none"
-          rows={2}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageUpload}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        {images.length > 0 && (
-          <div className="mb-4">
-            <p>Selected images:</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <Image
-                    src={URL.createObjectURL(image)}
-                    alt={`Preview ${index}`}
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  <button
-                    onClick={() => handleImageDelete(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                  >
-                    X
-                  </button>
-                  <p className="text-xs mt-1 text-center truncate w-24">{image.name}</p>
+        <div className="flex justify-between items-center mb-4 pr-2.5">
+          <h2 className="text-2xl font-bold">Create Sticker</h2>
+          <button
+            onClick={handleCreateSticker}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2.5"
+          >
+            스티커 작성
+          </button>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4 h-full">
+          <div className="w-full md:w-1/2">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="w-full mb-4 p-2 border rounded"
+            />
+            {images.length > 0 && (
+              <div className="mb-4">
+                <p>Selected images:</p>
+                <div className="max-w-[360px] max-h-[calc(70vh-200px)] overflow-x-auto overflow-y-auto">
+                  <div className="flex flex-wrap gap-4 mt-2 w-full">
+                    {images.map((image, index) => (
+                      <div key={index} className="relative w-[calc(50%-8px)] aspect-square flex-shrink-0 group">
+                        <Image
+                          src={URL.createObjectURL(image)}
+                          alt={`Preview ${index}`}
+                          width={160}
+                          height={160}
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                        <button
+                          onClick={() => handleImageDelete(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                          X
+                        </button>
+                        <p className="text-xs mt-1 text-center truncate w-full">{image.name}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-        )}
-        <button
-          onClick={handleCreateSticker}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-        >
-          스티커 작성
-        </button>
+          <div className="w-full h-[27rem] md:w-1/2 flex flex-col">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Sticker content"
+              className="w-full h-full p-2 border rounded resize-none"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
