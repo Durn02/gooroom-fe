@@ -12,7 +12,15 @@ interface ModalProps {
 
 const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [profileData, setProfileData] = useState<UserInfo>(null);
+  const [profileData, setProfileData] = useState<UserInfo>(
+    myProfile || {
+      my_memo: '',
+      nickname: '',
+      username: '',
+      node_id: '',
+      tags: [],
+    },
+  );
   const [newTags, setNewTags] = useState<string>('');
 
   const handleKeyDown = useCallback(
