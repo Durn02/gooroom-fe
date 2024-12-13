@@ -8,6 +8,7 @@ import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
 import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
 import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
+import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 export default function MyProfile() {
@@ -21,6 +22,7 @@ export default function MyProfile() {
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
   const [isCreateStickerModalOpen, setIsCreateStickerModalOpen] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUserInfo();
@@ -143,8 +145,13 @@ export default function MyProfile() {
       },
       credentials: 'include',
     });
-    const data = await response.json();
-    setPosts(data);
+    if (!response.ok) {
+      alert('게시글을 불러오는데 실패했습니다.');
+      window.location.href = '/';
+    } else {
+      const data = await response.json();
+      setPosts(data);
+    }
   }, []);
 
   const handleEditProfile = useCallback(() => {
@@ -189,53 +196,46 @@ export default function MyProfile() {
   };
 
   const handleCreatePost = useCallback(async () => {
-    const data = {
-      title: '제목1',
-      content: '내용',
-      tag: ['태그1', '태그2', '태그3'],
-      image_url: ['이미지1'],
-    };
-    const response = await fetch(`${API_URL}/domain/content/post/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    if (response.ok) {
-      await fetchPosts();
-      alert('게시글이 작성되었습니다.');
-    } else {
-      alert('게시글 작성에 실패했습니다.');
-    }
-  }, [fetchPosts]);
+    setIsCreatePostModalOpen(true);
+  }, []);
 
-  const deletePostButtonHandler = useCallback(async (postId: string) => {
+  const handleDeletePost = async (posts: Post) => {
     const isDelete = window.confirm('게시글을 삭제하시겠습니까?');
     if (!isDelete) {
       return;
     }
+
     try {
-      const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ post_node_id: postId }),
-      });
-      if (response.ok) {
-        setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== postId));
-        alert('게시글이 삭제되었습니다.');
-      } else {
-        alert('게시글 삭제에 실패했습니다.');
+      // S3에서 이미지 삭제
+      for (const imageUrl of posts.image_url) {
+        await deleteImageFromS3(imageUrl);
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ post_node_id: posts.post_node_id }),
+        });
+        if (response.ok) {
+          setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
+          alert('게시글이 삭제되었습니다.');
+        } else {
+          alert('게시글 삭제에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('게시글 삭제 중 오류가 발생했습니다.');
+      console.error('Error deleting sticker:', error);
+      alert('스티커 삭제 중 오류가 발생했습니다.');
+      return;
     }
-  }, []);
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -365,7 +365,7 @@ export default function MyProfile() {
                   className="bg-white border rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group relative"
                 >
                   <button
-                    onClick={() => deletePostButtonHandler(post.post_node_id)}
+                    onClick={() => handleDeletePost(post)}
                     className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-gray-600"
                   >
                     X
@@ -376,7 +376,7 @@ export default function MyProfile() {
                       {post.image_url.map((url, index) => (
                         <Image
                           key={index}
-                          src={`/${url}`}
+                          src={url}
                           alt={`Post ${index + 1}`}
                           className="object-cover rounded shadow"
                           width={100}
@@ -386,11 +386,13 @@ export default function MyProfile() {
                     </div>
                     <p className="mb-4 text-gray-700">{post.content}</p>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {post.tag.map((tag, index) => (
-                        <span key={index} className="bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm">
-                          {tag}
-                        </span>
-                      ))}
+                      {post.tags
+                        ? post.tags.map((tag, index) => (
+                            <span key={index} className="bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm">
+                              {tag}
+                            </span>
+                          ))
+                        : null}
                     </div>
                     <p className="text-sm text-gray-500">
                       {new Date(post.created_at).toLocaleDateString('ko-KR', {
@@ -428,6 +430,11 @@ export default function MyProfile() {
         isOpen={isCreateStickerModalOpen}
         onClose={() => setIsCreateStickerModalOpen(false)}
         fetchStickers={fetchStickers}
+      />
+      <CreatePostModal
+        isOpen={isCreatePostModalOpen}
+        onClose={() => setIsCreatePostModalOpen(false)}
+        fetchPosts={fetchPosts}
       />
     </div>
   );
