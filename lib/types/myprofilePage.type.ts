@@ -18,6 +18,6 @@ export interface Post {
   content: string;
   image_url: string[];
   created_at: string;
-  tag: string[];
+  tags: string[];
   title: string;
 }
