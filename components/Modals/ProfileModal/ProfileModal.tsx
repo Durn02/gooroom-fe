@@ -154,11 +154,7 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
       }`}
       onClick={handleOverlayClick}
     >
-      <div
-        className="bg-white p-6 rounded-lg relative w-4/5 max-w-md shadow-lg transition-transform duration-300  overflow-y-auto max-h-[70vh] p-4 transform ${
-        isOpen ? 'scale-100' : 'scale-95'
-      }"
-      >
+      <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-[35rem] min-w-[500px] relative">
         <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
           <svg
             className="w-6 h-6"
@@ -170,71 +166,75 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 className="text-2xl font-bold mb-4">My Profile</h2>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Nickname:</label>
-          <input
-            type="text"
-            name="nickname"
-            value={profileData.nickname}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-1"
-            placeholder="Edit your nickname..."
-          />
+
+        <div className="flex justify-between items-center mb-4 w-[28rem] mt-3">
+          <h2 className="text-2xl font-bold">My Profile</h2>
+          <button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded">
+            프로필 저장
+          </button>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Username:</label>
-          <input
-            type="text"
-            name="username"
-            value={profileData.username}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-1"
-            placeholder="Edit my name..."
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Memo:</label>
-          <textarea
-            name="my_memo"
-            value={profileData.my_memo}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-1"
-            placeholder="Edit my memo..."
-            rows={3}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Tags:</label>
-          <div className="flex">
+
+        <div className="flex flex-col gap-4 max-w-[28rem]">
+          <div className="w-full">
+            <input
+              type="text"
+              name="nickname"
+              value={profileData.nickname}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              placeholder="닉네임을 입력하세요"
+            />
+          </div>
+
+          <div className="w-full">
+            <input
+              type="text"
+              name="username"
+              value={profileData.username}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              placeholder="사용자 이름을 입력하세요"
+            />
+          </div>
+
+          <div className="w-full">
+            <textarea
+              name="my_memo"
+              value={profileData.my_memo}
+              onChange={handleChange}
+              className="w-full h-[12rem] p-2 border rounded resize-none"
+              placeholder="메모를 입력하세요"
+            />
+          </div>
+
+          <div className="w-full">
             <input
               type="text"
               value={newTags}
-              onChange={(e) => {
-                setNewTags(e.target.value);
-              }}
-              onKeyUp={handleNewTagsKeyPress}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-1"
-              placeholder="Enter a new tag..."
+              onChange={(e) => setNewTags(e.target.value)}
+              onKeyDown={handleNewTagsKeyPress}
+              className="w-full p-2 border rounded"
+              placeholder="태그를 입력하고 Enter를 누르세요"
             />
-            <button onClick={addTag} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-              Add
-            </button>
+            <div className="flex flex-wrap gap-2 mt-2 max-w-full overflow-hidden">
+              {profileData.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full text-sm flex items-center gap-2 transition-colors duration-200 break-words"
+                >
+                  <span className="text-gray-700 break-all">{tag}</span>
+                  <button
+                    onClick={() => removeTags(index)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200 w-4 h-4 flex items-center justify-center flex-shrink-0"
+                    aria-label={`Remove ${tag} tag`}
+                  >
+                    x
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-        <ul className="grid grid-cols-2 gap-2 mb-4">
-          {profileData?.tags.map((item, index) => (
-            <li key={index} className="flex justify-between items-center p-2 border border-gray-300 rounded">
-              {item}
-              <button onClick={() => removeTags(index)} className="text-red-500 hover:text-red-700">
-                X
-              </button>
-            </li>
-          ))}
-        </ul>
-        <button onClick={handleSave} className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
-          Save
-        </button>
       </div>
     </div>
   );
