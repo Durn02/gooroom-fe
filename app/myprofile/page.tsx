@@ -11,14 +11,17 @@ import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { useResizable } from '@/lib/hooks/useResizeSection';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [isResizing, setIsResizing] = useState(false);
-  const [initialX, setInitialX] = useState(0);
-  const [width, setWidth] = useState(30);
+  const { width, handleMouseDown } = useResizable({
+    minWidth: 10,
+    maxWidth: 80,
+    initialWidth: 30,
+  });
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
   const [isCreateStickerModalOpen, setIsCreateStickerModalOpen] = useState(false);
@@ -32,31 +35,6 @@ export default function MyProfile() {
     fetchStickers();
     fetchPosts();
   }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    setInitialX(e.clientX);
-  };
-
-  const handleMouseUp = () => {
-    setIsResizing(false);
-  };
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (isResizing) {
-        requestAnimationFrame(() => {
-          const newWidth = width + ((e.clientX - initialX) / window.innerWidth) * 100;
-          if (newWidth >= 10 && newWidth <= 80) {
-            setWidth(newWidth);
-          }
-          setInitialX(e.clientX);
-        });
-      }
-    },
-    [isResizing, initialX, width],
-  );
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
     event.preventDefault();
@@ -89,21 +67,6 @@ export default function MyProfile() {
       throw error;
     }
   };
-
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, handleMouseMove]);
 
   const fetchUserInfo = useCallback(async () => {
     const response = await fetch(`${API_URL}/domain/user/my/info`, {
