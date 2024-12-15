@@ -7,6 +7,7 @@ import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
 import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
 import StickerModal from '@/components/Modals/StickerModal/StickerModal';
+import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -22,7 +23,9 @@ export default function MyProfile() {
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
   const [isCreateStickerModalOpen, setIsCreateStickerModalOpen] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUserInfo();
@@ -56,8 +59,14 @@ export default function MyProfile() {
   );
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
+    event.preventDefault();
     setSelectedSticker(selected_sticker);
     setIsStickerModalOpen(true);
+  };
+  const handlePostDoubleClick = (selected_post: Post) => {
+    event.preventDefault();
+    setSelectedPost(selected_post);
+    setIsPostModalOpen(true);
   };
 
   const gohomeButtonHandler = () => {
@@ -363,6 +372,9 @@ export default function MyProfile() {
                 <div
                   key={post.post_node_id}
                   className="bg-white border rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group relative"
+                  onDoubleClick={() => {
+                    handlePostDoubleClick(post);
+                  }}
                 >
                   <button
                     onClick={() => handleDeletePost(post)}
@@ -430,6 +442,18 @@ export default function MyProfile() {
         isOpen={isCreateStickerModalOpen}
         onClose={() => setIsCreateStickerModalOpen(false)}
         fetchStickers={fetchStickers}
+      />
+      <PostModal
+        isOpen={isPostModalOpen}
+        onClose={() => {
+          setIsPostModalOpen(false);
+          fetchPosts();
+        }}
+        post={
+          posts.length > 0
+            ? selectedPost
+            : { post_node_id: '', title: '', content: '', image_url: [], tags: [], created_at: '' }
+        }
       />
       <CreatePostModal
         isOpen={isCreatePostModalOpen}
