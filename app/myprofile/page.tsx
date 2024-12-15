@@ -37,12 +37,10 @@ export default function MyProfile() {
   }, []);
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
-    event.preventDefault();
     setSelectedSticker(selected_sticker);
     setIsStickerModalOpen(true);
   };
   const handlePostDoubleClick = (selected_post: Post) => {
-    event.preventDefault();
     setSelectedPost(selected_post);
     setIsPostModalOpen(true);
   };
