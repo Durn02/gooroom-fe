@@ -139,7 +139,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
     setImages([...images, ...files]);
   };
 
-  const removeImage = (indexToRemove: number) => {
+  const handleImageDelete = (indexToRemove: number) => {
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
 
@@ -175,7 +175,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
       }`}
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-full min-w-[520px] relative">
+      <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-[30rem] min-w-[500px] relative">
         <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
           <svg
             className="w-6 h-6"
@@ -187,11 +187,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <div className="flex justify-between items-center mb-4 pr-2.5">
+        <div className="flex justify-between items-center mb-4 w-[28rem] mt-3">
           <h2 className="text-2xl font-bold">Create a new post</h2>
           <button
             onClick={handleCreatePost}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2.5"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded"
           >
             게시물 작성
           </button>
@@ -254,23 +254,32 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
               className="w-full p-2 border rounded"
             />
             <div className="flex flex-wrap gap-2 mt-2">
-              {images.map((image, index) => (
-                <>
-                  <Image
-                    src={URL.createObjectURL(image)}
-                    alt={`Preview ${index}`}
-                    width={80}
-                    height={80}
-                    className="object-cover rounded"
-                  />
-                  <button
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                  >
-                    x
-                  </button>
-                </>
-              ))}
+              {images.length > 0 && (
+                <div className="mb-4">
+                  <div className="max-w-[360px] max-h-[calc(70vh-200px)] overflow-x-auto overflow-y-auto">
+                    <div className="flex flex-wrap gap-4 mt-2 w-full">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative w-[calc(50%-8px)] aspect-square flex-shrink-0 group">
+                          <Image
+                            src={URL.createObjectURL(image)}
+                            alt={`Preview ${index}`}
+                            width={80}
+                            height={80}
+                            className="w-full h-full object-cover rounded"
+                          />
+                          <button
+                            onClick={() => handleImageDelete(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          >
+                            X
+                          </button>
+                          <p className="text-xs mt-1 text-center truncate w-full">{image.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
