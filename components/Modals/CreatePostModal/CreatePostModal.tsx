@@ -1,10 +1,10 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { API_URL, AWS_REGION, S3BUCKET, S3CLIENT } from '@/lib/utils/config';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types/myprofilePage.type';
+import { uploadToS3 } from '@/lib/utils/s3/handleS3';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -34,29 +34,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
     [onClose],
   );
 
-  const uploadToS3 = async (file: File, imageIndex: number): Promise<string> => {
-    try {
-      const currentTime = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-      const fileName = `${selectedUserId}/post/${currentTime}/${imageIndex}_${file.name}`;
-      if (!selectedUserId) {
-        alert('로그인 시간이 만료되었습니다.');
-        router.push('/');
-        throw new Error('User not found');
-      }
-      const command = new PutObjectCommand({
-        Bucket: S3BUCKET,
-        Key: fileName,
-        Body: Buffer.from(await file.arrayBuffer()),
-        ContentType: file.type,
-      });
-      await S3CLIENT.send(command);
-      return `https://${S3BUCKET}.s3.${AWS_REGION}.amazonaws.com/${fileName}`;
-    } catch (error) {
-      console.error('Error uploading to S3:', error);
-      throw new Error('Failed to upload image to S3');
-    }
-  };
-
   const handleCreatePost = async () => {
     try {
       if (!postData.title?.trim() || !postData.content?.trim()) {
@@ -64,7 +41,21 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
         return;
       }
 
-      const uploadedUrls = await Promise.all(images.map((file, index) => uploadToS3(file, index)));
+      const uploadedUrls = await Promise.all(
+        images.map(async (file, index) => {
+          try {
+            if (!selectedUserId) {
+              alert('로그인 시간이 만료되었습니다.');
+              router.push('/');
+              throw new Error('User not found');
+            }
+            return await uploadToS3(file, index, selectedUserId);
+          } catch (error) {
+            console.error('Error uploading to S3:', error);
+            throw new Error('Failed to upload image to S3');
+          }
+        }),
+      );
 
       const submitData = {
         content: postData.content,

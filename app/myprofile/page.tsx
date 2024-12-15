@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { API_URL, S3BUCKET, S3CLIENT } from '@/lib/utils/config';
+import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
@@ -10,8 +10,8 @@ import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { useResizable } from '@/lib/hooks/useResizeSection';
+import { deleteFromS3 } from '@/lib/utils/s3/handleS3';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -47,23 +47,6 @@ export default function MyProfile() {
 
   const gohomeButtonHandler = () => {
     window.location.href = '/';
-  };
-
-  const deleteImageFromS3 = async (imageUrl: string) => {
-    const key = imageUrl.split('/').slice(3).join('/');
-    try {
-      const command = new DeleteObjectCommand({
-        Bucket: S3BUCKET,
-        Key: key,
-      });
-
-      const res = await S3CLIENT.send(command);
-      console.log(res);
-      console.log(`Image ${key} deleted successfully from S3`);
-    } catch (error) {
-      console.error('Error deleting image from S3:', error);
-      throw error;
-    }
   };
 
   const fetchUserInfo = useCallback(async () => {
@@ -134,7 +117,7 @@ export default function MyProfile() {
     try {
       // S3에서 이미지 삭제
       for (const imageUrl of sticker.image_url) {
-        await deleteImageFromS3(imageUrl);
+        await deleteFromS3(imageUrl);
       }
     } catch (error) {
       console.error('Error deleting sticker:', error);
@@ -172,7 +155,7 @@ export default function MyProfile() {
     try {
       // S3에서 이미지 삭제
       for (const imageUrl of posts.image_url) {
-        await deleteImageFromS3(imageUrl);
+        await deleteFromS3(imageUrl);
       }
 
       try {
