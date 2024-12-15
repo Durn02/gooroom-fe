@@ -127,13 +127,13 @@ export function Landing() {
       return;
     }
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
-      router.push(`/myprofile`, { shallow: true });
+      router.push(`/myprofile`);
     } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
       setIsRoommateModalOpen(true);
     } else {
       setIsNeighborModalOpen(true);
     }
-  }, [selectedUserId, networkManager]);
+  }, [selectedUserId, networkManager, router]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
