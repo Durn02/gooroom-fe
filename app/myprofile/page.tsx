@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { API_URL } from '@/lib/utils/config';
+import { API_URL, S3BUCKET, S3CLIENT } from '@/lib/utils/config';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
@@ -10,7 +10,7 @@ import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
-import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -72,22 +72,16 @@ export default function MyProfile() {
   const gohomeButtonHandler = () => {
     window.location.href = '/';
   };
-  const s3Client = new S3Client({
-    region: process.env.NEXT_PUBLIC_AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID as string,
-      secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY as string,
-    },
-  });
+
   const deleteImageFromS3 = async (imageUrl: string) => {
     const key = imageUrl.split('/').slice(3).join('/');
     try {
       const command = new DeleteObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_AMPLIFY_BUCKET,
+        Bucket: S3BUCKET,
         Key: key,
       });
 
-      const res = await s3Client.send(command);
+      const res = await S3CLIENT.send(command);
       console.log(res);
       console.log(`Image ${key} deleted successfully from S3`);
     } catch (error) {

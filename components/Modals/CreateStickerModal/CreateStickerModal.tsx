@@ -1,20 +1,10 @@
 'use client';
 import React, { useEffect, useState, useCallback, useContext } from 'react';
-import { API_URL } from '@/lib/utils/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { API_URL, AWS_REGION, S3BUCKET, S3CLIENT } from '@/lib/utils/config';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import Image from 'next/image';
 import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useRouter } from 'next/navigation';
-
-// S3 configuration
-const Bucket = process.env.NEXT_PUBLIC_AMPLIFY_BUCKET;
-const s3Client = new S3Client({
-  region: process.env.NEXT_PUBLIC_AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY as string,
-  },
-});
 
 interface CreateStickerModalProps {
   isOpen: boolean;
@@ -80,13 +70,13 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
         throw new Error('User not found');
       }
       const command = new PutObjectCommand({
-        Bucket: Bucket,
+        Bucket: S3BUCKET,
         Key: fileName,
         Body: Buffer.from(await file.arrayBuffer()),
         ContentType: file.type,
       });
-      await s3Client.send(command);
-      return `https://${Bucket}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${fileName}`;
+      await S3CLIENT.send(command);
+      return `https://${S3BUCKET}.s3.${AWS_REGION}.amazonaws.com/${fileName}`;
     } catch (error) {
       console.error('Error uploading to S3:', error);
       throw new Error('Failed to upload image to S3');
