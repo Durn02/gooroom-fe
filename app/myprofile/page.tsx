@@ -10,14 +10,14 @@ import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
-import { useResizable } from '@/lib/hooks/useResizeSection';
+import { useResizeSection } from '@/lib/hooks/useResizeSection';
 import { deleteFromS3 } from '@/lib/utils/s3/handleS3';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const { width, handleMouseDown } = useResizable({
+  const { width, handleMouseDown } = useResizeSection({
     minWidth: 10,
     maxWidth: 80,
     initialWidth: 30,

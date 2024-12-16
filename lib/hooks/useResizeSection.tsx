@@ -6,7 +6,7 @@ interface UseResizableProps {
   initialWidth: number;
 }
 
-export const useResizable = ({ minWidth, maxWidth, initialWidth }: UseResizableProps) => {
+export const useResizeSection = ({ minWidth, maxWidth, initialWidth }: UseResizableProps) => {
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
   const [width, setWidth] = useState(initialWidth);
