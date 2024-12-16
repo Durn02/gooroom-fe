@@ -9,10 +9,9 @@ import { uploadToS3 } from '@/lib/utils/s3/handleS3';
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  fetchPosts: () => void;
 }
 
-const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetchPosts }) => {
+const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) => {
   const { selectedUserId } = useContext(UserProfileContext);
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
@@ -81,7 +80,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, fetc
       alert('게시물이 작성되었습니다.');
       setPostData({ title: '', content: '', tags: [], image_url: [] });
       setImages([]);
-      fetchPosts();
       onClose();
     } catch (error) {
       console.error('Error creating post:', error);

@@ -9,10 +9,9 @@ import { uploadToS3 } from '@/lib/utils/s3/handleS3';
 interface CreateStickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  fetchStickers: () => void;
 }
 
-const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose, fetchStickers }) => {
+const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose }) => {
   const { selectedUserId } = useContext(UserProfileContext);
   const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
@@ -98,7 +97,6 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
       alert('스티커가 작성되었습니다.');
       setContent('');
       setImages([]);
-      fetchStickers();
       onClose();
     } catch (error) {
       console.error('Error creating sticker:', error);

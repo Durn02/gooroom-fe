@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
@@ -12,6 +12,7 @@ import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateSti
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
 import { useResizeSection } from '@/lib/hooks/useResizeSection';
 import { deleteFromS3 } from '@/lib/utils/s3/handleS3';
+import { fetchPosts, fetchStickers, fetchUserInfo } from '@/lib/utils/fetchData/fetchData';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -31,9 +32,9 @@ export default function MyProfile() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchUserInfo();
-    fetchStickers();
-    fetchPosts();
+    fetchUserInfo().then((data) => setUserInfo(data));
+    fetchStickers().then((data) => setStickers(data));
+    fetchPosts().then((data) => setPosts(data));
   }, []);
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
@@ -49,73 +50,12 @@ export default function MyProfile() {
     window.location.href = '/';
   };
 
-  const fetchUserInfo = useCallback(async () => {
-    const response = await fetch(`${API_URL}/domain/user/my/info`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      alert('사용자 정보를 불러오는데 실패했습니다.');
-      window.location.href = '/';
-      return;
-    } else {
-      const data = await response.json();
-      setUserInfo(data);
-    }
-  }, []);
-
-  const fetchStickers = useCallback(async () => {
-    const response = await fetch(`${API_URL}/domain/content/sticker/get-my-contents`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      alert('스티커를 불러오는데 실패했습니다.');
-      window.location.href = '/';
-    } else {
-      const data = await response.json();
-      setStickers(data);
-    }
-  }, []);
-
-  const fetchPosts = useCallback(async () => {
-    const response = await fetch(`${API_URL}/domain/content/post/get-my-contents`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      alert('게시글을 불러오는데 실패했습니다.');
-      window.location.href = '/';
-    } else {
-      const data = await response.json();
-      setPosts(data);
-    }
-  }, []);
-
-  const handleEditProfile = useCallback(() => {
-    setIsProfileModalOpen(true);
-  }, []);
-
-  const handleCreateSticker = useCallback(async () => {
-    setIsCreateStickerModalOpen(true);
-  }, []);
-
   const handleDeleteSticker = async (sticker: Sticker) => {
     const response = window.confirm('스티커를 삭제하시겠습니까?');
     if (!response) {
       return;
     }
     try {
-      // S3에서 이미지 삭제
       for (const imageUrl of sticker.image_url) {
         await deleteFromS3(imageUrl);
       }
@@ -138,13 +78,9 @@ export default function MyProfile() {
       return;
     } else {
       alert('스티커가 삭제되었습니다.');
-      await fetchStickers();
+      await fetchStickers().then((data) => setStickers(data));
     }
   };
-
-  const handleCreatePost = useCallback(async () => {
-    setIsCreatePostModalOpen(true);
-  }, []);
 
   const handleDeletePost = async (posts: Post) => {
     const isDelete = window.confirm('게시글을 삭제하시겠습니까?');
@@ -153,7 +89,6 @@ export default function MyProfile() {
     }
 
     try {
-      // S3에서 이미지 삭제
       for (const imageUrl of posts.image_url) {
         await deleteFromS3(imageUrl);
       }
@@ -203,7 +138,7 @@ export default function MyProfile() {
                 <div className="flex justify-between items-center mb-2">
                   <h1 className="text-3xl font-bold">@{userInfo.nickname}</h1>
                   <button
-                    onClick={handleEditProfile}
+                    onClick={() => setIsProfileModalOpen(true)}
                     className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
                   >
                     정보 변경
@@ -238,7 +173,7 @@ export default function MyProfile() {
           <div className="flex justify-between items-center mb-4 mt-12">
             <h2 className="text-2xl font-bold text-gray-800">Stickers</h2>
             <button
-              onClick={handleCreateSticker}
+              onClick={() => setIsCreateStickerModalOpen(true)}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded"
             >
               작성하기
@@ -298,7 +233,7 @@ export default function MyProfile() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Posts</h2>
             <button
-              onClick={handleCreatePost}
+              onClick={() => setIsCreatePostModalOpen(true)}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded"
             >
               작성하기
@@ -362,7 +297,7 @@ export default function MyProfile() {
         isOpen={isProfileModalOpen}
         onClose={() => {
           setIsProfileModalOpen(false);
-          fetchUserInfo();
+          fetchUserInfo().then((data) => setUserInfo(data));
         }}
         myProfile={userInfo}
       />
@@ -370,7 +305,7 @@ export default function MyProfile() {
         isOpen={isStickerModalOpen}
         onClose={() => {
           setIsStickerModalOpen(false);
-          fetchStickers();
+          fetchStickers().then((data) => setStickers(data));
         }}
         sticker={
           stickers.length > 0 ? selectedSticker : { sticker_node_id: '', content: '', image_url: [], created_at: '' }
@@ -378,14 +313,16 @@ export default function MyProfile() {
       />
       <CreateStickerModal
         isOpen={isCreateStickerModalOpen}
-        onClose={() => setIsCreateStickerModalOpen(false)}
-        fetchStickers={fetchStickers}
+        onClose={() => {
+          setIsCreateStickerModalOpen(false);
+          fetchStickers().then((data) => setStickers(data));
+        }}
       />
       <PostModal
         isOpen={isPostModalOpen}
         onClose={() => {
           setIsPostModalOpen(false);
-          fetchPosts();
+          fetchPosts().then((data) => setPosts(data));
         }}
         post={
           posts.length > 0
@@ -395,8 +332,10 @@ export default function MyProfile() {
       />
       <CreatePostModal
         isOpen={isCreatePostModalOpen}
-        onClose={() => setIsCreatePostModalOpen(false)}
-        fetchPosts={fetchPosts}
+        onClose={() => {
+          setIsCreatePostModalOpen(false);
+          fetchPosts().then((data) => setPosts(data));
+        }}
       />
     </div>
   );
