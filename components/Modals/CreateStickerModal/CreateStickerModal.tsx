@@ -44,12 +44,6 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
     };
   }, [isOpen, handleKeyDown]);
 
-  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) {
-      onClose();
-    }
-  };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newImages = Array.from(e.target.files || []);
     setImages((prevImages) => [...prevImages, ...newImages]);
@@ -101,6 +95,12 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
     } catch (error) {
       console.error('Error creating sticker:', error);
       alert('스티커 작성에 실패했습니다.');
+    }
+  };
+
+  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
     }
   };
 
