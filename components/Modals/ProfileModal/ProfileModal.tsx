@@ -3,14 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_URL } from '@/lib/utils/config';
 import { UserInfo } from '@/lib/types/myprofilePage.type';
+import { fetchUserInfo } from '@/lib/utils/fetchData/fetchData';
 
-interface ModalProps {
+interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   myProfile: UserInfo;
 }
 
-const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
+const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [profileData, setProfileData] = useState<UserInfo>(
     myProfile || {
@@ -55,27 +56,6 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
       });
     }
   }, [myProfile]);
-
-  const fetchProfileData = async () => {
-    try {
-      const response = await fetch(`${API_URL}/domain/user/my/info`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        console.error('Failed to fetch profile data.');
-        window.location.href = '/';
-        return;
-      }
-      const data = await response.json();
-      setProfileData(data);
-    } catch (error) {
-      console.error('An error occurred while fetching profile data.', error);
-    }
-  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
@@ -127,7 +107,8 @@ const ProfileModal: React.FC<ModalProps> = ({ isOpen, onClose, myProfile }) => {
 
       if (response.ok) {
         await response.json();
-        fetchProfileData();
+        const data = await fetchUserInfo();
+        setProfileData(data);
         alert('프로필이 성공적으로 저장되었습니다.');
         onClose();
       } else {
