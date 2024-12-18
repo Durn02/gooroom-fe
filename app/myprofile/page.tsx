@@ -307,9 +307,7 @@ export default function MyProfile() {
           setIsStickerModalOpen(false);
           fetchStickers().then((data) => setStickers(data));
         }}
-        sticker={
-          stickers.length > 0 ? selectedSticker : { sticker_node_id: '', content: '', image_url: [], created_at: '' }
-        }
+        sticker={selectedSticker}
       />
       <CreateStickerModal
         isOpen={isCreateStickerModalOpen}
@@ -324,11 +322,7 @@ export default function MyProfile() {
           setIsPostModalOpen(false);
           fetchPosts().then((data) => setPosts(data));
         }}
-        post={
-          posts.length > 0
-            ? selectedPost
-            : { post_node_id: '', title: '', content: '', image_url: [], tags: [], created_at: '' }
-        }
+        post={selectedPost}
       />
       <CreatePostModal
         isOpen={isCreatePostModalOpen}
