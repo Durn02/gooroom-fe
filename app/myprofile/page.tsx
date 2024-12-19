@@ -12,7 +12,7 @@ import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateSti
 import CreatePostModal from '@/components/Modals/CreatePostModal/CreatePostModal';
 import { useResizeSection } from '@/lib/hooks/useResizeSection';
 import { deleteFromS3 } from '@/lib/utils/s3/handleS3';
-import { fetchPosts, fetchStickers, fetchUserInfo } from '@/lib/utils/fetchData/fetchData';
+import { fetchPosts, fetchStickers, fetchMyInfo } from '@/lib/utils/fetchData/fetchData';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -32,7 +32,7 @@ export default function MyProfile() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchUserInfo().then((data) => setUserInfo(data));
+    fetchMyInfo().then((data) => setUserInfo(data));
     fetchStickers().then((data) => setStickers(data));
     fetchPosts().then((data) => setPosts(data));
   }, []);
@@ -297,7 +297,7 @@ export default function MyProfile() {
         isOpen={isProfileModalOpen}
         onClose={() => {
           setIsProfileModalOpen(false);
-          fetchUserInfo().then((data) => setUserInfo(data));
+          fetchMyInfo().then((data) => setUserInfo(data));
         }}
         myProfile={userInfo}
       />
