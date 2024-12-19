@@ -6,6 +6,14 @@ export interface UserInfo {
   tags: string[];
 }
 
+export interface FriendInfo {
+  my_memo: string;
+  nickname: string;
+  username: string;
+  node_id: string;
+  tags: string[];
+}
+
 export interface Sticker {
   sticker_node_id: string;
   content: string;

@@ -3,7 +3,7 @@ import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useRouter } from 'next/navigation';
-import { Post } from '@/lib/types/myprofilePage.type';
+import { Post } from '@/lib/types/profilePage.type';
 import { uploadToS3 } from '@/lib/utils/s3/handleS3';
 
 interface CreatePostModalProps {

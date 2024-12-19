@@ -5,7 +5,7 @@ import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import ProfileModal from '@/components/Modals/ProfileModal/ProfileModal';
-import { UserInfo, Sticker, Post } from '@/lib/types/myprofilePage.type';
+import { UserInfo, Sticker, Post } from '@/lib/types/profilePage.type';
 import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/components/Modals/CreateStickerModal/CreateStickerModal';

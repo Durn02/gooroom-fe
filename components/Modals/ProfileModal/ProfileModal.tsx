@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_URL } from '@/lib/utils/config';
-import { UserInfo } from '@/lib/types/myprofilePage.type';
+import { UserInfo } from '@/lib/types/profilePage.type';
 import { fetchMyInfo } from '@/lib/utils/fetchData/fetchData';
 
 interface ProfileModalProps {

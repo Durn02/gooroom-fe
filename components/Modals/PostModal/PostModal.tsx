@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Post } from '@/lib/types/myprofilePage.type';
+import { Post } from '@/lib/types/profilePage.type';
 
 interface PostModalProps {
   isOpen: boolean;
