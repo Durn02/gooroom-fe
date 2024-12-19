@@ -107,20 +107,16 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
   const removeTag = (indexToRemove: number) => {
     setPostData((prev) => ({
       ...prev,
-      tags: prev.tags.filter((_, i) => i !== indexToRemove),
+      tags: prev.tags.filter((_, index) => index !== indexToRemove),
     }));
-    //   setPostData((prev) => ({
-    //     ...prev,
-    //     tags: prev.tags.filter((_, index) => index !== indexToRemove),
-    //   }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCreateImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImages([...images, ...files]);
   };
 
-  const handleImageDelete = (indexToRemove: number) => {
+  const handleDeleteImage = (indexToRemove: number) => {
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
 
@@ -231,7 +227,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
               type="file"
               accept="image/*"
               multiple
-              onChange={handleImageUpload}
+              onChange={handleCreateImage}
               className="w-full p-2 border rounded"
             />
             <div className="flex flex-wrap gap-2 mt-2">
@@ -249,7 +245,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             className="w-full h-full object-cover rounded"
                           />
                           <button
-                            onClick={() => handleImageDelete(index)}
+                            onClick={() => handleDeleteImage(index)}
                             className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                           >
                             X

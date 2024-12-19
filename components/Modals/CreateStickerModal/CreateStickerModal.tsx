@@ -44,12 +44,12 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
     };
   }, [isOpen, handleKeyDown]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCreateImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newImages = Array.from(e.target.files || []);
     setImages((prevImages) => [...prevImages, ...newImages]);
   };
 
-  const handleImageDelete = (index: number) => {
+  const handleDeleteImage = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
@@ -140,7 +140,7 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
               type="file"
               accept="image/*"
               multiple
-              onChange={handleImageUpload}
+              onChange={handleCreateImage}
               className="w-full mb-4 p-2 border rounded"
             />
             {images.length > 0 && (
@@ -158,7 +158,7 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
                           className="w-full h-full object-cover rounded-md"
                         />
                         <button
-                          onClick={() => handleImageDelete(index)}
+                          onClick={() => handleDeleteImage(index)}
                           className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           X
