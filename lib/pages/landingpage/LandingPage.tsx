@@ -6,7 +6,6 @@ import Link from 'next/link';
 import DefaultButton from '@/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
 import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
 
@@ -23,7 +22,6 @@ export function Landing() {
   const { selectedUserId, setSelectedUserId } = useContext(UserProfileContext);
   const [loggedInuser, setLoggedInUser] = useState(null);
 
-  const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
   const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const callbacks = {
@@ -33,12 +31,6 @@ export function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-
-  const closeRoommateModal = () => {
-    setIsRoommateModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
 
   const closeNeighborModal = () => {
     setIsNeighborModalOpen(false);
@@ -127,9 +119,9 @@ export function Landing() {
       return;
     }
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
-      router.push(`/myprofile`);
+      router.push('/myprofile');
     } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
-      setIsRoommateModalOpen(true);
+      router.push('/roommateprofile');
     } else {
       setIsNeighborModalOpen(true);
     }
@@ -207,11 +199,6 @@ export function Landing() {
       )}
 
       {/* 모달 컴포넌트 */}
-      <RoommateModal
-        isOpen={isRoommateModalOpen}
-        onClose={closeRoommateModal}
-        userNodeId={selectedUserId ? selectedUserId : null}
-      />
       <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} myProfile={loggedInuser} />
       <NeighborModal
         isOpen={isNeighborModalOpen}
