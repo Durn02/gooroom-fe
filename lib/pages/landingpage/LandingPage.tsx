@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DefaultButton from '@/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
-import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
 
 import { API_URL } from '@/lib/utils/config';
 
@@ -20,10 +18,7 @@ export function Landing() {
   const isLoggedIn = useIsLoginState();
 
   const { selectedUserId, setSelectedUserId } = useContext(UserProfileContext);
-  const [loggedInuser, setLoggedInUser] = useState(null);
 
-  const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
       setSelectedUserId(userId);
@@ -31,12 +26,6 @@ export function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-
-  const closeNeighborModal = () => {
-    setIsNeighborModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
@@ -62,12 +51,6 @@ export function Landing() {
         console.error(error);
       }
     }
-  };
-
-  const closeProfileModal = () => {
-    setIsProfileModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
   };
 
   const verifyAccessToken = async () => {
@@ -109,9 +92,6 @@ export function Landing() {
 
   useEffect(() => {
     verifyAccessToken();
-    if (networkManager) {
-      setLoggedInUser(networkManager.getLoggeInUser());
-    }
   }, []);
 
   useEffect(() => {
@@ -123,7 +103,7 @@ export function Landing() {
     } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
       router.push('/roommateprofile');
     } else {
-      setIsNeighborModalOpen(true);
+      router.push('/neighborprofile');
     }
   }, [selectedUserId, networkManager, router]);
 
@@ -197,14 +177,6 @@ export function Landing() {
           </div>
         </>
       )}
-
-      {/* 모달 컴포넌트 */}
-      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} myProfile={loggedInuser} />
-      <NeighborModal
-        isOpen={isNeighborModalOpen}
-        onClose={closeNeighborModal}
-        userNodeId={selectedUserId ? selectedUserId : null}
-      />
     </>
   );
 }
