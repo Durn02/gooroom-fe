@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import DefaultButton from '@/components/Button/DefaultButton';
 import Input from '@/components/Input/DefaultInput';
 import PwInput from '@/components/Input/PwInput/PwInput';
 import { useState, useEffect } from 'react';
-import { IsLoginContext } from '@/lib/context/IsLoginContext';
+// import { IsLoginContext } from '@/lib/context/IsLoginContext';
 import { API_URL } from '@/lib/utils/config';
 
 type signinRequestData = {
@@ -23,7 +23,7 @@ type VerifyRequestData = {
 const APIURL = API_URL;
 
 export default function Signin() {
-  const loginCtx = useContext(IsLoginContext);
+  // const loginCtx = useContext(IsLoginContext);
   console.log(APIURL);
   const [emailVerification, setEmailVerification] = useState(false);
 
@@ -58,7 +58,7 @@ export default function Signin() {
             } else if (data.detail === 'inconsistent password') {
               alert('비밀번호가 일치하지 않습니다');
             } else if (data.message === 'login success') {
-              loginCtx.setUserId(userEmailInput);
+              localStorage.setItem('userId', `"${userEmailInput}"`);
               alert('로그인 성공');
               window?.location?.replace('/');
             } else {
@@ -122,34 +122,28 @@ export default function Signin() {
   const [userEmailInput, setUserEmailInput] = useState('');
   const [userPwInput, setUserPwInput] = useState('');
   const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  const isLoggedin = useContext(IsLoginContext);
   // 로그인이 되어있는지 확인하는 useEffect
   // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
-      if (isLoggedin.isLogin) {
-        alert('이미 로그인 되어있습니다.');
-        window.location.replace('/');
-      } else {
-        try {
-          const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include', // 쿠키를 포함시키기 위해 필요
-          });
+      try {
+        const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // 쿠키를 포함시키기 위해 필요
+        });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.message === 'access token validation check successfull') {
-              alert('이미 로그인 되어있습니다.');
-              window.location.replace('/');
-            }
+        if (response.ok) {
+          const data = await response.json();
+          if (data.message === 'access token validation check successfull') {
+            alert('이미 로그인 되어있습니다.');
+            window.location.replace('/');
           }
-        } catch (error) {
-          alert(error);
         }
+      } catch (error) {
+        alert(error);
       }
     };
 

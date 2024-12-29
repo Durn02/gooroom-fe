@@ -1,50 +1,65 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useContext } from 'react';
-import { Network, Node, Edge } from 'vis-network';
-import { DataSet } from 'vis-data';
-import Link from 'next/link';
-import DefaultButton from '@/components/Button/DefaultButton';
-import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
-import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
+// import React, { useEffect, useState, useRef, useContext } from 'react';
+import React, { useState } from 'react';
+// import { Network, Node, Edge } from 'vis-network';
+
+// import React from 'react';
+// import { Network } from 'vis-network';
+// import { DataSet } from 'vis-data';
+// import Link from 'next/link';
+// import DefaultButton from '@/components/Button/DefaultButton';
+// import visnet_options from '@/components/VisNetGraph/visnetGraphOptions';
+// import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
+<<<<<<<<< Temporary merge branch 1
 import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
 import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
 import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
 import { IsLoginContext } from '@/lib/context/IsLoginContext';
+=========
+import FriendModal from '@/components/Modals/FriendModal/FriendModal';
+// import ProfileModal from './ProfileModal';
+// import { IsLoginContext } from '@/lib/context/IsLoginContext';
+>>>>>>>>> Temporary merge branch 2
 
-import { zoomIn, zoomOut, resetPosition, disableGraphInteraction, hardenGraph } from '../../utils/graphInteraction';
-import CastModal from '@/components/Modals/CastModal/CastModal';
-import { castAnimation } from '../../utils/casting';
-import { fetchUnreadCasts } from '../../utils/alertCasting';
-import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
-import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
-import { API_URL } from '@/lib/utils/config';
+// import { zoomIn, zoomOut, resetPosition, disableGraphInteraction, hardenGraph } from '../../utils/graphInteraction';
+// import CastModal from '@/components/Modals/CastModal/CastModal';
+// import { castAnimation } from '../../utils/casting';
+// import { fetchUnreadCasts } from '../../utils/alertCasting';
+// import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
+// import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
+// import { API_URL } from '@/lib/utils/config';
 
-const APIURL = API_URL;
+import useNetwork from '@/lib/hooks/useNetwork';
 
-export default function Landing() {
-  const isLoggedIn = useContext(IsLoginContext);
+// const APIURL = API_URL;
 
-  const loggedInUserRef = useRef<User>();
-  const roommatesDataRef = useRef<RoomMateData[]>([]);
-  const neighborsDataRef = useRef<User[]>([]);
-  const friendsData: string[] = [];
-  const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
+export function Landing() {
+  // const isLoggedIn = useContext(IsLoginContext);
 
-  const nodesDataset = useRef(new DataSet<Node>());
-  const edgesDataset = useRef(new DataSet<Edge>());
+  // const loggedInUserRef = useRef<User>();
+  // const roommatesDataRef = useRef<RoomMateData[]>([]);
+  // const neighborsDataRef = useRef<User[]>([]);
 
-  const networkContainer = useRef<HTMLDivElement | null>(null);
-  const networkInstance = useRef<Network | null>(null);
+  // const friendsData: string[] = [];
+  // const roommatesWithNeighborsRef = useRef<RoommateWithNeighbors[]>([]);
 
+  // const nodesDataset = useRef(new DataSet<Node>());
+  // const edgesDataset = useRef(new DataSet<Edge>());
+
+  // const networkContainer = useRef<HTMLDivElement | null>(null);
+  // const networkInstance = useRef<Network | null>(null);
+
+<<<<<<<<< Temporary merge branch 1
   const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
   const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
   const [isCastModalOpen, setIsCastModalOpen] = useState(false);
+=========
+>>>>>>>>> Temporary merge branch 2
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [cast_message, setCastMessage] = useState('');
 
+<<<<<<<<< Temporary merge branch 1
   const closeRoommateModal = () => {
     setIsRoommateModalOpen(false);
     setSelectedUserId(null);
@@ -65,70 +80,61 @@ export default function Landing() {
   const openNeighborModal = (userId: string) => {
     setSelectedUserId(userId);
     setIsNeighborModalOpen(true);
+=========
+  // const [isCastModalOpen, setIsCastModalOpen] = useState(false);
+  // const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  // const [cast_message, setCastMessage] = useState('');
+
+  const callbacks = {
+    onNodeDoubleClick: (nodeId: string) => {
+      openFriendModal(nodeId);
+    },
+    // 다른 콜백 함수들 추가 가능
   };
 
-  const fetchAndUpdateData = async () => {
-    const friendsData = await fetchFriends();
+  const { networkManager, networkContainer } = useNetwork(callbacks);
 
-    if (loggedInUserRef.current) {
-      reloadDataset(
-        {
-          loggedInUser: loggedInUserRef.current,
-          roommates: roommatesDataRef.current,
-          neighbors: neighborsDataRef.current,
-          roommatesWithNeighbors: roommatesWithNeighborsRef.current,
-        },
-        friendsData,
-        nodesDataset.current,
-        edgesDataset.current,
-      );
-    }
-    roommatesDataRef.current = friendsData.roommates;
-    neighborsDataRef.current = friendsData.neighbors;
-    roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
-
-    // Check if loggedInUser exists. If it doesn't, this is the first load.
-    if (!loggedInUserRef.current) {
-      console.log(loggedInUserRef.current);
-      loggedInUserRef.current = friendsData.loggedInUser;
-      console.log(loggedInUserRef.current);
-      initDataset(friendsData, nodesDataset.current, edgesDataset.current);
-    }
-  };
-  const closeCastModal = () => {
-    setIsCastModalOpen(false);
+  const openFriendModal = (userId: string) => {
+    setSelectedUserId(userId);
+>>>>>>>>> Temporary merge branch 2
   };
 
-  const openCastModal = () => {
-    setIsCastModalOpen(true);
-  };
+  // const fetchAndUpdateData = async () => {
+  //   const friendsData = await fetchFriends();
 
-  const onSignoutButtonClickHandler = async () => {
-    const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
-    if (isSignout) {
-      alert('회원탈퇴를 진행합니다!');
-      try {
-        const response = await fetch(`${APIURL}/domain/auth/signout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.message === 'signout success') {
-            alert('회원탈퇴가 완료되었습니다.');
-            window.location.href = '/';
-          }
-        }
-      } catch (error) {
-        alert('unknown error occurred in onSignoutButtonClickHandler');
-        console.error(error);
-      }
-    }
-  };
+  //   if (loggedInUserRef.current) {
+  //     reloadDataset(
+  //       {
+  //         loggedInUser: loggedInUserRef.current,
+  //         roommates: roommatesDataRef.current,
+  //         neighbors: neighborsDataRef.current,
+  //         roommatesWithNeighbors: roommatesWithNeighborsRef.current,
+  //       },
+  //       friendsData,
+  //       nodesDataset.current,
+  //       edgesDataset.current,
+  //     );
+  //   }
+  //   roommatesDataRef.current = friendsData.roommates;
+  //   neighborsDataRef.current = friendsData.neighbors;
+  //   roommatesWithNeighborsRef.current = friendsData.roommatesWithNeighbors;
 
+  //   // Check if loggedInUser exists. If it doesn't, this is the first load.
+  //   if (!loggedInUserRef.current) {
+  //     loggedInUserRef.current = friendsData.loggedInUser;
+  //     initDataset(friendsData, nodesDataset.current, edgesDataset.current);
+  //   }
+  // };
+
+  // const closeCastModal = () => {
+  //   setIsCastModalOpen(false);
+  // };
+
+  // const openCastModal = () => {
+  //   setIsCastModalOpen(true);
+  // };
+
+<<<<<<<<< Temporary merge branch 1
   const closeProfileModal = () => {
     setIsProfileModalOpen(false);
     setSelectedUserId(null);
@@ -139,72 +145,91 @@ export default function Landing() {
     setSelectedUserId(userId);
     setIsProfileModalOpen(true);
   };
+=========
+  // const onSignoutButtonClickHandler = async () => {
+  //   const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
+  //   if (isSignout) {
+  //     alert('회원탈퇴를 진행합니다!');
+  //     try {
+  //       const response = await fetch(`${APIURL}/domain/auth/signout`, {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //       });
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         if (data.message === 'signout success') {
+  //           alert('회원탈퇴가 완료되었습니다.');
+  //           window.location.href = '/';
+  //         }
+  //       }
+  //     } catch (error) {
+  //       alert('unknown error occurred in onSignoutButtonClickHandler');
+  //       console.error(error);
+  //     }
+  //   }
+  // };
+>>>>>>>>> Temporary merge branch 2
 
-  const verifyAccessToken = async () => {
-    try {
-      const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+  // const closeProfileModal = () => {
+  //   setIsProfileModalOpen(false);
+  // };
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log(data);
-        if (data.message == 'access token validation check successfull') {
-          isLoggedIn.isLogin = true;
-        }
-      } else {
-        const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        if (refresh_response.ok) {
-          isLoggedIn.isLogin = true;
-        } else {
-          isLoggedIn.isLogin = false;
-        }
-      }
-    } catch (error) {
-      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
-    }
-  };
+  // const verifyAccessToken = async () => {
+  //   try {
+  //     const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       credentials: 'include',
+  //     });
 
-  useEffect(() => {
-    verifyAccessToken();
-  }, []);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       console.log(data);
+  //       if (data.message == 'access token validation check successfull') {
+  //         isLoggedIn.isLogin = true;
+  //       }
+  //     } else {
+  //       const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //       });
+  //       if (refresh_response.ok) {
+  //         isLoggedIn.isLogin = true;
+  //       } else {
+  //         isLoggedIn.isLogin = false;
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (networkContainer.current) {
-      if (!networkInstance.current) {
-        networkInstance.current = new Network(
-          networkContainer.current,
-          {
-            nodes: nodesDataset.current,
-            edges: edgesDataset.current,
-          },
-          visnet_options,
-        );
-        fetchAndUpdateData();
+  // useEffect(() => {
 
-        networkInstance.current.on('doubleClick', (event: { nodes: string[] }) => {
-          const { nodes: clickedNodes } = event;
-          if (clickedNodes.length > 0) {
-            const clickedNodeId = clickedNodes[0];
+  // }, []);
 
-            networkInstance.current?.focus(clickedNodeId, {
-              scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
-              animation: {
-                duration: 1000, // 애니메이션 지속 시간 (밀리초)
-                easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
-              },
-            });
+  // useEffect(() => {
+  //   if (networkContainer.current) {
+  //     if (!networkInstance.current) {
+  //       networkInstance.current = new Network(
+  //         networkContainer.current,
+  //         {
+  //           nodes: nodesDataset.current,
+  //           edges: edgesDataset.current,
+  //         },
+  //         visnet_options,
+  //       );
+  //       fetchAndUpdateData();
 
+<<<<<<<<< Temporary merge branch 1
             setTimeout(() => {
               if (clickedNodeId === loggedInUserRef.current?.node_id) {
                 // openFriendModal(clickedNodeId);
@@ -236,85 +261,117 @@ export default function Landing() {
       }
     };
   }, [networkContainer.current]);
+=========
+  //       networkInstance.current.on('doubleClick', (event: { nodes: string[] }) => {
+  //         const { nodes: clickedNodes } = event;
+  //         if (clickedNodes.length > 0) {
+  //           const clickedNodeId = clickedNodes[0];
+>>>>>>>>> Temporary merge branch 2
 
-  const onLogoutButtonClickHandler = async () => {
-    try {
-      const response = await fetch(`${APIURL}/domain/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === 'logout success') {
-          // 서버가 보낸 메시지에 따라 조건 수정
-          alert('로그아웃합니다.');
-          isLoggedIn.setUserId(null);
-          console.log('isLoggedIn : ', isLoggedIn);
-          window.location.href = '/';
-        }
-      }
-    } catch (error) {
-      alert(error);
-    }
-  };
+  //           networkInstance.current?.focus(clickedNodeId, {
+  //             scale: 100, // 확대 비율 (1.0은 기본 값, 1.5는 1.5배 확대)
+  //             animation: {
+  //               duration: 1000, // 애니메이션 지속 시간 (밀리초)
+  //               easingFunction: 'easeInOutQuad', // 애니메이션 이징 함수
+  //             },
+  //           });
 
-  const addFriend = async () => {
-    // Simulate adding a friend
+  //           setTimeout(() => {
+  //             openFriendModal(clickedNodeId);
+  //           }, 800);
+  //         }
+  //       });
+  //       fetchUnreadCasts(nodesDataset.current);
+  //     } else {
+  //       fetchAndUpdateData();
+  //       console.log('fetchAndUpdateData called');
+  //     }
+  //   }
+  //   return () => {
+  //     if (networkInstance.current) {
+  //       networkInstance.current.destroy();
+  //       networkInstance.current = null;
+  //     }
+  //   };
+  // }, [networkContainer.current]);
 
-    fetchAndUpdateData(); // Re-fetch and reload the dataset
-  };
+  // const onLogoutButtonClickHandler = async () => {
+  //   try {
+  //     const response = await fetch(`${APIURL}/domain/auth/logout`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       credentials: 'include',
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       if (data.message === 'logout success') {
+  //         // 서버가 보낸 메시지에 따라 조건 수정
+  //         alert('로그아웃합니다.');
+  //         isLoggedIn.setUserId(null);
+  //         console.log('isLoggedIn : ', isLoggedIn);
+  //         window.location.href = '/';
+  //       }
+  //     }
+  //   } catch (error) {
+  //     alert(error);
+  //   }
+  // };
 
-  const cast = () => {
-    disableGraphInteraction(networkInstance.current);
-    hardenGraph(networkInstance.current);
+  // const addFriend = async () => {
+  // Simulate adding a friend
 
-    networkInstance.current?.once('stabilized', () => {
-      castAnimation(
-        networkInstance.current,
-        networkContainer.current,
-        loggedInUserRef.current?.node_id,
-        roommatesDataRef.current,
-        neighborsDataRef.current,
-      );
-    });
+  //   fetchAndUpdateData(); // Re-fetch and reload the dataset
+  // };
 
-    roommatesDataRef.current.forEach((element) => {
-      friendsData.push(element.roommate.node_id);
-    });
-    neighborsDataRef.current.forEach((element) => {
-      friendsData.push(element.node_id);
-    });
+  // const cast = () => {
+  //   disableGraphInteraction(networkInstance.current);
+  //   hardenGraph(networkInstance.current);
 
-    fetch(`${APIURL}/domain/content/cast/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        friends: friendsData,
-        message: cast_message,
-        duration: 1,
-      }),
-      credentials: 'include',
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log('cast success');
-        } else {
-          console.error('cast failed');
-        }
-      })
-      .catch((error) => {
-        console.error('error : ', error);
-      });
-  };
+  //   networkInstance.current?.once('stabilized', () => {
+  //     castAnimation(
+  //       networkInstance.current,
+  //       networkContainer.current,
+  //       loggedInUserRef.current?.node_id,
+  //       roommatesDataRef.current,
+  //       neighborsDataRef.current,
+  //     );
+  //   });
+
+  //   roommatesDataRef.current.forEach((element) => {
+  //     friendsData.push(element.roommate.node_id);
+  //   });
+  //   neighborsDataRef.current.forEach((element) => {
+  //     friendsData.push(element.node_id);
+  //   });
+
+  //   fetch(`${APIURL}/domain/content/cast/send`, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       friends: friendsData,
+  //       message: cast_message,
+  //       duration: 1,
+  //     }),
+  //     credentials: 'include',
+  //   })
+  //     .then((response) => {
+  //       if (response.ok) {
+  //         console.log('cast success');
+  //       } else {
+  //         console.error('cast failed');
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error('error : ', error);
+  //     });
+  // };
   return (
     <>
-      {console.log('isLoggedIn.isLogin : ', isLoggedIn.isLogin)}
-      {!isLoggedIn.isLogin && (
+      {!isLoggedIn && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -330,32 +387,33 @@ export default function Landing() {
         </>
       )}
 
-      {isLoggedIn.isLogin && (
-        <>
-          <div>
-            <div className={style.castPostStickerDropdownButton}>
+      {/* {isLoggedIn.isLogin && ( */}
+      <>
+        <div>
+          {/* <div className={style.castPostStickerDropdownButton}>
               <CastPostStickerDropdownButton cast_fuction={openCastModal} />
-            </div>
-            <div className={style.magnifyButtonContainer}>
+            </div> */}
+          {/* <div className={style.magnifyButtonContainer}>
               <DefaultButton placeholder="+" onClick={() => zoomIn(networkInstance.current)} />
               <DefaultButton placeholder="O" onClick={() => resetPosition(networkInstance.current)} />
               <DefaultButton placeholder="-" onClick={() => zoomOut(networkInstance.current)} />
-            </div>
-            <div className={style.logoutButtonContainer}>
+            </div> */}
+          {/* <div className={style.logoutButtonContainer}>
               <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
             </div>
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
-            </div>
-            <button onClick={addFriend}>Add Friend Test</button>
-            <div className={style.visNetContainer}>
-              <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
-            </div>
+            </div> */}
+          {/* <button onClick={addFriend}>Add Friend Test</button> */}
+          <div className={style.visNetContainer}>
+            <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
           </div>
-        </>
-      )}
+        </div>
+      </>
+      {/* )} */}
 
       {/* 모달 컴포넌트 */}
+<<<<<<<<< Temporary merge branch 1
       <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
       <RoommateModal
         isOpen={isRoommateModalOpen}
@@ -368,6 +426,26 @@ export default function Landing() {
         onClose={closeNeighborModal}
         userNodeId={selectedUserId ? selectedUserId : null}
       />
+=========
+      <FriendModal
+        networkManager={networkManager}
+        onClose={() => {
+          setSelectedUserId(null);
+        }}
+        nodeId={selectedUserId}
+      />
+>>>>>>>>> Temporary merge branch 2
     </>
   );
 }
+
+// {
+/* <FriendModal
+isOpen={isFriendModalOpen}
+onClose={closeFriendModal}
+userNodeId={selectedUserId ? selectedUserId : null}
+/>
+<CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
+
+<ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} /> */
+// }

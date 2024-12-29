@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext } from "react";
+import { createContext } from 'react';
 
 type IsLoginContext = {
   isLogin: boolean;
@@ -8,7 +8,7 @@ type IsLoginContext = {
   setAccessToken: SetState<string | null>;
   userId: string | null;
   setUserId: SetState<string | null>;
-}
+};
 
 export const IsLoginContext = createContext<IsLoginContext>({
   isLogin: false,
