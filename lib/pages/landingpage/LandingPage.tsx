@@ -10,7 +10,7 @@ import style from './LandingPage.module.css';
 import { API_URL } from '@/lib/utils/config';
 
 import useNetwork from '@/lib/hooks/useNetwork';
-import useUI from '@/lib/hooks/useUI';
+import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useIsLoginState } from '@/lib/hooks/useIsLoginState';
 
 const APIURL = API_URL;
@@ -31,38 +31,6 @@ export function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-  const { uiManager } = useUI(networkManager);
-  
-  const closeRoommateModal = () => {
-    setIsRoommateModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
-
-  const closeNeighborModal = () => {
-    setIsNeighborModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
-
-  // const openFriendModal = () => {
-  //   setSelectedUserId(selectedUserId);
-  //   if (selectedUserId === networkManager.getLoggeInUser().node_id) {
-  //     setIsProfileModalOpen(true);
-  //   } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
-  //     setIsRoommateModalOpen(true);
-  //   } else {
-  //     setIsNeighborModalOpen(true);
-  //   }
-  // };
-
-  // const closeCastModal = () => {
-  //   setIsCastModalOpen(false);
-  // };
-
-  // const openCastModal = () => {
-  //   setIsCastModalOpen(true);
-  // };
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
@@ -217,14 +185,3 @@ export function Landing() {
     </>
   );
 }
-
-// {
-/* <FriendModal
-isOpen={isFriendModalOpen}
-onClose={closeFriendModal}
-userNodeId={selectedUserId ? selectedUserId : null}
-/>
-<CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
-
-<ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} /> */
-// }
