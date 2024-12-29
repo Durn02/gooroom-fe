@@ -1,10 +1,7 @@
 import { NetworkManager } from './NetworkManager';
 
 export const zoomIn = function (this: NetworkManager) {
-<<<<<<< HEAD
   this.startObservation();
-=======
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
@@ -14,7 +11,6 @@ export const zoomIn = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
-<<<<<<< HEAD
   setTimeout(() => {
     this.stopObservation();
   }, 500);
@@ -22,11 +18,6 @@ export const zoomIn = function (this: NetworkManager) {
 
 export const zoomOut = function (this: NetworkManager) {
   this.startObservation();
-=======
-};
-
-export const zoomOut = function (this: NetworkManager) {
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
@@ -36,7 +27,6 @@ export const zoomOut = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
-<<<<<<< HEAD
   setTimeout(() => {
     this.stopObservation();
   }, 500);
@@ -44,11 +34,6 @@ export const zoomOut = function (this: NetworkManager) {
 
 export const resetPosition = function (this: NetworkManager) {
   this.startObservation();
-=======
-};
-
-export const resetPosition = function (this: NetworkManager) {
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   const network = this.getNetwork();
   network.fit({
     animation: {
@@ -56,12 +41,9 @@ export const resetPosition = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
-<<<<<<< HEAD
   setTimeout(() => {
     this.stopObservation();
   }, 1000);
-=======
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
 };
 
 export const disableGraphInteraction = function (this: NetworkManager) {
@@ -112,8 +94,4 @@ export const softenGraph = function (this: NetworkManager) {
       },
     },
   });
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923

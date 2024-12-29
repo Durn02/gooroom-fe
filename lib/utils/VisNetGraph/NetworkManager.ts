@@ -12,12 +12,8 @@ import {
   hardenGraph,
   softenGraph,
 } from './graphInteraction';
-<<<<<<< HEAD
 
 type NetworkEvent = { event: string; data?: unknown; scale?: number };
-=======
-import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
 
 export class NetworkManager {
   private network: Network;
@@ -32,14 +28,11 @@ export class NetworkManager {
   private observer? : (event: NetworkEvent) => void;
   private lock: number = 0;
 
-<<<<<<< HEAD
 
   setObserver(observer: (event: NetworkEvent) => void) {
     this.observer = observer;
   }
   
-=======
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   constructor(
     network: Network,
     loggedInUser: User,
@@ -53,20 +46,11 @@ export class NetworkManager {
     this.roommatesData = roommatesData;
     this.neighborsData = neighborsData;
     this.roommatesWithNeighbors = roommatesWithNeighbors;
-<<<<<<< HEAD
  
-=======
-
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
     const data = { nodes: this.nodesDataSet, edges: this.edgesDataSet };
     network.setData(data);
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesData, neighborsData));
     this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesData, roommatesWithNeighbors));
-<<<<<<< HEAD
-=======
-
-    this.bind();
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
 
     this.bind();
 
@@ -179,7 +163,6 @@ export class NetworkManager {
       scale: this.network.getScale(),
     });
   }
-<<<<<<< HEAD
 
   public stopObservation() {
     this.removeLock();
@@ -192,8 +175,6 @@ export class NetworkManager {
 
   }
 
-=======
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   public destroy() {
     if (this.network) {
       this.network.destroy();
@@ -235,11 +216,7 @@ export class NetworkManager {
     roommates: RoomMateData[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
   ) => Edge[];
-<<<<<<< HEAD
   declare zoomIn: ()  => void;
-=======
-  declare zoomIn: () => void;
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   declare zoomOut: () => void;
   declare resetPosition: () => void;
   declare disableGraphInteraction: () => void;
@@ -258,18 +235,8 @@ export class NetworkManager {
     this.enableGraphInteraction = enableGraphInteraction.bind(this);
     this.hardenGraph = hardenGraph.bind(this);
     this.softenGraph = softenGraph.bind(this);
-<<<<<<< HEAD
-=======
-    this.getLoggedInUserPosition = getLoggedInUserPosition.bind(this);
-    this.getRoommatesPosition = getRoommatesPosition.bind(this);
-    this.getRoommatesByNeighborsPositions = getRoommatesByNeighborsPositions.bind(this);
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
   }
 }
 
 NetworkManager.prototype.generateNodes = generateNodes;
-<<<<<<< HEAD
 NetworkManager.prototype.generateEdges = generateEdges;
-=======
-NetworkManager.prototype.generateEdges = generateEdges;
->>>>>>> 8bae9ddf76c0946f983be3ef8b2ca7d01303a923
