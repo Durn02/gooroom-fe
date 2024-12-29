@@ -68,9 +68,12 @@ export const EditBox = ({ currentMemo, setRoommateMemo }) => {
           className="w-full p-4 mb-4 text-gray-700 border border-gray-400 rounded"
           value={newMemo}
           onChange={(e) => setNewMemo(e.target.value)}
+          placeholder={currentMemo ? currentMemo : '친구에 대한 메모를 작성해보세요'}
         />
       ) : (
-        <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">{currentMemo}</p>
+        <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
+          {currentMemo || '친구에 대한 메모를 작성해보세요'}
+        </p>
       )}
       {(isHovered || isEditing) && (
         <button
