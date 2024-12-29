@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import userImage from '../../lib/assets/images/user.png';
 import { Sticker, Post, FriendInfo } from '@/lib/types/profilePage.type';
@@ -8,7 +8,6 @@ import StickerModal from '@/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/lib/hooks/useResizeSection';
 import { fetchFriendInfo } from '@/lib/utils/fetchData/fetchData';
-import { UserProfileContext } from '@/lib/context/UserProfileContext';
 
 export default function NeighborProfile() {
   const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
@@ -23,7 +22,7 @@ export default function NeighborProfile() {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const { selectedUserId } = useContext(UserProfileContext);
+  const selectedUserId = localStorage.getItem('selectedUserId');
 
   useEffect(() => {
     fetchFriendInfo(selectedUserId).then((data) => {

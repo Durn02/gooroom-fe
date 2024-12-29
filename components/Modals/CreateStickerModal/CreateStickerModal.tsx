@@ -1,8 +1,7 @@
 'use client';
-import React, { useEffect, useState, useCallback, useContext } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
-import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useRouter } from 'next/navigation';
 import { uploadToS3 } from '@/lib/utils/s3/handleS3';
 
@@ -12,7 +11,7 @@ interface CreateStickerModalProps {
 }
 
 const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose }) => {
-  const { selectedUserId } = useContext(UserProfileContext);
+  const selectedUserId = localStorage.getItem('selectedUserId');
   const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);

@@ -1,6 +1,5 @@
-import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { API_URL } from '@/lib/utils/config';
-import { useContext, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaPencilAlt, FaCheck } from 'react-icons/fa';
 
 export const EditBox = ({ currentMemo, setRoommateMemo }) => {
@@ -8,7 +7,7 @@ export const EditBox = ({ currentMemo, setRoommateMemo }) => {
   const [newMemo, setNewMemo] = useState(currentMemo);
   const [isHovered, setIsHovered] = useState(false);
   const [isMemoChanged, setIsMemoChanged] = useState(false);
-  const { selectedUserId } = useContext(UserProfileContext);
+  const selectedUserId = localStorage.getItem('selectedUserId');
   const textareaRef = useRef(null);
 
   useEffect(() => {

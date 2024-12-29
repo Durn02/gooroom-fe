@@ -1,7 +1,6 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { API_URL } from '@/lib/utils/config';
 import Image from 'next/image';
-import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types/profilePage.type';
 import { uploadToS3 } from '@/lib/utils/s3/handleS3';
@@ -12,7 +11,7 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) => {
-  const { selectedUserId } = useContext(UserProfileContext);
+  const selectedUserId = localStorage.getItem('selectedUserId');
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [postData, setPostData] = useState<Partial<Post>>({
