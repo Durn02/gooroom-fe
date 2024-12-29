@@ -9,9 +9,11 @@ import PostModal from '@/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/lib/hooks/useResizeSection';
 import { fetchFriendInfo } from '@/lib/utils/fetchData/fetchData';
 import { UserProfileContext } from '@/lib/context/UserProfileContext';
+import { EditBox } from '@/components/EditBox/EditBox';
 
 export default function RoommateProfile() {
   const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
+  const [roommateMemo, setRoommateMemo] = useState<string>('');
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const { width, handleMouseDown } = useResizeSection({
@@ -30,6 +32,7 @@ export default function RoommateProfile() {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);
+      setRoommateMemo(data.roommate_edge.memo);
     });
   }, []);
 
@@ -72,6 +75,7 @@ export default function RoommateProfile() {
                     {friendInfo.my_memo}
                   </p>
                 )}
+                <EditBox currentMemo={roommateMemo} setRoommateMemo={setRoommateMemo} />
                 <div className="flex flex-wrap gap-2">
                   {friendInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
