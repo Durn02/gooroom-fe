@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 export default function useTabSharedState<T>(key: string, initial: T) {
   const [state, setState] = useState<T>(() => {
     const storagedState = localStorage.getItem(key) || sessionStorage.getItem(key) || JSON.stringify(initial);
-    return JSON.parse(storagedState);
+    if(storagedState === 'undefined') return initial;
+    return storagedState;
   });
 
   useEffect(() => {
