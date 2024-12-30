@@ -8,7 +8,7 @@ import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/Ca
 import style from './LandingPage.module.css';
 
 import { API_URL } from '@/lib/utils/config';
-
+import useUI from '@/lib/hooks/useUI';
 import useNetwork from '@/lib/hooks/useNetwork';
 import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useIsLoginState } from '@/lib/hooks/useIsLoginState';
@@ -31,6 +31,7 @@ export function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
+  const { uiManager } = useUI(networkManager);
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
@@ -177,7 +178,7 @@ export function Landing() {
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
             </div>
             <div className={style.visNetContainer}>
-              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
+              <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
             </div>
           </div>
         </>

@@ -41,6 +41,7 @@ export class UIManager {
           acc[nodeId] = { x: pos.x, y: pos.y, nodeId: parseInt(nodeId) };
           // UI 아이콘 생성
           this.createCasts(pos.x, pos.y, `cast-${nodeId}`);
+          
           return acc;
         }, {} as Record<string, { x: number; y: number; nodeId: number }>);
         
@@ -114,22 +115,23 @@ export class UIManager {
    */
   private createCasts(x: number, y: number, id: string) {
     const img = document.createElement("img");
-    const offset = 60 * Math.min(this.scale, 3);
+    const sizeOffset = 100 * Math.min(this.scale, 4);
+    const posOffset = 60 * Math.min(this.scale, 6);
 
     img.classList.add("cast");
     img.id = id;
     img.src = "/lib/assets/icons/cast.png"; // 수정된 경로
     img.style.position = "absolute";
-    img.style.left = `${x - 0.3*offset}px`;
-    img.style.top = `${y - 0.01*offset}px`;
-    img.style.width = `${0.5*offset}px`;
-    img.style.height = `${0.5*offset}px`;
-  
+    img.style.left = `${x - 0.4*posOffset}px`;
+    img.style.top = `${y - 0.6*posOffset}px`;
+    img.style.width = `${0.2*sizeOffset}px`;
+    img.style.height = `${0.2*sizeOffset}px`;
+
     // 부모 요소 추가 (document.body가 아닌 특정 컨테이너)
     const container = document.getElementById("NetworkContainer");
     if (container) {
       container.appendChild(img);
-      this.animateCast(img, y - 1.2*offset);
+      this.animateCast(img, y - 0.6*posOffset);
     } else {
       console.error("Container element not found!");
     }
