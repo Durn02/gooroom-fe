@@ -1,7 +1,5 @@
 import { useLayoutEffect, useState, useRef } from 'react';
-import { Network } from 'vis-network/standalone/esm/vis-network';
-import { fetchFriendsInManager } from '@/lib/utils/handleFriends';
-import visnet_options from '../assets/styles/visnetGraphOptions';
+import { fetchFriendsInManager } from '../api/networkManager/fetchFriends';
 import { NetworkManager } from '../utils/VisNetGraph/NetworkManager';
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
@@ -10,24 +8,15 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
 
   useLayoutEffect(() => {
     const init = async () => {
-      const { loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors } = await fetchFriendsInManager();
+      const { loggedInUser, neighborsData, roommatesWithNeighbors } = await fetchFriendsInManager();
 
-      if (networkContainer.current) {
-        const instance = new Network(
-          networkContainer.current,
-          {
-            nodes: [],
-            edges: [],
-          },
-          visnet_options,
-        );
-
-        if (!loggedInUser) return;
+      if (networkContainer.current && loggedInUser) {
         initNetworkManager(
-          new NetworkManager(instance, loggedInUser, roommatesData, neighborsData, roommatesWithNeighbors, callbacks),
+          new NetworkManager(networkContainer.current, loggedInUser, neighborsData, roommatesWithNeighbors, callbacks),
         );
       }
     };
+
     init();
     return () => networkManager?.destroy();
   }, []);

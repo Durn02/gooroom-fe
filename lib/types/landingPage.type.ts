@@ -12,12 +12,9 @@ export interface User {
   username: string;
 }
 
-export interface RoomMateData {
-  roommate: User;
-  is_roommate_edge: RoomMateEdge;
-}
 export interface RoommateWithNeighbors {
-  roommate: string;
+  roommate: User;
+  roommate_edge: RoomMateEdge;
   neighbors: string[];
 }
 

@@ -14,7 +14,7 @@ export const getLoggedInUserPosition = function (this: NetworkManager): Position
 };
 
 export const getRoommatesPosition = function (this: NetworkManager): Position[] {
-  const roommates = this.getRoommatesData();
+  const roommates = this.getRoommatesWithNeighbors();
   const network = this.getNetwork();
   return roommates.map((roommate) => {
     const position = getPosition(roommate.roommate.node_id, network);
