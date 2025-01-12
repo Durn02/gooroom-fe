@@ -1,6 +1,7 @@
 import { NetworkManager } from './NetworkManager';
 
 export const zoomIn = function (this: NetworkManager) {
+  this.startObservation();
   const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
@@ -10,9 +11,13 @@ export const zoomIn = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
+  setTimeout(() => {
+    this.stopObservation();
+  }, 500);
 };
 
 export const zoomOut = function (this: NetworkManager) {
+  this.startObservation();
   const network = this.getNetwork();
   const scale = network.getScale();
   network.moveTo({
@@ -22,9 +27,13 @@ export const zoomOut = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
+  setTimeout(() => {
+    this.stopObservation();
+  }, 500);
 };
 
 export const resetPosition = function (this: NetworkManager) {
+  this.startObservation();
   const network = this.getNetwork();
   network.fit({
     animation: {
@@ -32,6 +41,9 @@ export const resetPosition = function (this: NetworkManager) {
       easingFunction: 'easeInOutQuad',
     },
   });
+  setTimeout(() => {
+    this.stopObservation();
+  }, 1000);
 };
 
 export const disableGraphInteraction = function (this: NetworkManager) {

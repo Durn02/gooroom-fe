@@ -15,6 +15,9 @@ import {
 } from './graphInteraction';
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 
+type NetworkEvent = { event: string; data?: unknown; scale?: number };
+
+
 export class NetworkManager {
   private network: Network;
   private loggedInUser: User;
@@ -22,6 +25,16 @@ export class NetworkManager {
   private roommatesWithNeighbors: RoommateWithNeighbors[];
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
+  private interactedNodeId: string | null = null;
+
+  private observer? : (event: NetworkEvent) => void;
+  private lock: number = 0;
+
+
+  setObserver(observer: (event: NetworkEvent) => void) {
+    this.observer = observer;
+  }
+
 
   constructor(
     networkContainer: HTMLDivElement,
@@ -66,7 +79,104 @@ export class NetworkManager {
         }, 800);
       }
     });
+
+    this.network.on('click', (event: { nodes: string[] }) => {
+      console.log('click event');
+      const { nodes: clickedNodes } = event;
+      if (clickedNodes.length > 0) {
+        const nodeId = clickedNodes[0];
+        if (this.interactedNodeId === nodeId) {
+          this.observer?.({
+            event: "nodeClicked",
+            data: null,
+            scale: this.network.getScale(),
+          });
+          this.interactedNodeId = null;
+          return;
+        }
+        const position = this.getPositions()[nodeId];
+
+        this.observer?.({
+          event: "nodeClicked",
+          data: {[nodeId]: position},
+          scale: this.network.getScale(),
+        });
+
+        this.interactedNodeId = nodeId;
+      }
+      else {
+        this.observer?.({
+          event: "nodeClicked",
+          data: null,
+          scale: this.network.getScale(),
+        });
+      }
+    });
+    this.network.on('dragStart', () => this.startObservation());
+    this.network.on('dragEnd', () => this.stopObservation());
+    this.network.on('startStabilizing', () => this.startObservation());
+    this.network.on('stabilized', () => this.stopObservation());
+    this.network.on('zoom', () => {
+      this.startObservation();
+      setTimeout(() => {
+        this.stopObservation();
+      }, 200);
+    });
+    this.network.on('resize', () => {
+      this.startObservation(); // 첫 번째 메서드 즉시 실행
+    
+      // 500ms(0.5초) 후 두 번째 메서드 실행
+      setTimeout(() => {
+        this.stopObservation();
+      }, 200); // 텀 조절 (밀리초 단위)
+    });
+    
   }
+  public addLock() {
+    this.lock++;
+    console.log('lock:', this.lock);
+  }
+  public removeLock() {
+    if (this.lock > 0) {
+      this.lock--;
+      console.log('lock:', this.lock);
+    }
+  }
+  public getPositions() {
+    // 모든 노드의 원래 위치 가져오기
+    const positions = this.network.getPositions(); // { node1: {x, y}, node2: {x, y} }
+  
+    // 각 위치를 DOM 좌표로 변환
+    const domPositions: Record<string, { x: number; y: number }> = {};
+    Object.entries(positions).forEach(([nodeId, pos]) => {
+      domPositions[nodeId] = this.network.canvasToDOM(pos); // 변환된 좌표 저장
+    });
+  
+    return domPositions; // 모든 변환된 위치 반환
+  }
+
+
+  public startObservation() {
+    this.addLock();
+    this.observer?.({
+      event: "startDrawing", // div 제거 이벤트
+      data: null,
+      scale: this.network.getScale(),
+    });
+  }
+
+  public stopObservation() {
+    this.removeLock();
+    if (this.lock > 0) return;
+    this.observer?.({
+      event: "finishDrawing", // div 재생성 이벤트
+      data: this.getPositions(), // 추후 cast get positions 로 변경
+      scale: this.network.getScale(),
+    });
+    console.log(this.network.getScale());
+  }
+
+  
   public destroy() {
     if (this.network) {
       this.network.destroy();

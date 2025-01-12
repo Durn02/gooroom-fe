@@ -4,6 +4,11 @@ export interface RoomMateEdge {
   group: string;
 }
 
+export interface KnockEdge {
+  edge_id: string;
+  nickname: string;
+}
+
 export interface User {
   my_memo: string;
   nickname: string;

@@ -1,78 +1,37 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-// import type { RoomMateData } from '@/lib/types/landingPage.type';
 import DefaultButton from '@/components/Button/DefaultButton';
-// import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-// import type { User } from '@/lib/types/landingPage.type';
+import CastPostStickerDropdownButton from '@/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import RoommateModal from '@/components/Modals/RoommateModal/RoommateModal';
-import ProfileModal from '../../../components/Modals/ProfileModal/ProfileModal';
-import NeighborModal from '@/components/Modals/NeighborModal/NeighborModal';
 
-// import CastModal from '@/components/Modals/CastModal/CastModal';
-// import { castAnimation } from '../../utils/casting';
-// import { fetchUnreadCasts } from '../../utils/alertCasting';
-// import { User, RoomMateData, RoommateWithNeighbors } from '../../types/landingPage.type';
-// import { fetchFriends, initDataset, reloadDataset } from '../../utils/handleFriends';
 import { API_URL } from '@/lib/utils/config';
-
+import useUI from '@/lib/hooks/useUI';
 import useNetwork from '@/lib/hooks/useNetwork';
+import { UserProfileContext } from '@/lib/context/UserProfileContext';
 import { useIsLoginState } from '@/lib/hooks/useIsLoginState';
 
 const APIURL = API_URL;
 
 export function Landing() {
+  const router = useRouter();
   const isLoggedIn = useIsLoginState();
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { selectedUserId, setSelectedUserId } = useContext(UserProfileContext);
 
-  const [isRoommateModalOpen, setIsRoommateModalOpen] = useState(false);
-  const [isNeighborModalOpen, setIsNeighborModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  // const [isCastModalOpen, setIsCastModalOpen] = useState(false);
-  // const [cast_message, setCastMessage] = useState('');
-  // const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  // const [cast_message, setCastMessage] = useState('');
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
+      setSelectedUserId(userId);
+    },
+    onNodeClick: (userId: string) => {
       setSelectedUserId(userId);
     },
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-
-  const closeRoommateModal = () => {
-    setIsRoommateModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
-
-  const closeNeighborModal = () => {
-    setIsNeighborModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
-
-  // const openFriendModal = () => {
-  //   setSelectedUserId(selectedUserId);
-  //   if (selectedUserId === networkManager.getLoggeInUser().node_id) {
-  //     setIsProfileModalOpen(true);
-  //   } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
-  //     setIsRoommateModalOpen(true);
-  //   } else {
-  //     setIsNeighborModalOpen(true);
-  //   }
-  // };
-
-  // const closeCastModal = () => {
-  //   setIsCastModalOpen(false);
-  // };
-
-  // const openCastModal = () => {
-  //   setIsCastModalOpen(true);
-  // };
+  const { uiManager } = useUI(networkManager);
 
   const onSignoutButtonClickHandler = async () => {
     const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
@@ -100,15 +59,9 @@ export function Landing() {
     }
   };
 
-  const closeProfileModal = () => {
-    setIsProfileModalOpen(false);
-    setSelectedUserId(null);
-    networkManager.resetPosition();
-  };
-
   const verifyAccessToken = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
+      const response = await fetch(`${API_URL}/domain/auth/verify-access-token`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -120,11 +73,10 @@ export function Landing() {
         const data = await response.json();
         console.log(data);
         if (data.message == 'access token validation check successfull') {
-          // isLoggedIn = true;
           console.log('isLoggedIn : ', isLoggedIn);
         }
       } else {
-        const refresh_response = await fetch(`${APIURL}/domain/auth/refresh-acc-token`, {
+        const refresh_response = await fetch(`${API_URL}/domain/auth/refresh-acc-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -132,10 +84,10 @@ export function Landing() {
           credentials: 'include',
         });
         if (refresh_response.ok) {
-          // isLoggedIn = true;
+          alert('refresh token success');
+          window.location.reload();
           console.log('isLoggedIn : ', isLoggedIn);
         } else {
-          // isLoggedIn = false;
           console.log('isLoggedIn : ', isLoggedIn);
         }
       }
@@ -153,21 +105,23 @@ export function Landing() {
       return;
     }
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
-      setIsProfileModalOpen(true);
-    } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
-      setIsRoommateModalOpen(true);
+      router.push('/myprofile');
+    } else if (
+      networkManager.getRoommatesWithNeighbors().some((instance) => instance.roommate.node_id === selectedUserId)
+    ) {
+      router.push('/roommateprofile');
     } else {
-      setIsNeighborModalOpen(true);
+      router.push('/neighborprofile');
     }
   }, [selectedUserId, networkManager]);
 
-  useEffect(()=>{
+  useEffect(() => {
     //networkManager.readUnsentCast()
-  },[networkManager])
+  }, [networkManager]);
 
   const onLogoutButtonClickHandler = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/auth/logout`, {
+      const response = await fetch(`${API_URL}/domain/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,6 +142,10 @@ export function Landing() {
     } catch (error) {
       alert(error);
     }
+  };
+
+  const cast_function = () => {
+    console.log('cast function');
   };
 
   return (
@@ -211,9 +169,9 @@ export function Landing() {
       {isLoggedIn && (
         <>
           <div>
-            {/* <div className={style.castPostStickerDropdownButton}>
-              <CastPostStickerDropdownButton cast_fuction={openCastModal} />
-            </div> */}
+            <div className={style.castPostStickerDropdownButton}>
+              <CastPostStickerDropdownButton cast_fuction={cast_function} />
+            </div>
             <div className={style.magnifyButtonContainer}>
               <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
               <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
@@ -225,38 +183,12 @@ export function Landing() {
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
             </div>
-            {/* <button onClick={addFriend}>Add Friend Test</button> */}
             <div className={style.visNetContainer}>
-              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
+              <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
             </div>
           </div>
         </>
       )}
-
-      {/* 모달 컴포넌트 */}
-      {/* <CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} /> */}
-      <RoommateModal
-        isOpen={isRoommateModalOpen}
-        onClose={closeRoommateModal}
-        userNodeId={selectedUserId ? selectedUserId : null}
-      />
-      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
-      <NeighborModal
-        isOpen={isNeighborModalOpen}
-        onClose={closeNeighborModal}
-        userNodeId={selectedUserId ? selectedUserId : null}
-      />
     </>
   );
 }
-
-// {
-/* <FriendModal
-isOpen={isFriendModalOpen}
-onClose={closeFriendModal}
-userNodeId={selectedUserId ? selectedUserId : null}
-/>
-<CastModal isOpen={isCastModalOpen} onClose={closeCastModal} setCastMessage={setCastMessage} cast={cast} />
-
-<ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} /> */
-// }
