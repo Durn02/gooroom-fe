@@ -1,8 +1,9 @@
 //NetworkManager.ts
 import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
-import { RoomMateData, User, RoommateWithNeighbors } from '@/lib/types/landingPage.type';
+import { User, RoommateWithNeighbors } from '@/lib/types/landingPage.type';
 import { generateNodes, generateEdges } from './constructNetwork';
+import visnet_options from '@/lib/assets/styles/visnetGraphOptions';
 import {
   zoomIn,
   zoomOut,
@@ -20,7 +21,6 @@ type NetworkEvent = { event: string; data?: unknown; scale?: number };
 export class NetworkManager {
   private network: Network;
   private loggedInUser: User;
-  private roommatesData: RoomMateData[];
   private neighborsData: User[];
   private roommatesWithNeighbors: RoommateWithNeighbors[];
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
@@ -37,23 +37,27 @@ export class NetworkManager {
 
 
   constructor(
-    network: Network,
+    networkContainer: HTMLDivElement,
     loggedInUser: User,
-    roommatesData: RoomMateData[],
     neighborsData: User[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
     callbacks: { [key: string]: (node_id: string) => void },
   ) {
-    this.network = network;
     this.loggedInUser = loggedInUser;
-    this.roommatesData = roommatesData;
     this.neighborsData = neighborsData;
     this.roommatesWithNeighbors = roommatesWithNeighbors;
 
-    const data = { nodes: this.nodesDataSet, edges: this.edgesDataSet };
-    network.setData(data);
-    this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesData, neighborsData));
-    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesData, roommatesWithNeighbors));
+    this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesWithNeighbors, neighborsData));
+    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors, neighborsData));
+
+    this.network = new Network(
+      networkContainer,
+      {
+        nodes: this.nodesDataSet,
+        edges: this.edgesDataSet,
+      },
+      visnet_options,
+    );
 
     this.bind();
 
@@ -191,10 +195,6 @@ export class NetworkManager {
     return this.loggedInUser;
   }
   public setLoggeInUser() {}
-  public getRoommatesData() {
-    return this.roommatesData;
-  }
-  public setRoommatesData() {}
   public getNeighborsData() {
     return this.neighborsData;
   }
@@ -208,11 +208,15 @@ export class NetworkManager {
   public getEdgesDataSet() {}
   public setEdgesDataSet() {}
 
-  declare generateNodes: (loggedInUser: User, roommatesData: RoomMateData[], neighborsData: User[]) => Node[];
+  declare generateNodes: (
+    loggedInUser: User,
+    roommatesWithNeighbors: RoommateWithNeighbors[],
+    neighborsData: User[],
+  ) => Node[];
   declare generateEdges: (
     loggedInUser: User,
-    roommates: RoomMateData[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
+    neighborsData: User[],
   ) => Edge[];
   declare zoomIn: () => void;
   declare zoomOut: () => void;

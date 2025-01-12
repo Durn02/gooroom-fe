@@ -4,6 +4,11 @@ export interface RoomMateEdge {
   group: string;
 }
 
+export interface KnockEdge {
+  edge_id: string;
+  nickname: string;
+}
+
 export interface User {
   my_memo: string;
   nickname: string;
@@ -12,12 +17,9 @@ export interface User {
   username: string;
 }
 
-export interface RoomMateData {
-  roommate: User;
-  is_roommate_edge: RoomMateEdge;
-}
 export interface RoommateWithNeighbors {
-  roommate: string;
+  roommate: User;
+  roommate_edge: RoomMateEdge;
   neighbors: string[];
 }
 

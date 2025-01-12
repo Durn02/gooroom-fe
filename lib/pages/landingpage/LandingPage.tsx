@@ -106,12 +106,18 @@ export function Landing() {
     }
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
       router.push('/myprofile');
-    } else if (networkManager.getRoommatesData().some((instance) => instance.roommate.node_id === selectedUserId)) {
+    } else if (
+      networkManager.getRoommatesWithNeighbors().some((instance) => instance.roommate.node_id === selectedUserId)
+    ) {
       router.push('/roommateprofile');
     } else {
       router.push('/neighborprofile');
     }
-  }, [selectedUserId, networkManager, router]);
+  }, [selectedUserId, networkManager]);
+
+  useEffect(() => {
+    //networkManager.readUnsentCast()
+  }, [networkManager]);
 
   const onLogoutButtonClickHandler = async () => {
     try {

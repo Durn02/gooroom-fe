@@ -37,12 +37,30 @@ export const fetchFriendInfo = async (userNodeId: string) => {
   }
 };
 
-export const fetchStickers = async () => {
+export const fetchMyStickers = async () => {
   const response = await fetch(`${API_URL}/domain/content/sticker/get-my-contents`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    alert('스티커를 불러오는데 실패했습니다.');
+    window.location.href = '/';
+  } else {
+    const data = await response.json();
+    return data;
+  }
+};
+
+export const fetchStickers = async (userNodeId: string) => {
+  const response = await fetch(`${API_URL}/domain/content/sticker/get-members`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ user_node_id: userNodeId }),
     credentials: 'include',
   });
   if (!response.ok) {
