@@ -78,7 +78,7 @@ export default function MyProfile() {
       return;
     } else {
       alert('스티커가 삭제되었습니다.');
-      await fetchStickers().then((data) => setStickers(data));
+      await fetchMyStickers().then((data) => setStickers(data));
     }
   };
 
@@ -144,7 +144,15 @@ export default function MyProfile() {
                     정보 변경
                   </button>
                 </div>
-                <Image src={userImage} alt="User profile" width={100} height={100} className="rounded-full" />
+                <Image
+                  src={userInfo.profile_image_url || userImage}
+                  alt="User profile"
+                  width={100}
+                  height={100}
+                  className="rounded-full object-cover"
+                  style={{ width: '100px', height: '100px' }}
+                />
+
                 <p className="text-gray-600 mb-2 font-bold">{userInfo.username}</p>
                 <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
                   {userInfo.my_memo}
@@ -305,7 +313,7 @@ export default function MyProfile() {
         isOpen={isStickerModalOpen}
         onClose={() => {
           setIsStickerModalOpen(false);
-          fetchStickers().then((data) => setStickers(data));
+          fetchMyStickers().then((data) => setStickers(data));
         }}
         sticker={selectedSticker}
       />
@@ -313,7 +321,7 @@ export default function MyProfile() {
         isOpen={isCreateStickerModalOpen}
         onClose={() => {
           setIsCreateStickerModalOpen(false);
-          fetchStickers().then((data) => setStickers(data));
+          fetchMyStickers().then((data) => setStickers(data));
         }}
       />
       <PostModal
