@@ -21,6 +21,14 @@ const visnet_options = {
   },
   physics: {
     enabled: true,
+    barnesHut: {
+      gravitationalConstant: -8000,
+      centralGravity: 0.3,
+      springLength: 50,
+      springConstant: 0.04,
+      damping: 0.09,
+      avoidOverlap: false,
+    },
   },
   interaction: {
     hover: true,
