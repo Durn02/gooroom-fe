@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-import style from './LandingPage.module.css';
+import style from '../style/LandingPage.module.css';
 
 import { API_URL } from '@/src/lib/config';
 import useUI from '@/src/hooks/useUI';
@@ -15,7 +15,7 @@ import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 
 const APIURL = API_URL;
 
-export function Landing() {
+export default function Landing() {
   const router = useRouter();
   const isLoggedIn = useIsLoginState();
 
@@ -33,73 +33,6 @@ export function Landing() {
   const { networkManager, networkContainer } = useNetwork(callbacks);
   const { uiManager } = useUI(networkManager);
 
-  const onSignoutButtonClickHandler = async () => {
-    const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
-    if (isSignout) {
-      alert('회원탈퇴를 진행합니다!');
-      try {
-        const response = await fetch(`${APIURL}/domain/auth/signout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.message === 'signout success') {
-            alert('회원탈퇴가 완료되었습니다.');
-            window.location.href = '/';
-          }
-        }
-      } catch (error) {
-        alert('unknown error occurred in onSignoutButtonClickHandler');
-        console.error(error);
-      }
-    }
-  };
-
-  const verifyAccessToken = async () => {
-    try {
-      const response = await fetch(`${API_URL}/domain/auth/verify-access-token`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log(data);
-        if (data.message == 'access token validation check successfull') {
-          console.log('isLoggedIn : ', isLoggedIn);
-        }
-      } else {
-        const refresh_response = await fetch(`${API_URL}/domain/auth/refresh-acc-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        if (refresh_response.ok) {
-          alert('refresh token success');
-          window.location.reload();
-          console.log('isLoggedIn : ', isLoggedIn);
-        } else {
-          console.log('isLoggedIn : ', isLoggedIn);
-        }
-      }
-    } catch (error) {
-      console.error(`Unknown error occurred in verifyAccessToken : ${error}`);
-    }
-  };
-
-  useEffect(() => {
-    verifyAccessToken();
-  }, []);
-
   useEffect(() => {
     if (selectedUserId === null) {
       return;
@@ -113,36 +46,11 @@ export function Landing() {
     } else {
       router.push('/neighborprofile');
     }
-  }, [selectedUserId, networkManager]);
+  }, [selectedUserId, networkManager, router]);
 
   useEffect(() => {
     //networkManager.readUnsentCast()
   }, [networkManager]);
-
-  const onLogoutButtonClickHandler = async () => {
-    try {
-      const response = await fetch(`${API_URL}/domain/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === 'logout success') {
-          // 서버가 보낸 메시지에 따라 조건 수정
-          alert('로그아웃합니다.');
-          localStorage.clear();
-          sessionStorage.clear();
-          console.log('isLoggedIn : ', isLoggedIn);
-          window.location.href = '/';
-        }
-      }
-    } catch (error) {
-      alert(error);
-    }
-  };
 
   const cast_function = () => {
     console.log('cast function');
