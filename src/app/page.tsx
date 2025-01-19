@@ -1,25 +1,22 @@
 'use client';
 
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-import style from '../style/LandingPage.module.css';
-
-import { API_URL } from '@/src/lib/config';
+import style from '../assets/styles/LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
-import { UserProfileContext } from '@/src/context/UserProfileContext';
 import { useIsLoginState } from '@/src/hooks/useIsLoginState';
-
-const APIURL = API_URL;
+import { onSignoutButtonClickHandler } from '../lib/api/sign';
+import { onLogoutButtonClickHandler } from '../lib/api/sign';
+import { encrypt } from '../utils/crypto';
 
 export default function Landing() {
   const router = useRouter();
   const isLoggedIn = useIsLoginState();
-
-  const { selectedUserId, setSelectedUserId } = useContext(UserProfileContext);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -34,7 +31,7 @@ export default function Landing() {
   const { uiManager } = useUI(networkManager);
 
   useEffect(() => {
-    if (selectedUserId === null) {
+    if (selectedUserId === '') {
       return;
     }
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
@@ -42,15 +39,13 @@ export default function Landing() {
     } else if (
       networkManager.getRoommatesWithNeighbors().some((instance) => instance.roommate.node_id === selectedUserId)
     ) {
-      router.push('/roommateprofile');
+      const encryptedUserId = encrypt(selectedUserId);
+      router.push(`/roommateprofile/${encodeURIComponent(encryptedUserId)}`);
     } else {
-      router.push('/neighborprofile');
+      const encryptedUserId = encrypt(selectedUserId);
+      router.push(`/neighborprofile/${encodeURIComponent(encryptedUserId)}`);
     }
   }, [selectedUserId, networkManager, router]);
-
-  useEffect(() => {
-    //networkManager.readUnsentCast()
-  }, [networkManager]);
 
   const cast_function = () => {
     console.log('cast function');

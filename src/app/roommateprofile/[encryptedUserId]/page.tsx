@@ -2,15 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import userImage from '../../lib/assets/images/user.png';
+import userImage from '@/src/assets/images/user.png';
 import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { fetchFriendInfo } from '@/src/lib/api/fetchData';
+import { EditBox } from '@/src/components/EditBox/EditBox';
+import { decrypt } from '@/src/utils/crypto';
 
-export default function NeighborProfile() {
+type Props = {
+  params: {
+    encryptedUserId: string;
+  };
+};
+
+export default function RoommateProfile({ params }: Props) {
+  const selectedUserId = decrypt(decodeURIComponent(params.encryptedUserId));
   const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
+  const [roommateMemo, setRoommateMemo] = useState<string>('');
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const { width, handleMouseDown } = useResizeSection({
@@ -22,15 +32,15 @@ export default function NeighborProfile() {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const selectedUserId = localStorage.getItem('selectedUserId');
 
   useEffect(() => {
     fetchFriendInfo(selectedUserId).then((data) => {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);
+      setRoommateMemo(data.roommate_edge.memo);
     });
-  }, []);
+  }, [selectedUserId]);
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
     setSelectedSticker(selected_sticker);
@@ -71,6 +81,7 @@ export default function NeighborProfile() {
                     {friendInfo.my_memo}
                   </p>
                 )}
+                <EditBox currentMemo={roommateMemo} setRoommateMemo={setRoommateMemo} />
                 <div className="flex flex-wrap gap-2">
                   {friendInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
