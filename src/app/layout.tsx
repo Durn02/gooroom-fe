@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
+// import './globals.css';
+import '@/src/assets/styles/globals.css';
 
 import dynamic from 'next/dynamic';
 const IsLoginProvider = dynamic(() => import('@/src/context/IsLoginProvider'), { ssr: false });

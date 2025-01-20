@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import userImage from '../../lib/assets/images/user.png';
+import userImage from '@/src/assets/images/user.png';
 import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';

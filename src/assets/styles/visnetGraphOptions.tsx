@@ -27,7 +27,7 @@ const visnet_options = {
       springLength: 50,
       springConstant: 0.04,
       damping: 0.09,
-      avoidOverlap: false,
+      avoidOverlap: 1,
     },
   },
   interaction: {

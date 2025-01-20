@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-import style from '../assets/styles/LandingPage.module.css';
+import style from './LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { useIsLoginState } from '@/src/hooks/useIsLoginState';

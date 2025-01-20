@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
-import userImage from '../../lib/assets/images/user.png';
+import userImage from '@/src/assets/images/user.png';
 import ProfileModal from '@/src/components/Modals/ProfileModal/ProfileModal';
 import { UserInfo, Sticker, Post } from '@/src/types/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
