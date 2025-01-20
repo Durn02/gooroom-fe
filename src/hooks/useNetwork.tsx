@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, useRef } from 'react';
-import { fetchFriendsInManager } from '../api/networkManager/fetchFriends';
+import { fetchFriendsInManager } from '../lib/api/fetchFriends';
 import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
