@@ -2,18 +2,16 @@
 
 import { createContext } from 'react';
 
-type IsLoginContext = {
+type IsLoginContextType = {
   isLogin: boolean;
-  accessToken: string;
-  setAccessToken: SetState<string | null>;
   userId: string | null;
-  setUserId: SetState<string | null>;
+  login: (id: string) => void;
+  logout: () => void;
 };
 
-export const IsLoginContext = createContext<IsLoginContext>({
+export const IsLoginContext = createContext<IsLoginContextType>({
   isLogin: false,
-  accessToken: '',
-  setAccessToken: () => undefined,
-  userId: '',
-  setUserId: () => undefined,
+  userId: null,
+  login: () => undefined,
+  logout: () => undefined,
 });

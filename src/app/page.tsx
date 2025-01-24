@@ -9,13 +9,13 @@ import style from './LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { useIsLoginState } from '@/src/hooks/useIsLoginState';
-import { onSignoutButtonClickHandler } from '../lib/api/sign';
-import { onLogoutButtonClickHandler } from '../lib/api/sign';
+import { onSignoutButtonClickHandler, onLogoutButtonClickHandler } from '../lib/api/sign';
+import { verifyAccessToken } from '../lib/api/verifyAccessToken';
 import { encrypt } from '../utils/crypto';
 
 export default function Landing() {
   const router = useRouter();
-  const isLoggedIn = useIsLoginState();
+  const { isLogin, login, logout } = useIsLoginState();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   const callbacks = {
@@ -29,6 +29,17 @@ export default function Landing() {
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
   const { uiManager } = useUI(networkManager);
+
+  useEffect(() => {
+    console.log('isLogin in landing : ', isLogin);
+    if (!isLogin) {
+      verifyAccessToken().then((userNodeId) => {
+        if (userNodeId) {
+          login(userNodeId);
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -53,7 +64,7 @@ export default function Landing() {
 
   return (
     <>
-      {!isLoggedIn && (
+      {!isLogin && (
         <>
           <div>gooroom에 오신 것을 환영합니다</div>
           <div className={style.toSignInPageButtonContainer}>
@@ -69,7 +80,7 @@ export default function Landing() {
         </>
       )}
 
-      {isLoggedIn && (
+      {isLogin && (
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>
@@ -81,7 +92,7 @@ export default function Landing() {
               <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
             <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
+              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler(logout)} />
             </div>
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />

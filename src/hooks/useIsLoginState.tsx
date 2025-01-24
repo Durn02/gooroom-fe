@@ -8,5 +8,5 @@ export function useIsLoginState() {
     throw new Error('useSetIsLogin must be used within an IsLoginProvider');
   }
 
-  return context.isLogin;
+  return context;
 }

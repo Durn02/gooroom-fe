@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 
-export const onSignoutButtonClickHandler = async (): Promise<boolean> => {
+export const onSignoutButtonClickHandler = async () => {
   const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
   if (isSignout) {
     alert('회원탈퇴를 진행합니다!');
@@ -15,7 +15,7 @@ export const onSignoutButtonClickHandler = async (): Promise<boolean> => {
       if (response.ok) {
         const data = await response.json();
         if (data.message === 'signout success') {
-          return true;
+          // return true;
           // alert('회원탈퇴가 완료되었습니다.');
           // window.location.href = '/';
         }
@@ -27,7 +27,7 @@ export const onSignoutButtonClickHandler = async (): Promise<boolean> => {
   }
 };
 
-export const onLogoutButtonClickHandler = async (): Promise<boolean> => {
+export const onLogoutButtonClickHandler = async (logout: () => void) => {
   try {
     const response = await fetch(`${API_URL}/domain/auth/logout`, {
       method: 'POST',
@@ -39,12 +39,7 @@ export const onLogoutButtonClickHandler = async (): Promise<boolean> => {
     if (response.ok) {
       const data = await response.json();
       if (data.message === 'logout success') {
-        // 서버가 보낸 메시지에 따라 조건 수정
-        return true;
-        //   alert('로그아웃합니다.');
-        //   localStorage.clear();
-        //   sessionStorage.clear();
-        //   window.location.href = '/';
+        logout();
       }
     }
   } catch (error) {

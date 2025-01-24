@@ -1,6 +1,6 @@
 import { API_URL } from '@/src/lib/config';
 
-export const verifyAccessToken = async (): Promise<boolean> => {
+export const verifyAccessToken = async () => {
   try {
     const response = await fetch(`${API_URL}/domain/auth/verify-access-token`, {
       method: 'GET',
@@ -11,25 +11,28 @@ export const verifyAccessToken = async (): Promise<boolean> => {
     });
 
     if (response.ok) {
-      const data = await response.json();
-      console.log(data);
-      if (data.message == 'access token validation check successfull') {
-        return true;
-      }
+      const user_node_id = await response.json();
+      console.log('acc token is valid');
+      return user_node_id;
     } else {
-      const refresh_response = await fetch(`${API_URL}/domain/auth/refresh-acc-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-      if (refresh_response.ok) {
-        alert('refresh token success');
-        return true;
-      } else {
-        return false;
+      const errorData = await response.json();
+      if (errorData.detail === 'Token has expired') {
+        const refresh_response = await fetch(`${API_URL}/domain/auth/refresh-acc-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (refresh_response.ok) {
+          console.log('Refresh token successful');
+          const user_node_id = await refresh_response.json();
+          return user_node_id;
+        } else {
+          return false;
+        }
       }
+      return false;
     }
   } catch (error) {
     console.error(`Unknown error occurred in verifyAccessToken : ${error}`);

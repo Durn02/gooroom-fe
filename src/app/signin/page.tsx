@@ -6,8 +6,8 @@ import DefaultButton from '@/src/components/Button/DefaultButton';
 import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
 import { useState, useEffect } from 'react';
-// import { IsLoginContext } from '@/lib/context/IsLoginContext';
 import { API_URL } from '@/src/lib/config';
+import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 
 type signinRequestData = {
   email: string;
@@ -23,9 +23,8 @@ type VerifyRequestData = {
 const APIURL = API_URL;
 
 export default function Signin() {
-  // const loginCtx = useContext(IsLoginContext);
-  console.log(APIURL);
   const [emailVerification, setEmailVerification] = useState(false);
+  const { login, isLogin } = useIsLoginState();
 
   const onSignInButtonClickHandler = () => {
     const signinRequestData: signinRequestData = {
@@ -49,7 +48,7 @@ export default function Signin() {
         })
           .then((res) => res.json())
           .then((data) => {
-            console.log(data.message);
+            console.log('data in login : ', data);
             if (data.detail === 'not registered email') {
               alert('가입되지 않은 이메일입니다');
             } else if (data.detail === 'not verified email') {
@@ -57,12 +56,11 @@ export default function Signin() {
               setEmailVerification(true);
             } else if (data.detail === 'inconsistent password') {
               alert('비밀번호가 일치하지 않습니다');
-            } else if (data.message === 'login success') {
-              localStorage.setItem('userId', `"${userEmailInput}"`);
+            } else {
+              login(data);
+              console.log('isLogin after login : ', isLogin);
               alert('로그인 성공');
               window?.location?.replace('/');
-            } else {
-              alert('알 수 없는 이유로 로그인에 실패했습니다');
             }
           });
       } catch (e) {
