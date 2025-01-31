@@ -29,6 +29,7 @@ export const onSignoutButtonClickHandler = async (): Promise<boolean> => {
 
 export const onLogoutButtonClickHandler = async (): Promise<boolean> => {
   try {
+    alert('로그아웃 합니다.');
     const response = await fetch(`${API_URL}/domain/auth/logout`, {
       method: 'POST',
       headers: {

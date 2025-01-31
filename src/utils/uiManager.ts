@@ -5,8 +5,11 @@ export class UIManager {
 
   private ui_position: { x: number; y: number } | null = null; // 선택된 UI 위치
   private cast_positions: Record<string, { x: number; y: number; nodeId: number }> = {}; // 모든 위치 정보
-  private scale: number = 1; // 기본 배율
+  private contextMenuPosition: { x: number; y: number } | null = null;
+  private contextMenuItems: string[] = [];
+  private contextMenuUserId: string | null = null;
 
+  private scale: number = 1; // 기본 배율
   private isDrowing: boolean = false;
 
   constructor(networkManager: NetworkManager) {
@@ -18,7 +21,16 @@ export class UIManager {
       );
     });
   }
-
+  private showContextMenu(x: number, y: number, items: string[], userId: string | null) {
+    this.contextMenuPosition = { x, y };
+    this.contextMenuItems = items;
+    this.contextMenuUserId = userId;
+  }
+  private hideContextMenu() {
+    this.contextMenuPosition = null;
+    this.contextMenuItems = [];
+    this.contextMenuUserId = null;
+  }
   /**
    * 이벤트 처리 핸들러
    */
@@ -31,6 +43,7 @@ export class UIManager {
         this.destroyAllCasts(); // Cast용 div 제거
         this.isDrowing = true;
         break;
+
       case 'finishDrawing':
         this.cast_positions = Object.entries(data).reduce(
           (acc, [nodeId, pos]) => {
@@ -46,6 +59,7 @@ export class UIManager {
 
         this.isDrowing = false;
         break;
+
       case 'clickNode':
         if (!data || Object.keys(data).length === 0) {
           this.ui_position = null; // UI 상태 초기화
@@ -80,6 +94,20 @@ export class UIManager {
         );
         break;
 
+      case 'loggedInUserClicked':
+        if (data && 'x' in data && 'y' in data) {
+          this.showContextMenu(data.x, data.y, ['View my profile'], null);
+        }
+        break;
+      case 'otherNodeClicked':
+        if (data && 'x' in data && 'y' in data && data.userId) {
+          this.showContextMenu(data.x, data.y, ['View profile'], data.userId);
+        }
+        break;
+
+      case 'backgroundClicked':
+        this.hideContextMenu();
+        break;
       default:
         console.warn(`Unhandled event type: ${eventType}`);
     }

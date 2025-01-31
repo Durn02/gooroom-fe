@@ -49,7 +49,7 @@ export default function Signin() {
         })
           .then((res) => res.json())
           .then((data) => {
-            console.log(data.message);
+            console.log(data);
             if (data.detail === 'not registered email') {
               alert('가입되지 않은 이메일입니다');
             } else if (data.detail === 'not verified email') {
@@ -62,7 +62,8 @@ export default function Signin() {
               alert('로그인 성공');
               window?.location?.replace('/');
             } else {
-              alert('알 수 없는 이유로 로그인에 실패했습니다');
+              window?.location?.replace('/');
+              // alert('알 수 없는 이유로 로그인에 실패했습니다');
             }
           });
       } catch (e) {

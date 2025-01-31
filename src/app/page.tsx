@@ -10,13 +10,24 @@ import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 import { onSignoutButtonClickHandler } from '../lib/api/sign';
-import { onLogoutButtonClickHandler } from '../lib/api/sign';
 import { encrypt } from '../utils/crypto';
+import { verifyAccessToken } from '../lib/api/verifyAccessToken';
+import ContextMenu from '../components/ContextMenu/ContextMenu';
+import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
 export default function Landing() {
   const router = useRouter();
   const isLoggedIn = useIsLoginState();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [contextMenu, setContextMenu] = useState<{
+    position: { x: number; y: number } | null;
+    items: [string, () => void][];
+    userId: string | null;
+  }>({
+    position: null,
+    items: [],
+    userId: null,
+  });
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -46,6 +57,42 @@ export default function Landing() {
       router.push(`/neighborprofile/${encodeURIComponent(encryptedUserId)}`);
     }
   }, [selectedUserId, networkManager, router]);
+
+  useEffect(() => {
+    if (networkManager) {
+      networkManager.setObserver(({ event, data }) => {
+        switch (event) {
+          case 'loggedInUserClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: MY_NODE_MENU_ITEMS as [string, () => void][],
+              userId: null,
+            });
+            break;
+          case 'roommateNodeClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
+              userId: (data as { x: number; y: number; userId: string }).userId,
+            });
+            break;
+          case 'neighborNodeClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
+              userId: (data as { x: number; y: number; userId: string }).userId,
+            });
+            break;
+          case 'backgroundClicked':
+            setContextMenu({ position: null, items: [], userId: null });
+            break;
+        }
+      });
+    }
+  }, [networkManager]);
+  useEffect(() => {
+    verifyAccessToken();
+  }, []);
 
   const cast_function = () => {
     console.log('cast function');
@@ -80,14 +127,17 @@ export default function Landing() {
               <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
               <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
-            <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler()} />
-            </div>
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
             </div>
             <div className={style.visNetContainer}>
               <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
+              <ContextMenu
+                items={contextMenu.items}
+                position={contextMenu.position}
+                onClose={() => setContextMenu({ position: null, items: [], userId: null })}
+                userId={contextMenu.userId}
+              />
             </div>
           </div>
         </>

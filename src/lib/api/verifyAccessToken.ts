@@ -26,8 +26,11 @@ export const verifyAccessToken = async (): Promise<boolean> => {
       });
       if (refresh_response.ok) {
         alert('refresh token success');
+        window.location.reload();
         return true;
       } else {
+        alert('새롭게 로그인 해야합니다.');
+        window.location.href = '/signin';
         return false;
       }
     }
