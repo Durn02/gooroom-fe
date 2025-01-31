@@ -10,7 +10,6 @@ export const fetchMyInfo = async () => {
   });
   if (!response.ok) {
     alert('사용자 정보를 불러오는데 실패했습니다.');
-    window.location.href = '/';
     return;
   } else {
     const data = await response.json();

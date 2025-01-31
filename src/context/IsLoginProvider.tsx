@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { IsLoginContext } from './IsLoginContext';
-import useTabSharedState from '../hooks/tabShared';
+// import useTabSharedState from '../hooks/tabShared';
 
 export default function IsLoginProvider({ children }: React.PropsWithChildren) {
-  const [userId, setUserId] = useTabSharedState<string | null>('', null);
+  // const [userId, setUserId] = useTabSharedState<string | null>('', null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const login = useCallback(
     (id: string) => {

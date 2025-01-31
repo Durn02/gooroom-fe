@@ -8,8 +8,6 @@ export function generateNodes(
   roommatesWithNeighbors: RoommateWithNeighbors[],
   neighborsData: User[],
 ): Node[] {
-  console.log('roommatesWithNeighbors : ', roommatesWithNeighbors);
-
   const userNode: Node = {
     id: loggedInUser.node_id,
     label: loggedInUser.nickname,

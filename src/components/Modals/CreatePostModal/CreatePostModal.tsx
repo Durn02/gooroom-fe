@@ -11,7 +11,7 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) => {
-  const selectedUserId = localStorage.getItem('selectedUserId');
+  // const selectedUserId = localStorage.getItem('selectedUserId');
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [postData, setPostData] = useState<Partial<Post>>({

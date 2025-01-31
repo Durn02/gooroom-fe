@@ -11,7 +11,7 @@ interface CreateStickerModalProps {
 }
 
 const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose }) => {
-  const selectedUserId = localStorage.getItem('selectedUserId');
+  // const selectedUserId = localStorage.getItem('selectedUserId');
   const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);

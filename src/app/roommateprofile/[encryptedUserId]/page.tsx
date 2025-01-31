@@ -10,6 +10,7 @@ import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { fetchFriendInfo } from '@/src/lib/api/fetchData';
 import { EditBox } from '@/src/components/EditBox/EditBox';
 import { decrypt } from '@/src/utils/crypto';
+import { useRouter } from 'next/navigation';
 
 type Props = {
   params: {
@@ -32,6 +33,7 @@ export default function RoommateProfile({ params }: Props) {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchFriendInfo(selectedUserId).then((data) => {
@@ -52,7 +54,7 @@ export default function RoommateProfile({ params }: Props) {
   };
 
   const gohomeButtonHandler = () => {
-    window.location.href = '/';
+    router.back();
   };
 
   return (

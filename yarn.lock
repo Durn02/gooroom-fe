@@ -3394,6 +3394,7 @@ __metadata:
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-prettier: "npm:^5.2.1"
     gsap: "npm:^3.12.5"
+    idb: "npm:^8.0.1"
     ky: "npm:^1.7.2"
     ky-universal: "npm:^0.12.0"
     next: "npm:14.2.13"
@@ -3530,6 +3531,13 @@ __metadata:
   dependencies:
     safer-buffer: "npm:>= 2.1.2 < 3.0.0"
   checksum: 10c0/98102bc66b33fcf5ac044099d1257ba0b7ad5e3ccd3221f34dd508ab4070edff183276221684e1e0555b145fce0850c9f7d2b60a9fcac50fbb4ea0d6e845a3b1
+  languageName: node
+  linkType: hard
+
+"idb@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "idb@npm:8.0.1"
+  checksum: 10c0/01489040a91ebb0be18c0d77a92f336fcb965049014b14cce493c5f6cefdc7e3b4a95aa6a6f1024981eecb52f3745e370ac29c6e5dcb3b9e9e29e925e1120fb4
   languageName: node
   linkType: hard
 
