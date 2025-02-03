@@ -15,7 +15,7 @@ import { encrypt } from '../utils/crypto';
 
 export default function Landing() {
   const router = useRouter();
-  const { isLogin, login, logout } = useIsLoginState();
+  const { isLogin, userId, login, logout } = useIsLoginState();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   const callbacks = {
@@ -32,6 +32,7 @@ export default function Landing() {
 
   useEffect(() => {
     console.log('isLogin in landing : ', isLogin);
+    console.log('userId in landing : ', userId);
     if (!isLogin) {
       verifyAccessToken().then((userNodeId) => {
         if (userNodeId) {

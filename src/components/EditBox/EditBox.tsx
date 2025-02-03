@@ -7,7 +7,7 @@ export const EditBox = ({ currentMemo, setRoommateMemo }) => {
   const [newMemo, setNewMemo] = useState(currentMemo);
   const [isHovered, setIsHovered] = useState(false);
   const [isMemoChanged, setIsMemoChanged] = useState(false);
-  const selectedUserId = localStorage.getItem('selectedUserId');
+  // const selectedUserId = localStorage.getItem('selectedUserId');
   const textareaRef = useRef(null);
 
   useEffect(() => {

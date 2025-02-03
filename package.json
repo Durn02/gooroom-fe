@@ -14,6 +14,7 @@
     "@types/react-transition-group": "^4.4.11",
     "crypto-js": "^4.2.0",
     "gsap": "^3.12.5",
+    "idb": "^8.0.1",
     "ky": "^1.7.2",
     "ky-universal": "^0.12.0",
     "next": "14.2.13",
