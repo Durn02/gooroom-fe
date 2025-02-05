@@ -12,7 +12,7 @@ import CreateStickerModal from '@/src/components/Modals/CreateStickerModal/Creat
 import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { deleteFromS3 } from '@/src/lib/s3/handleS3';
-import { fetchPosts, fetchMyStickers, fetchMyInfo } from '@/src/lib/api/fetchData';
+import { userApi, postApi, stickerApi } from '@/src/lib/api';
 
 export default function MyProfile() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -32,9 +32,9 @@ export default function MyProfile() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchMyInfo().then((data) => setUserInfo(data));
-    fetchMyStickers().then((data) => setStickers(data));
-    fetchPosts().then((data) => setPosts(data));
+    userApi.fetchMyInfo().then((data) => setUserInfo(data));
+    stickerApi.fetchMyStickers().then((data) => setStickers(data));
+    postApi.fetchPosts().then((data) => setPosts(data));
   }, []);
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
@@ -78,7 +78,7 @@ export default function MyProfile() {
       return;
     } else {
       alert('스티커가 삭제되었습니다.');
-      await fetchMyStickers().then((data) => setStickers(data));
+      await stickerApi.fetchMyStickers().then((data) => setStickers(data));
     }
   };
 
@@ -305,7 +305,7 @@ export default function MyProfile() {
         isOpen={isProfileModalOpen}
         onClose={() => {
           setIsProfileModalOpen(false);
-          fetchMyInfo().then((data) => setUserInfo(data));
+          userApi.fetchMyInfo().then((data) => setUserInfo(data));
         }}
         myProfile={userInfo}
       />
@@ -313,7 +313,7 @@ export default function MyProfile() {
         isOpen={isStickerModalOpen}
         onClose={() => {
           setIsStickerModalOpen(false);
-          fetchMyStickers().then((data) => setStickers(data));
+          stickerApi.fetchMyStickers().then((data) => setStickers(data));
         }}
         sticker={selectedSticker}
       />
@@ -321,14 +321,14 @@ export default function MyProfile() {
         isOpen={isCreateStickerModalOpen}
         onClose={() => {
           setIsCreateStickerModalOpen(false);
-          fetchMyStickers().then((data) => setStickers(data));
+          stickerApi.fetchMyStickers().then((data) => setStickers(data));
         }}
       />
       <PostModal
         isOpen={isPostModalOpen}
         onClose={() => {
           setIsPostModalOpen(false);
-          fetchPosts().then((data) => setPosts(data));
+          postApi.fetchPosts().then((data) => setPosts(data));
         }}
         post={selectedPost}
       />
@@ -336,7 +336,7 @@ export default function MyProfile() {
         isOpen={isCreatePostModalOpen}
         onClose={() => {
           setIsCreatePostModalOpen(false);
-          fetchPosts().then((data) => setPosts(data));
+          postApi.fetchPosts().then((data) => setPosts(data));
         }}
       />
     </div>

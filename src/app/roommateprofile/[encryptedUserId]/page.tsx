@@ -7,7 +7,7 @@ import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
-import { fetchFriendInfo } from '@/src/lib/api/fetchData';
+import { friendApi } from '@/src/lib/api';
 import { EditBox } from '@/src/components/EditBox/EditBox';
 import { decrypt } from '@/src/utils/crypto';
 import { useRouter } from 'next/navigation';
@@ -36,7 +36,7 @@ export default function RoommateProfile({ params }: Props) {
   const router = useRouter();
 
   useEffect(() => {
-    fetchFriendInfo(selectedUserId).then((data) => {
+    friendApi.fetchFriendInfo(selectedUserId).then((data) => {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);

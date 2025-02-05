@@ -9,8 +9,7 @@ import style from './LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { useIsLoginState } from '@/src/hooks/useIsLoginState';
-import { onSignoutButtonClickHandler, onLogoutButtonClickHandler } from '../lib/api/sign';
-import { verifyAccessToken } from '../lib/api/verifyAccessToken';
+import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 
 export default function Landing() {
@@ -34,9 +33,9 @@ export default function Landing() {
     console.log('isLogin in landing : ', isLogin);
     console.log('userId in landing : ', userId);
     if (!isLogin) {
-      verifyAccessToken().then((userNodeId) => {
-        if (userNodeId) {
-          login(userNodeId);
+      userApi.fetchMyInfo().then((userData) => {
+        if (userData) {
+          login(userData.node_id);
         }
       });
     }
@@ -93,10 +92,10 @@ export default function Landing() {
               <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
             <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler(logout)} />
+              <DefaultButton placeholder="로그아웃" onClick={() => userApi.onLogoutButtonClickHandler(logout)} />
             </div>
             <div className={style.signoutButtonContainer}>
-              <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
+              <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
             <div className={style.visNetContainer}>
               <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />

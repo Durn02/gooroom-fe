@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_URL } from '@/src/lib/config';
 import { UserInfo } from '@/src/types/profilePage.type';
-import { fetchMyInfo } from '@/src/lib/api/fetchData';
+import { userApi } from '@/src/lib/api';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       username: '',
       node_id: '',
       tags: [],
+      profile_image_url: '',
     },
   );
   const [newTags, setNewTags] = useState<string>('');
@@ -53,6 +54,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         my_memo: myProfile.my_memo || '',
         node_id: myProfile.node_id || '',
         tags: myProfile.tags || [],
+        profile_image_url: '',
       });
     }
   }, [myProfile]);
@@ -107,7 +109,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
 
       if (response.ok) {
         await response.json();
-        const data = await fetchMyInfo();
+        const data = await userApi.fetchMyInfo();
         setProfileData(data);
         alert('프로필이 성공적으로 저장되었습니다.');
         onClose();

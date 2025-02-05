@@ -4,6 +4,7 @@ import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { uploadToS3 } from '@/src/lib/s3/handleS3';
+import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 
 interface CreateStickerModalProps {
   isOpen: boolean;
@@ -11,8 +12,8 @@ interface CreateStickerModalProps {
 }
 
 const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose }) => {
-  // const selectedUserId = localStorage.getItem('selectedUserId');
   const [isVisible, setIsVisible] = useState(false);
+  const { userId } = useIsLoginState();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const router = useRouter();
@@ -57,12 +58,12 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
       const uploadedUrls = await Promise.all(
         images.map(async (file, index) => {
           try {
-            if (!selectedUserId) {
+            if (!userId) {
               alert('로그인 시간이 만료되었습니다.');
               router.push('/');
               throw new Error('User not found');
             }
-            return await uploadToS3(file, index, selectedUserId);
+            return await uploadToS3(file, index, userId);
           } catch (error) {
             console.error('Error uploading to S3:', error);
             throw new Error('Failed to upload image to S3');
