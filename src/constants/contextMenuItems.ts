@@ -1,5 +1,5 @@
 import { onLogoutButtonClickHandler } from '../lib/api/sign';
-import { API_URL } from '../lib/config';
+import { encrypt } from '../utils/crypto';
 
 const viewMyProfile = () => {
   window.location.href = '/myprofile';
@@ -12,7 +12,7 @@ const viewBlockMuteList = () => {
 };
 
 const viewRoommateProfile = (nodeId: string) => {
-  const encryptedUserId = encodeURIComponent(nodeId);
+  const encryptedUserId = encodeURIComponent(encrypt(nodeId));
   window.location.href = `/roommateprofile/${encryptedUserId}`;
 };
 
