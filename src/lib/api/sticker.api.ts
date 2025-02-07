@@ -6,7 +6,7 @@ export const fetchMyStickers = async () => {
     return data;
   } catch (error) {
     console.error('스티커를 불러오는데 실패했습니다.', error);
-    window.location.href = '/';
+    // window.location.href = '/';
     throw error;
   }
 };
@@ -19,7 +19,7 @@ export const fetchStickers = async (userNodeId: string) => {
     return data;
   } catch (error) {
     console.error('스티커를 불러오는데 실패했습니다.', error);
-    window.location.href = '/';
+    // window.location.href = '/';
     throw error;
   }
 };

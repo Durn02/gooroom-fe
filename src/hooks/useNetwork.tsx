@@ -27,9 +27,6 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
         loggedInUser = fetchedData.loggedInUser;
         neighborsData = fetchedData.neighborsData;
         roommatesWithNeighbors = fetchedData.roommatesWithNeighbors;
-
-        console.log('roommatesWithNeighbors : ', roommatesWithNeighbors);
-        console.log('neighborsData : ', neighborsData);
         saveRoommates(roommatesWithNeighbors);
         saveDatas('neighbors', neighborsData);
       }

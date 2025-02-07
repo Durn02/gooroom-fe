@@ -2498,6 +2498,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dequal@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "dequal@npm:2.0.3"
+  checksum: 10c0/f98860cdf58b64991ae10205137c0e97d384c3a4edc7f807603887b7c4b850af1224a33d88012009f150861cbee4fa2d322c4cc04b9313bee312e47f6ecaa888
+  languageName: node
+  linkType: hard
+
 "didyoumean@npm:^1.2.2":
   version: 1.2.2
   resolution: "didyoumean@npm:1.2.2"
@@ -3461,6 +3468,7 @@ __metadata:
     react-icons: "npm:^5.4.0"
     react-transition-group: "npm:^4.4.5"
     server-only: "npm:^0.0.1"
+    swr: "npm:^2.3.1"
     tailwind-merge: "npm:^2.5.2"
     tailwindcss: "npm:^3.4.1"
     typescript: "npm:^5"
@@ -5501,6 +5509,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"swr@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "swr@npm:2.3.1"
+  dependencies:
+    dequal: "npm:^2.0.3"
+    use-sync-external-store: "npm:^1.4.0"
+  peerDependencies:
+    react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/e3da27ca5ed68a0f39ca28484059763e6ec88916ea8782b2736220a2f37a90d92e75bacc98f085093fd4983739be0ee9905b91fb69481bea5c8d5b20e5ee0593
+  languageName: node
+  linkType: hard
+
 "synckit@npm:^0.9.1":
   version: 0.9.1
   resolution: "synckit@npm:0.9.1"
@@ -5786,6 +5806,15 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 10c0/4ef57b45aa820d7ac6496e9208559986c665e49447cb072744c13b66925a362d96dd5a46c4530a6b8e203e5db5fe849369444440cb22ecfc26c679359e5dfa3c
+  languageName: node
+  linkType: hard
+
+"use-sync-external-store@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "use-sync-external-store@npm:1.4.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/ec011a5055962c0f6b509d6e78c0b143f8cd069890ae370528753053c55e3b360d3648e76cfaa854faa7a59eb08d6c5fb1015e60ffde9046d32f5b2a295acea5
   languageName: node
   linkType: hard
 

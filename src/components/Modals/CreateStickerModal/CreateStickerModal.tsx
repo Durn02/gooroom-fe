@@ -4,16 +4,15 @@ import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { uploadToS3 } from '@/src/lib/s3/handleS3';
-import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 
 interface CreateStickerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string;
 }
 
-const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose }) => {
+const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose, userId }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { userId } = useIsLoginState();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const router = useRouter();

@@ -2,19 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
-import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 
 export default function Landing() {
   const router = useRouter();
-  const { isLogin, userId, login, logout } = useIsLoginState();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   const callbacks = {
@@ -29,17 +26,16 @@ export default function Landing() {
   const { networkManager, networkContainer } = useNetwork(callbacks);
   const { uiManager } = useUI(networkManager);
 
-  useEffect(() => {
-    console.log('isLogin in landing : ', isLogin);
-    console.log('userId in landing : ', userId);
-    if (!isLogin) {
-      userApi.fetchMyInfo().then((userData) => {
-        if (userData) {
-          login(userData.node_id);
-        }
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   console.log('networkManager set');
+  //   if (networkManager == undefined) {
+  //     console.log('setIsLoading set as false');
+  //     setIsLoading(true);
+  //   } else {
+  //     console.log('setIsLoading set as true');
+  //     setIsLoading(false);
+  //   }
+  // }, [networkManager]);
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -64,23 +60,9 @@ export default function Landing() {
 
   return (
     <>
-      {!isLogin && (
-        <>
-          <div>gooroom에 오신 것을 환영합니다</div>
-          <div className={style.toSignInPageButtonContainer}>
-            <Link href={'signin'}>
-              <DefaultButton placeholder="로그인 페이지로" />
-            </Link>
-          </div>
-          <div className={style.toSignUpPageButtonContainer}>
-            <Link href={'signup'}>
-              <DefaultButton placeholder="회원가입 페이지로" />
-            </Link>
-          </div>
-        </>
-      )}
+      {/* {isLoading && <div>isLoading</div>} */}
 
-      {isLogin && (
+      {true && (
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>
@@ -92,7 +74,7 @@ export default function Landing() {
               <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
             <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => userApi.onLogoutButtonClickHandler(logout)} />
+              <DefaultButton placeholder="로그아웃" onClick={() => userApi.onLogoutButtonClickHandler()} />
             </div>
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />

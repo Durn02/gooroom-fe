@@ -1,4 +1,5 @@
 import apiClient from './axiosApiClient';
+import { logout } from '../sign';
 
 export const fetchMyInfo = async () => {
   try {
@@ -13,15 +14,12 @@ export const fetchMyInfo = async () => {
 export const onSignoutButtonClickHandler = async () => {
   const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
   if (!isSignout) return;
-
   alert('회원탈퇴를 진행합니다!');
-
   try {
     const { data } = await apiClient.post('/domain/auth/signout');
-
     if (data.message === 'signout success') {
       alert('회원탈퇴가 완료되었습니다.');
-      window.location.href = '/';
+      logout();
     }
   } catch (error) {
     console.error('회원탈퇴 중 오류 발생:', error);
@@ -29,7 +27,7 @@ export const onSignoutButtonClickHandler = async () => {
   }
 };
 
-export const onLogoutButtonClickHandler = async (logout: () => void) => {
+export const onLogoutButtonClickHandler = async () => {
   try {
     const { data } = await apiClient.post('/domain/auth/logout');
 

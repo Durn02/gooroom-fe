@@ -4,16 +4,16 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/src/types/profilePage.type';
 import { uploadToS3 } from '@/src/lib/s3/handleS3';
-import { useIsLoginState } from '@/src/hooks/useIsLoginState';
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string;
 }
 
-const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) => {
+const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, userId }) => {
+  // const selectedUserId = localStorage.getItem('selectedUserId');
   const router = useRouter();
-  const {userId} = useIsLoginState()
   const [isVisible, setIsVisible] = useState(false);
   const [postData, setPostData] = useState<Partial<Post>>({
     title: '',

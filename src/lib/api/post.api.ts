@@ -6,7 +6,7 @@ export const fetchPosts = async () => {
     return data;
   } catch (error) {
     console.error('게시글을 불러오는데 실패했습니다.', error);
-    window.location.href = '/';
+    // window.location.href = '/';
     throw error;
   }
 };

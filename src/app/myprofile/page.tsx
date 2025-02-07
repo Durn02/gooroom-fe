@@ -13,8 +13,10 @@ import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostM
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { deleteFromS3 } from '@/src/lib/s3/handleS3';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
+import { useRouter } from 'next/navigation';
 
 export default function MyProfile() {
+  const router = useRouter();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -47,7 +49,7 @@ export default function MyProfile() {
   };
 
   const gohomeButtonHandler = () => {
-    window.location.href = '/';
+    router.back();
   };
 
   const handleDeleteSticker = async (sticker: Sticker) => {
@@ -317,13 +319,16 @@ export default function MyProfile() {
         }}
         sticker={selectedSticker}
       />
-      <CreateStickerModal
-        isOpen={isCreateStickerModalOpen}
-        onClose={() => {
-          setIsCreateStickerModalOpen(false);
-          stickerApi.fetchMyStickers().then((data) => setStickers(data));
-        }}
-      />
+      {userInfo && (
+        <CreateStickerModal
+          isOpen={isCreateStickerModalOpen}
+          onClose={() => {
+            setIsCreateStickerModalOpen(false);
+            stickerApi.fetchMyStickers().then((data) => setStickers(data));
+          }}
+          userId={userInfo.user_node_id}
+        />
+      )}
       <PostModal
         isOpen={isPostModalOpen}
         onClose={() => {
@@ -332,13 +337,16 @@ export default function MyProfile() {
         }}
         post={selectedPost}
       />
-      <CreatePostModal
-        isOpen={isCreatePostModalOpen}
-        onClose={() => {
-          setIsCreatePostModalOpen(false);
-          postApi.fetchPosts().then((data) => setPosts(data));
-        }}
-      />
+      {userInfo && (
+        <CreatePostModal
+          isOpen={isCreatePostModalOpen}
+          onClose={() => {
+            setIsCreatePostModalOpen(false);
+            postApi.fetchPosts().then((data) => setPosts(data));
+          }}
+          userId={userInfo.user_node_id}
+        />
+      )}
     </div>
   );
 }
