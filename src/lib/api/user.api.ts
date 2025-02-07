@@ -1,5 +1,6 @@
 import apiClient from './axiosApiClient';
 import { logout } from '../sign';
+import axios from 'axios';
 
 export const fetchMyInfo = async () => {
   try {
@@ -37,5 +38,15 @@ export const onLogoutButtonClickHandler = async () => {
   } catch (error) {
     console.error('로그아웃 중 오류 발생:', error);
     alert('로그아웃 중 문제가 발생했습니다.');
+  }
+};
+
+export const checkLogin = async () => {
+  try {
+    await apiClient.get('domain/auth/verify-access-token');
+    return true;
+  } catch (error) {
+    console.error('access token 검증 실패', error);
+    throw error;
   }
 };

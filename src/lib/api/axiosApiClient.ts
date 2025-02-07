@@ -20,7 +20,7 @@ apiClient.interceptors.response.use(
         originalRequest._retry = true;
 
         try {
-          await axios.post(`${API_URL}/auth/verify-refresh-token`, {}, { withCredentials: true });
+          await axios.post(`${API_URL}/domain/auth/refresh-acc-token`, {}, { withCredentials: true });
 
           return apiClient(originalRequest);
         } catch (refreshError) {

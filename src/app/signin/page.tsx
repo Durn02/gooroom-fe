@@ -8,6 +8,7 @@ import PwInput from '@/src/components/Input/PwInput/PwInput';
 import { useState, useEffect } from 'react';
 import { API_URL } from '@/src/lib/config';
 import { useRouter } from 'next/navigation';
+import { userApi } from '@/src/lib/api';
 
 type signinRequestData = {
   email: string;
@@ -24,6 +25,9 @@ const APIURL = API_URL;
 
 export default function Signin() {
   const [emailVerification, setEmailVerification] = useState(false);
+  const [userEmailInput, setUserEmailInput] = useState('');
+  const [userPwInput, setUserPwInput] = useState('');
+  const [userVerifyInput, setUserVerifyCodeInput] = useState('');
   const router = useRouter();
 
   const onSignInButtonClickHandler = () => {
@@ -115,33 +119,14 @@ export default function Signin() {
       }
     }
   };
-  const [userEmailInput, setUserEmailInput] = useState('');
-  const [userPwInput, setUserPwInput] = useState('');
-  const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  // 로그인이 되어있는지 확인하는 useEffect
-  // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
-  // useEffect(() => {
-  //   const checkLogin = async () => {
-  //     try {
-  //       const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-  //         method: 'GET',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         credentials: 'include',
-  //       });
 
-  //       if (response.ok) {
-  //         alert('이미 로그인 되어있습니다.');
-  //         router.push('/');
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   };
-
-  //   checkLogin();
-  // }, []);
+  useEffect(() => {
+    const isLoggedIn = userApi.checkLogin();
+    if (isLoggedIn) {
+      alert('이미 로그인 되어있습니다');
+      router.push('/');
+    }
+  }, [router]);
 
   return (
     <>
