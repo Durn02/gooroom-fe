@@ -41,11 +41,11 @@ export const onLogoutButtonClickHandler = async (): Promise<boolean> => {
       const data = await response.json();
       if (data.message === 'logout success') {
         // 서버가 보낸 메시지에 따라 조건 수정
+        window.location.href = '/';
         return true;
         //   alert('로그아웃합니다.');
         //   localStorage.clear();
         //   sessionStorage.clear();
-        //   window.location.href = '/';
       }
     }
   } catch (error) {

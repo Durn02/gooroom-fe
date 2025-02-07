@@ -1,6 +1,6 @@
 // components/ContextMenu.tsx
 import React from 'react';
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 // import { encrypt } from '@/src/utils/crypto';
 
 interface ContextMenuProps {
@@ -11,47 +11,12 @@ interface ContextMenuProps {
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, onClose, userId }) => {
-  // const router = useRouter();
+  const router_in_component = useRouter();
   if (!position) return null;
 
-  // const handleItemClick = (item: string) => {
-  //   switch (item) {
-  //     case 'view my profile':
-  //       router.push('/myprofile');
-  //       break;
-  //     case 'view roommate profile':
-  //       const encryptedUserId = encrypt(userId);
-  //       router.push(`/roommateprofile/${encodeURIComponent(encryptedUserId)}`);
-  //       break;
-  //     case 'view neighbor profile':
-  //       const encryptedNeighborId = encrypt(userId);
-  //       router.push(`/neighborprofile/${encodeURIComponent(encryptedNeighborId)}`);
-  //       break;
-  //   }
-
-  //   onClose();
-  // };
-
-  const handleItemClick = (item: [string, (string) => void]) => {
+  const handleItemClick = (item: [string, (userId: string, router) => void]) => {
     const [, itemFunction] = item;
-
-    // Execute the associated function
-    itemFunction(userId);
-
-    // Additional routing logic if needed
-    // switch (itemName) {
-    //   case 'view my profile':
-    //     router.push('/myprofile');
-    //     break;
-    //   case 'view roommate profile':
-    //     const encryptedUserId = encrypt(userId);
-    //     router.push(`/roommateprofile/${encodeURIComponent(encryptedUserId)}`);
-    //     break;
-    //   case 'view neighbor profile':
-    //     const encryptedNeighborId = encrypt(userId);
-    //     router.push(`/neighborprofile/${encodeURIComponent(encryptedNeighborId)}`);
-    //     break;
-    // }
+    itemFunction(userId, router_in_component);
 
     onClose();
   };

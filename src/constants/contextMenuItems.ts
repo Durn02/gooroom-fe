@@ -11,9 +11,10 @@ const viewBlockMuteList = () => {
   alert('show block/mute list');
 };
 
-const viewRoommateProfile = (nodeId: string) => {
+const viewRoommateProfile = (nodeId: string, router) => {
   const encryptedUserId = encodeURIComponent(encrypt(nodeId));
-  window.location.href = `/roommateprofile/${encryptedUserId}`;
+  router.push(`/roommateprofile/${encryptedUserId}`);
+  // window.location.href = `/roommateprofile/${encryptedUserId}`;
 };
 
 export const MY_NODE_MENU_ITEMS = [
