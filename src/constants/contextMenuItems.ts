@@ -14,7 +14,11 @@ const viewBlockMuteList = () => {
 const viewRoommateProfile = (nodeId: string, router) => {
   const encryptedUserId = encodeURIComponent(encrypt(nodeId));
   router.push(`/roommateprofile/${encryptedUserId}`);
-  // window.location.href = `/roommateprofile/${encryptedUserId}`;
+};
+
+const viewNeighborProfile = (nodeId: string, router) => {
+  const encryptedUserId = encodeURIComponent(encrypt(nodeId));
+  router.push(`/neighborprofile/${encryptedUserId}`);
 };
 
 export const MY_NODE_MENU_ITEMS = [
@@ -26,13 +30,12 @@ export const MY_NODE_MENU_ITEMS = [
 
 export const ROOMMATE_NODE_MENU_ITEMS = [
   ['view roommate profile', viewRoommateProfile],
-  ['view roommate memo', () => {}],
   ['block', () => {}],
   ['mute', () => {}],
 ];
 
 export const NEIGHBOR_NODE_MENU_ITEMS = [
-  ['view neighbor profile', () => {}],
+  ['view neighbor profile', viewNeighborProfile],
   ['send knock', () => {}],
   ['block', () => {}],
   ['mute', () => {}],

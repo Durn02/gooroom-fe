@@ -14,7 +14,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, onClose, use
   const router_in_component = useRouter();
   if (!position) return null;
 
-  const handleItemClick = (item: [string, (userId: string, router) => void]) => {
+  const handleItemClick = (item: [string, (userId: string, router: ReturnType<typeof useRouter>) => void]) => {
     const [, itemFunction] = item;
     itemFunction(userId, router_in_component);
 

@@ -1,4 +1,5 @@
 import { API_URL } from '@/src/lib/config';
+import { decrypt } from '@/src/utils/crypto';
 import { useState, useEffect, useRef } from 'react';
 import { FaPencilAlt, FaCheck } from 'react-icons/fa';
 
