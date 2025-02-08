@@ -2,21 +2,29 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
 import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
-import { useIsLoginState } from '@/src/hooks/useIsLoginState';
-import { onSignoutButtonClickHandler, onLogoutButtonClickHandler } from '../lib/api/sign';
-import { verifyAccessToken } from '../lib/api/verifyAccessToken';
+import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
+import { verifyAccessToken } from '../lib/api/verifyAccessToken';
+import ContextMenu from '../components/ContextMenu/ContextMenu';
+import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
 export default function Landing() {
   const router = useRouter();
-  const { isLogin, userId, login, logout } = useIsLoginState();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [contextMenu, setContextMenu] = useState<{
+    position: { x: number; y: number } | null;
+    items: [string, () => void][];
+    userId: string | null;
+  }>({
+    position: null,
+    items: [],
+    userId: null,
+  });
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -28,19 +36,18 @@ export default function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-  const { uiManager } = useUI(networkManager);
+  const {} = useUI(networkManager);
 
-  useEffect(() => {
-    console.log('isLogin in landing : ', isLogin);
-    console.log('userId in landing : ', userId);
-    if (!isLogin) {
-      verifyAccessToken().then((userNodeId) => {
-        if (userNodeId) {
-          login(userNodeId);
-        }
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   console.log('networkManager set');
+  //   if (networkManager == undefined) {
+  //     console.log('setIsLoading set as false');
+  //     setIsLoading(true);
+  //   } else {
+  //     console.log('setIsLoading set as true');
+  //     setIsLoading(false);
+  //   }
+  // }, [networkManager]);
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -59,29 +66,51 @@ export default function Landing() {
     }
   }, [selectedUserId, networkManager, router]);
 
+  useEffect(() => {
+    if (networkManager) {
+      networkManager.setObserver(({ event, data }) => {
+        switch (event) {
+          case 'loggedInUserClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: MY_NODE_MENU_ITEMS as [string, () => void][],
+              userId: null,
+            });
+            break;
+          case 'roommateNodeClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
+              userId: (data as { x: number; y: number; userId: string }).userId,
+            });
+            break;
+          case 'neighborNodeClicked':
+            setContextMenu({
+              position: data as { x: number; y: number },
+              items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
+              userId: (data as { x: number; y: number; userId: string }).userId,
+            });
+            break;
+          case 'backgroundClicked':
+            setContextMenu({ position: null, items: [], userId: null });
+            break;
+        }
+      });
+    }
+  }, [networkManager]);
+  useEffect(() => {
+    verifyAccessToken();
+  }, []);
+
   const cast_function = () => {
     console.log('cast function');
   };
 
   return (
     <>
-      {!isLogin && (
-        <>
-          <div>gooroom에 오신 것을 환영합니다</div>
-          <div className={style.toSignInPageButtonContainer}>
-            <Link href={'signin'}>
-              <DefaultButton placeholder="로그인 페이지로" />
-            </Link>
-          </div>
-          <div className={style.toSignUpPageButtonContainer}>
-            <Link href={'signup'}>
-              <DefaultButton placeholder="회원가입 페이지로" />
-            </Link>
-          </div>
-        </>
-      )}
+      {/* {isLoading && <div>isLoading</div>} */}
 
-      {isLogin && (
+      {true && (
         <>
           <div>
             <div className={style.castPostStickerDropdownButton}>
@@ -92,14 +121,17 @@ export default function Landing() {
               <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
               <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
             </div>
-            <div className={style.logoutButtonContainer}>
-              <DefaultButton placeholder="로그아웃" onClick={() => onLogoutButtonClickHandler(logout)} />
-            </div>
             <div className={style.signoutButtonContainer}>
-              <DefaultButton placeholder="회원탈퇴" onClick={() => onSignoutButtonClickHandler()} />
+              <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
             <div className={style.visNetContainer}>
               <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
+              <ContextMenu
+                items={contextMenu.items}
+                position={contextMenu.position}
+                onClose={() => setContextMenu({ position: null, items: [], userId: null })}
+                userId={contextMenu.userId}
+              />
             </div>
           </div>
         </>

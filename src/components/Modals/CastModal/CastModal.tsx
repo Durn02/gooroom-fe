@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import styles from "./CastModal.module.css";
+import React, { useEffect } from 'react';
+import styles from './CastModal.module.css';
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,13 +9,11 @@ interface ModalProps {
 }
 
 const CastModal = ({ isOpen, onClose, setCastMessage, cast }: ModalProps) => {
-  if (!isOpen) return null;
+  // if (!isOpen) return null;
 
   useEffect(() => {
     if (isOpen) {
-      const inputElement = document.getElementById(
-        "castMessageInput"
-      ) as HTMLInputElement;
+      const inputElement = document.getElementById('castMessageInput') as HTMLInputElement;
       if (inputElement) {
         inputElement.focus();
       }
@@ -27,10 +25,10 @@ const CastModal = ({ isOpen, onClose, setCastMessage, cast }: ModalProps) => {
     cast();
   };
   const handlePressKeyboard = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       onCastButtonClickHandler();
     }
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       onClose();
     }
   };
@@ -52,10 +50,7 @@ const CastModal = ({ isOpen, onClose, setCastMessage, cast }: ModalProps) => {
           }}
           onKeyDown={handlePressKeyboard}
         ></input>
-        <button
-          className={styles.modalSubmitButton}
-          onClick={onCastButtonClickHandler}
-        >
+        <button className={styles.modalSubmitButton} onClick={onCastButtonClickHandler}>
           전송
         </button>
       </div>

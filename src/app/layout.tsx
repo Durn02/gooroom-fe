@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-// import './globals.css';
 import '@/src/assets/styles/globals.css';
 
-import dynamic from 'next/dynamic';
-const IsLoginProvider = dynamic(() => import('@/src/context/IsLoginProvider'), { ssr: false });
-const UserProfileProvider = dynamic(() => import('@/src/context/UserProfileProvider'), { ssr: false });
+// import dynamic from 'next/dynamic';
+// const IsLoginProvider = dynamic(() => import('@/src/context/IsLoginProvider'), { ssr: false });
+// const UserProfileProvider = dynamic(() => import('@/src/context/UserProfileProvider'), { ssr: false });
 const geistSans = localFont({
   src: '../fonts/GeistVF.woff',
   variable: '--font-geist-sans',
@@ -27,11 +26,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // return (
+  //   <html lang="en">
+  //     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+  //       <IsLoginProvider>{children}</IsLoginProvider>
+  //     </body>
+  //   </html>
+  // );
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <IsLoginProvider>{children}</IsLoginProvider>
-      </body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>
   );
 }

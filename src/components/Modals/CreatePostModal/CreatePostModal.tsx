@@ -8,9 +8,10 @@ import { uploadToS3 } from '@/src/lib/s3/handleS3';
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string;
 }
 
-const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) => {
+const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, userId }) => {
   // const selectedUserId = localStorage.getItem('selectedUserId');
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
@@ -42,12 +43,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
       const uploadedUrls = await Promise.all(
         images.map(async (file, index) => {
           try {
-            if (!selectedUserId) {
+            if (!userId) {
               alert('로그인 시간이 만료되었습니다.');
               router.push('/');
               throw new Error('User not found');
             }
-            return await uploadToS3(file, index, selectedUserId);
+            return await uploadToS3(file, index, userId);
           } catch (error) {
             console.error('Error uploading to S3:', error);
             throw new Error('Failed to upload image to S3');

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { API_URL } from '@/src/lib/config';
-import { useIsLoginState } from '@/src/hooks/useIsLoginState';
+import { useRouter } from 'next/navigation';
+// import { userApi } from '@/src/lib/api';
 
 type signinRequestData = {
   email: string;
@@ -24,7 +25,10 @@ const APIURL = API_URL;
 
 export default function Signin() {
   const [emailVerification, setEmailVerification] = useState(false);
-  const { login, isLogin } = useIsLoginState();
+  const [userEmailInput, setUserEmailInput] = useState('');
+  const [userPwInput, setUserPwInput] = useState('');
+  const [userVerifyInput, setUserVerifyCodeInput] = useState('');
+  const router = useRouter();
 
   const onSignInButtonClickHandler = () => {
     const signinRequestData: signinRequestData = {
@@ -57,10 +61,8 @@ export default function Signin() {
             } else if (data.detail === 'inconsistent password') {
               alert('비밀번호가 일치하지 않습니다');
             } else {
-              login(data);
-              console.log('isLogin after login : ', isLogin);
               alert('로그인 성공');
-              window?.location?.replace('/');
+              router.push('/');
             }
           });
       } catch (e) {
@@ -84,7 +86,7 @@ export default function Signin() {
       });
       if (response.ok) {
         alert('Verify successful');
-        window.location.replace('/');
+        router.push('/');
       } else {
         alert(`Verify failed: ${response.statusText}`);
       }
@@ -117,36 +119,14 @@ export default function Signin() {
       }
     }
   };
-  const [userEmailInput, setUserEmailInput] = useState('');
-  const [userPwInput, setUserPwInput] = useState('');
-  const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  // 로그인이 되어있는지 확인하는 useEffect
-  // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
-  useEffect(() => {
-    const checkLogin = async () => {
-      try {
-        const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // 쿠키를 포함시키기 위해 필요
-        });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.message === 'access token validation check successfull') {
-            alert('이미 로그인 되어있습니다.');
-            window.location.replace('/');
-          }
-        }
-      } catch (error) {
-        alert(error);
-      }
-    };
-
-    checkLogin();
-  }, []);
+  // useEffect(() => {
+  //   const isLoggedIn = userApi.checkLogin();
+  //   if (isLoggedIn) {
+  //     alert('이미 로그인 되어있습니다');
+  //     router.push('/');
+  //   }
+  // }, [router]);
 
   return (
     <>
