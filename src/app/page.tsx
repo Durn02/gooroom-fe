@@ -9,7 +9,6 @@ import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
-import { verifyAccessToken } from '../lib/api/verifyAccessToken';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
@@ -98,9 +97,6 @@ export default function Landing() {
       });
     }
   }, [networkManager]);
-  useEffect(() => {
-    verifyAccessToken();
-  }, []);
 
   const cast_function = () => {
     console.log('cast function');
