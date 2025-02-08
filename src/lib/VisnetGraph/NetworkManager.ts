@@ -77,32 +77,32 @@ export class NetworkManager {
       }
     });
 
-    this.network.on('click', (event: { nodes: string[] }) => {
-      console.log('click event');
-      const { nodes: clickedNodes } = event;
+    this.network.on('click', (event: { nodes: string[]; pointer: { DOM: { x: number; y: number } } }) => {
+      const { nodes: clickedNodes, pointer } = event;
       if (clickedNodes.length > 0) {
         const nodeId = clickedNodes[0];
-        if (this.interactedNodeId === nodeId) {
+        if (nodeId === this.getLoggeInUser().node_id) {
           this.observer?.({
-            event: 'nodeClicked',
-            data: null,
+            event: 'loggedInUserClicked',
+            data: { x: pointer.DOM.x, y: pointer.DOM.y },
             scale: this.network.getScale(),
           });
-          this.interactedNodeId = null;
-          return;
+        } else if (this.roommatesWithNeighbors.some((roommate) => roommate.roommate.node_id === nodeId)) {
+          this.observer?.({
+            event: 'roommateNodeClicked',
+            data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
+            scale: this.network.getScale(),
+          });
+        } else {
+          this.observer?.({
+            event: 'neighborNodeClicked',
+            data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
+            scale: this.network.getScale(),
+          });
         }
-        const position = this.getPositions()[nodeId];
-
-        this.observer?.({
-          event: 'nodeClicked',
-          data: { [nodeId]: position },
-          scale: this.network.getScale(),
-        });
-
-        this.interactedNodeId = nodeId;
       } else {
         this.observer?.({
-          event: 'nodeClicked',
+          event: 'backgroundClicked',
           data: null,
           scale: this.network.getScale(),
         });
