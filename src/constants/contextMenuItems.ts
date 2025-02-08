@@ -1,4 +1,5 @@
 import { userApi } from '../lib/api';
+import { blockFreind, muteFreind } from '../lib/api/friend/friend.api';
 import { encrypt } from '../utils/crypto';
 
 const viewMyProfile = () => {
@@ -21,6 +22,14 @@ const viewNeighborProfile = (nodeId: string, router) => {
   router.push(`/neighborprofile/${encryptedUserId}`);
 };
 
+const block = (nodeId: string) => {
+  blockFreind(nodeId);
+};
+
+const mute = (nodeId: string) => {
+  muteFreind(nodeId);
+};
+
 export const MY_NODE_MENU_ITEMS = [
   ['view my profile', viewMyProfile],
   ['view knock list', viewKnockList],
@@ -30,13 +39,13 @@ export const MY_NODE_MENU_ITEMS = [
 
 export const ROOMMATE_NODE_MENU_ITEMS = [
   ['view roommate profile', viewRoommateProfile],
-  ['block', () => {}],
-  ['mute', () => {}],
+  ['block', block],
+  ['mute', mute],
 ];
 
 export const NEIGHBOR_NODE_MENU_ITEMS = [
   ['view neighbor profile', viewNeighborProfile],
   ['send knock', () => {}],
-  ['block', () => {}],
-  ['mute', () => {}],
+  ['block', block],
+  ['mute', mute],
 ];
