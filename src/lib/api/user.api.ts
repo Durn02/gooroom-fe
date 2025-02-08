@@ -41,12 +41,12 @@ export const onLogoutButtonClickHandler = async () => {
   }
 };
 
-export const checkLogin = async () => {
-  try {
-    await apiClient.get('domain/auth/verify-access-token');
-    return true;
-  } catch (error) {
-    console.error('access token 검증 실패', error);
-    throw error;
-  }
-};
+// export const checkLogin = async () => {
+//   try {
+//     await apiClient.get('domain/auth/verify-access-token');
+//     return true;
+//   } catch (error) {
+//     console.error('access token 검증 실패', error);
+//     throw error;
+//   }
+// };
