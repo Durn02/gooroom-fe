@@ -36,7 +36,7 @@ export const saveRoommates = async (roommatesWithNeighbors: RoommateWithNeighbor
     const batch = roommatesWithNeighbors.slice(i, i + batchSize);
     const transformedBatch = batch.map((item) => ({
       ...item,
-      node_id: item.roommate.node_id,
+      node_id: item.roommate?.node_id,
     }));
     await Promise.all(transformedBatch.map((transformedBatch) => store.put(transformedBatch)));
   }
