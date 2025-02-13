@@ -30,7 +30,9 @@ export class NetworkManager {
   private lock: number = 0;
 
   setObserver(observer: (event: NetworkEvent) => void) {
+    console.log('set Observer called');
     this.observer = observer;
+    console.debug(observer);
   }
 
   constructor(
