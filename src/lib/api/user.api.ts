@@ -41,6 +41,21 @@ export const onLogoutButtonClickHandler = async () => {
   }
 };
 
+export const viewBlockMuteList = async () => {
+  try {
+    const block_list_data = await apiClient.post('/domain/block/get-members');
+    const mute_list_data = await apiClient.post('/domain/mute/get-members');
+    const data = {
+      block_list_data,
+      mute_list_data,
+    };
+    return data;
+  } catch (error) {
+    console.error('차단/음소거 목록을 불러오는데 실패했습니다.', error);
+    throw error;
+  }
+};
+
 // export const checkLogin = async () => {
 //   try {
 //     await apiClient.get('domain/auth/verify-access-token');
