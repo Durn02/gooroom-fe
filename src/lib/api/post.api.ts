@@ -1,3 +1,4 @@
+// the word 'post' means '게시글' in gooroom, not method 'POST'
 import apiClient from './axiosApiClient';
 
 export const fetchPosts = async () => {
