@@ -1,6 +1,5 @@
 import apiClient from './axiosApiClient';
 import { logout } from '../sign';
-import axios from 'axios';
 
 export const fetchMyInfo = async () => {
   try {
