@@ -5,25 +5,25 @@ import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import useUI from '@/src/hooks/useUI';
+// import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
-import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
+// import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [contextMenu, setContextMenu] = useState<{
-    position: { x: number; y: number } | null;
-    items: [string, () => void][];
-    userId: string | null;
-  }>({
-    position: null,
-    items: [],
-    userId: null,
-  });
+  // const [contextMenu, setContextMenu] = useState<{
+  //   position: { x: number; y: number } | null;
+  //   items: [string, () => void][];
+  //   userId: string | null;
+  // }>({
+  //   position: null,
+  //   items: [],
+  //   userId: null,
+  // });
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -34,19 +34,8 @@ export default function Landing() {
     },
   };
 
-  const { networkManager, networkContainer } = useNetwork(callbacks);
-  const {} = useUI(networkManager);
-
-  // useEffect(() => {
-  //   console.log('networkManager set');
-  //   if (networkManager == undefined) {
-  //     console.log('setIsLoading set as false');
-  //     setIsLoading(true);
-  //   } else {
-  //     console.log('setIsLoading set as true');
-  //     setIsLoading(false);
-  //   }
-  // }, [networkManager]);
+  const { networkManager, networkContainer, contextMenu, setContextMenu, castsList } = useNetwork(callbacks);
+  // const {} = useUI(networkManager);
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -65,38 +54,38 @@ export default function Landing() {
     }
   }, [selectedUserId, networkManager, router]);
 
-  useEffect(() => {
-    if (networkManager) {
-      networkManager.setObserver(({ event, data }) => {
-        switch (event) {
-          case 'loggedInUserClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: MY_NODE_MENU_ITEMS as [string, () => void][],
-              userId: null,
-            });
-            break;
-          case 'roommateNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'neighborNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'backgroundClicked':
-            setContextMenu({ position: null, items: [], userId: null });
-            break;
-        }
-      });
-    }
-  }, [networkManager]);
+  // useEffect(() => {
+  //   if (networkManager) {
+  //     networkManager.setObserver(({ event, data }) => {
+  //       switch (event) {
+  //         case 'loggedInUserClicked':
+  //           setContextMenu({
+  //             position: data as { x: number; y: number },
+  //             items: MY_NODE_MENU_ITEMS as [string, () => void][],
+  //             userId: null,
+  //           });
+  //           break;
+  //         case 'roommateNodeClicked':
+  //           setContextMenu({
+  //             position: data as { x: number; y: number },
+  //             items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
+  //             userId: (data as { x: number; y: number; userId: string }).userId,
+  //           });
+  //           break;
+  //         case 'neighborNodeClicked':
+  //           setContextMenu({
+  //             position: data as { x: number; y: number },
+  //             items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
+  //             userId: (data as { x: number; y: number; userId: string }).userId,
+  //           });
+  //           break;
+  //         case 'backgroundClicked':
+  //           setContextMenu({ position: null, items: [], userId: null });
+  //           break;
+  //       }
+  //     });
+  //   }
+  // }, [networkManager]);
 
   const cast_function = () => {
     console.log('cast function');
@@ -122,12 +111,14 @@ export default function Landing() {
             </div>
             <div className={style.visNetContainer}>
               <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
-              <ContextMenu
-                items={contextMenu.items}
-                position={contextMenu.position}
-                onClose={() => setContextMenu({ position: null, items: [], userId: null })}
-                userId={contextMenu.userId}
-              />
+              {contextMenu.position && (
+                <ContextMenu
+                  items={contextMenu.items}
+                  position={contextMenu.position}
+                  onClose={() => setContextMenu({ position: null, items: [], userId: null })}
+                  userId={contextMenu.userId}
+                />
+              )}
             </div>
           </div>
         </>
