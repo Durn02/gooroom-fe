@@ -8,7 +8,7 @@ export const getKnocks = async (): Promise<{
 }> => {
   try {
     const { data } = await apiClient.post('/domain/friend/knock/get-members');
-    return data.knocks;
+    return data;
   } catch (error) {
     console.error('Failed to fetch knocks:', error);
     throw error;
