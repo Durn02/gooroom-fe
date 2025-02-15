@@ -1,16 +1,13 @@
+// constants/contextMenuItems.ts
 import { userApi } from '../lib/api';
 import { blockFreind, muteFreind } from '../lib/api/friend/friend.api';
-import { getKnocks, sendKnock } from '../lib/api/knock.api';
+import { sendKnock } from '../lib/api/knock.api';
 import { viewBlockMuteList } from '../lib/api/user.api';
 import { encrypt } from '../utils/crypto';
 import { clearStore } from '../utils/indexedDB';
 
 const viewMyProfile = () => {
   window.location.href = '/myprofile';
-};
-const viewKnockListFunc = async () => {
-  const data = await getKnocks();
-  console.log(data);
 };
 const viewBlockMuteListFunc = async () => {
   alert('show block/mute list');
@@ -47,7 +44,7 @@ const sendKnockFunc = async (nodeId: string) => {
 
 export const MY_NODE_MENU_ITEMS = [
   ['view my profile', viewMyProfile],
-  ['view knock list', viewKnockListFunc],
+  ['view knock list', () => {}],
   ['view block/mute list', viewBlockMuteListFunc],
   ['logout', userApi.onLogoutButtonClickHandler],
 ];

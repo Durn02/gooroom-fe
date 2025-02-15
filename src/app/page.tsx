@@ -11,6 +11,9 @@ import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
+import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
+import { getKnocks } from '../lib/api/knock.api';
+import { KnockEdge } from '../types/landingPage.type';
 
 export default function Landing() {
   const router = useRouter();
@@ -24,6 +27,14 @@ export default function Landing() {
     items: [],
     userId: null,
   });
+  const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
+  const [knocks, setKnocks] = useState<KnockEdge[]>([]);
+
+  const handleViewKnockList = async () => {
+    const data = await getKnocks();
+    setKnocks(data.knocks);
+    setIsKnockListModalOpen(true);
+  };
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -127,8 +138,16 @@ export default function Landing() {
                 position={contextMenu.position}
                 onClose={() => setContextMenu({ position: null, items: [], userId: null })}
                 userId={contextMenu.userId}
+                onViewKnockList={handleViewKnockList}
               />
             </div>
+            {isKnockListModalOpen && (
+              <KnockListModal
+                knocks={knocks}
+                onClose={() => setIsKnockListModalOpen(false)}
+                isOpen={isKnockListModalOpen}
+              />
+            )}
           </div>
         </>
       )}
