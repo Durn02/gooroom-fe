@@ -5,26 +5,28 @@ import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import useUI from '@/src/hooks/useUI';
+// import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
+
 import CastContainer from '../components/CastContainer/CastContainer';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
+
 
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [contextMenu, setContextMenu] = useState<{
-    position: { x: number; y: number } | null;
-    items: [string, () => void][];
-    userId: string | null;
-  }>({
-    position: null,
-    items: [],
-    userId: null,
-  });
+  // const [contextMenu, setContextMenu] = useState<{
+  //   position: { x: number; y: number } | null;
+  //   items: [string, () => void][];
+  //   userId: string | null;
+  // }>({
+  //   position: null,
+  //   items: [],
+  //   userId: null,
+  // });
 
 
   const callbacks = {
@@ -35,6 +37,7 @@ export default function Landing() {
       setSelectedUserId(userId);
     },
   };
+
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
   const { uiManager } = useUI(networkManager);
@@ -49,6 +52,10 @@ export default function Landing() {
   //     setIsLoading(false);
   //   }
   // }, [networkManager]);
+
+  const { networkManager, networkContainer, contextMenu, setContextMenu, castsList } = useNetwork(callbacks);
+  // const {} = useUI(networkManager);
+
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -108,6 +115,7 @@ export default function Landing() {
     }
   }, [networkManager]);
 
+
   useEffect(() => {
     console.log(castStatus);
   },[castStatus]);
@@ -133,6 +141,7 @@ export default function Landing() {
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
+
             <div className={style.visNetContainer} id="NetworkContainer" >
               <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
               <ContextMenu
@@ -145,6 +154,7 @@ export default function Landing() {
                 castStatus={castStatus}
                 scale={networkManager?.getScale() || 1}
               />
+
             </div>
           </div>
         </>

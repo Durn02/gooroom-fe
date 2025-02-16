@@ -1,4 +1,5 @@
 import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
+import cast_img from '@/public/lib/assets/icons/cast.png';
 
 
 export class UIManager {
@@ -12,6 +13,7 @@ export class UIManager {
   private isDrawing: boolean = false;
 
   constructor(networkManager: NetworkManager) {
+    console.log('UImanager constructor called');
     networkManager.setObserver(({ event, data = {}, scale = 1 }) => {
       this.handleEvent(
         event,
@@ -34,6 +36,7 @@ export class UIManager {
    * 이벤트 처리 핸들러
    */
   public handleEvent(eventType: string, data: Record<string, { x: number; y: number }> = {}, scale: number) {
+    console.log('handleEvent called');
     this.scale = scale; // 배율 업데이트
     switch (eventType) {
       case 'startDrawing':
@@ -84,14 +87,34 @@ export class UIManager {
   /**
    * 아이콘 UI 생성
    */
-  private updateCastPositions() {
-    // CastContainer의 prop으로 전달 this.cast_positions를
-    // CastContainer의 state로 전달
-    // CastContainer의 state를 이용해 CastUI 생성
-    // CastUI는 CastContainer에서 생성
-    // CastUI는 CastContainer의 state를 prop으로 받아서 생성
-    // CastContainer는 CastUI를 생성할 때 this.cast_positions를 prop으로 전달
-    // CastUI는 this.cast_positions를 받아서 UI 생성
+
+  private createCasts(x: number, y: number, id: string) {
+    console.log('creaetCasts called');
+    const img = document.createElement('img');
+    const sizeOffset = 100 * Math.min(this.scale, 4);
+    const posOffset = 60 * Math.min(this.scale, 6);
+
+    img.classList.add('cast');
+    img.id = id;
+    img.src = '@/public/lib/assets/icons/cast.png'; // 수정된 경로
+    img.style.position = 'absolute';
+    img.style.left = `${x - 0.4 * posOffset}px`;
+    img.style.top = `${y - 0.6 * posOffset}px`;
+    img.style.width = `${0.2 * sizeOffset}px`;
+    img.style.height = `${0.2 * sizeOffset}px`;
+
+    console.log('img  : ', img);
+
+    // 부모 요소 추가 (document.body가 아닌 특정 컨테이너)
+    const container = document.getElementById('NetworkContainer');
+    if (container) {
+      container.appendChild(img);
+      this.animateCast(img, y - 0.6 * posOffset);
+    } else {
+      console.error('Container element not found!');
+    }
+  }
+
 
 
   }
