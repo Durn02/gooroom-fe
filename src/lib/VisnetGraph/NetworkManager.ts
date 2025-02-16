@@ -137,6 +137,10 @@ export class NetworkManager {
       console.log('lock:', this.lock);
     }
   }
+  public getScale() {
+    return this.network.getScale();
+  }
+
   public getPositions() {
     // 모든 노드의 원래 위치 가져오기
     const positions = this.network.getPositions(); // { node1: {x, y}, node2: {x, y} }
@@ -221,7 +225,7 @@ export class NetworkManager {
   declare getLoggedInUserPosition: () => Position;
   declare getRoommatesPosition: () => Position[];
   declare getRoommatesByNeighborsPositions: () => { [x: string]: Position[] }[];
-
+  
   private bind() {
     this.zoomIn = zoomIn.bind(this);
     this.zoomOut = zoomOut.bind(this);

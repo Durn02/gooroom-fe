@@ -10,6 +10,7 @@ import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
+import CastContainer from '../components/CastContainer/CastContainer';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
 export default function Landing() {
@@ -25,6 +26,7 @@ export default function Landing() {
     userId: null,
   });
 
+
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
       setSelectedUserId(userId);
@@ -35,8 +37,8 @@ export default function Landing() {
   };
 
   const { networkManager, networkContainer } = useNetwork(callbacks);
-  const {} = useUI(networkManager);
-
+  const { uiManager } = useUI(networkManager);
+  const [castStatus, setCastStatus] = useState<Record<string, { x: number; y: number }>>({});
   // useEffect(() => {
   //   console.log('networkManager set');
   //   if (networkManager == undefined) {
@@ -93,11 +95,22 @@ export default function Landing() {
           case 'backgroundClicked':
             setContextMenu({ position: null, items: [], userId: null });
             break;
+          case 'startDrawing':
+            setContextMenu({ position: null, items: [], userId: null });
+            setCastStatus({});
+          case 'finishDrawing':
+            if (data) {
+              setCastStatus(data as Record<string, { x: number; y: number }>);
+            }
+            break;
         }
       });
     }
   }, [networkManager]);
 
+  useEffect(() => {
+    console.log(castStatus);
+  },[castStatus]);
   const cast_function = () => {
     console.log('cast function');
   };
@@ -120,13 +133,17 @@ export default function Landing() {
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
-            <div className={style.visNetContainer}>
-              <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
+            <div className={style.visNetContainer} id="NetworkContainer" >
+              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
               <ContextMenu
                 items={contextMenu.items}
                 position={contextMenu.position}
                 onClose={() => setContextMenu({ position: null, items: [], userId: null })}
                 userId={contextMenu.userId}
+              />
+              <CastContainer
+                castStatus={castStatus}
+                scale={networkManager?.getScale() || 1}
               />
             </div>
           </div>
