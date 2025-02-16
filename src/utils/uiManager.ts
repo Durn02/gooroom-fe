@@ -1,17 +1,16 @@
 import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
 import cast_img from '@/public/lib/assets/icons/cast.png';
 
+
 export class UIManager {
   // 상태 관리 변수
-
-  private ui_position: { x: number; y: number } | null = null; // 선택된 UI 위치
-  private cast_positions: Record<string, { x: number; y: number; nodeId: number }> = {}; // 모든 위치 정보
-  private contextMenuPosition: { x: number; y: number } | null = null;
-  private contextMenuItems: string[] = [];
-  private contextMenuUserId: string | null = null;
+  private cast_positions: Record<string, { x: number; y: number }> = {}; // 모든 위치 정보
+  // private contextMenuPosition: { x: number; y: number } | null = null;
+  // private contextMenuItems: string[] = [];
+  // private contextMenuUserId: string | null = null;
 
   private scale: number = 1; // 기본 배율
-  private isDrowing: boolean = false;
+  private isDrawing: boolean = false;
 
   constructor(networkManager: NetworkManager) {
     console.log('UImanager constructor called');
@@ -23,16 +22,16 @@ export class UIManager {
       );
     });
   }
-  private showContextMenu(x: number, y: number, items: string[], userId: string | null) {
-    this.contextMenuPosition = { x, y };
-    this.contextMenuItems = items;
-    this.contextMenuUserId = userId;
-  }
-  private hideContextMenu() {
-    this.contextMenuPosition = null;
-    this.contextMenuItems = [];
-    this.contextMenuUserId = null;
-  }
+  // private showContextMenu(x: number, y: number, items: string[], userId: string | null) {
+  //   this.contextMenuPosition = { x, y };
+  //   this.contextMenuItems = items;
+  //   this.contextMenuUserId = userId;
+  // }
+  // private hideContextMenu() {
+  //   this.contextMenuPosition = null;
+  //   this.contextMenuItems = [];
+  //   this.contextMenuUserId = null;
+  // }
   /**
    * 이벤트 처리 핸들러
    */
@@ -41,111 +40,54 @@ export class UIManager {
     this.scale = scale; // 배율 업데이트
     switch (eventType) {
       case 'startDrawing':
-        if (this.isDrowing) return;
-        this.destroyUI(); // UI용 div 제거
-        this.destroyAllCasts(); // Cast용 div 제거
-        this.isDrowing = true;
+        if (this.isDrawing) return;
+        
+        this.hideCasts(); // Cast용 div 제거
+        this.isDrawing = true;
         break;
 
       case 'finishDrawing':
-        this.cast_positions = Object.entries(data).reduce(
-          (acc, [nodeId, pos]) => {
-            // 위치 데이터 저장
-            acc[nodeId] = { x: pos.x, y: pos.y, nodeId: parseInt(nodeId) };
-            // UI 아이콘 생성
-            this.createCasts(pos.x, pos.y, `cast-${nodeId}`);
-
-            return acc;
-          },
-          {} as Record<string, { x: number; y: number; nodeId: number }>,
-        );
-
-        this.isDrowing = false;
+        this.cast_positions = data; // 위치 정보 업데이트
+        this.isDrawing = false;
         break;
 
-      case 'clickNode':
-        if (!data || Object.keys(data).length === 0) {
-          this.ui_position = null; // UI 상태 초기화
-        } else {
-          // 2. 단일 nodeId: position 쌍 처리
-          const [nodeId, pos] = Object.entries(data)[0]; // 첫 번째 항목 가져오기
-          if (pos) {
-            // UI 아이콘 생성
-            this.createUI(pos.x, pos.y, `ui-${nodeId}`);
-          } else {
-            console.warn(`Invalid position data for node ${nodeId}.`);
-          }
-        }
-        break;
-
-      case 'zoomEvent':
-        this.destroyUI(); // UI용 div 제거
-        this.destroyAllCasts(); // Cast용 div 제거
-        if (!data || Object.keys(data).length === 0) {
-          this.ui_position = null; // UI 상태 초기화
-          return;
-        }
-        this.cast_positions = Object.entries(data).reduce(
-          (acc, [nodeId, pos]) => {
-            // 위치 데이터 저장
-            acc[nodeId] = { x: pos.x, y: pos.y, nodeId: parseInt(nodeId) };
-            // UI 아이콘 생성
-            this.createCasts(pos.x, pos.y, `cast-${nodeId}`);
-            return acc;
-          },
-          {} as Record<string, { x: number; y: number; nodeId: number }>,
-        );
-        break;
-
-      case 'loggedInUserClicked':
-        if (data && 'x' in data && 'y' in data) {
-          this.showContextMenu(data.x, data.y, ['View my profile'], null);
-        }
-        break;
-      case 'otherNodeClicked':
-        if (data && 'x' in data && 'y' in data && data.userId) {
-          this.showContextMenu(data.x, data.y, ['View profile'], data.userId);
-        }
-        break;
-
-      case 'backgroundClicked':
-        this.hideContextMenu();
-        break;
+      
       default:
         console.warn(`Unhandled event type: ${eventType}`);
     }
   }
 
-  private createUI(x: number, y: number, id: string) {
-    // 기존 요소 제거 (중복 방지)
-    const existing = document.getElementById(id);
-    if (existing) existing.remove();
+  // private createUI(x: number, y: number, id: string) {
+  //   // 기존 요소 제거 (중복 방지)
+  //   const existing = document.getElementById(id);
+  //   if (existing) existing.remove();
 
-    const div = document.createElement('div');
+  //   const div = document.createElement('div');
 
-    const offset = 50 * this.scale; // 크기 조정
+  //   const offset = 50 * this.scale; // 크기 조정
 
-    div.classList.add('ui'); // 클래스 추가
-    div.id = id;
-    div.style.position = 'absolute';
-    div.style.left = `${x - 50 * offset}px`;
-    div.style.top = `${y - 50 * offset}px`;
-    div.style.width = `${offset}px`;
-    div.style.height = `${offset}px`;
-    div.style.borderRadius = '50%';
-    div.style.border = '2px solid red';
+  //   div.classList.add('ui'); // 클래스 추가
+  //   div.id = id;
+  //   div.style.position = 'absolute';
+  //   div.style.left = `${x - 50 * offset}px`;
+  //   div.style.top = `${y - 50 * offset}px`;
+  //   div.style.width = `${offset}px`;
+  //   div.style.height = `${offset}px`;
+  //   div.style.borderRadius = '50%';
+  //   div.style.border = '2px solid red';
 
-    const parent = document.getElementById('NetworkContainer');
-    if (parent) {
-      parent.appendChild(div);
-    } else {
-      console.error('Container element not found!');
-    }
-  }
+  //   const parent = document.getElementById('NetworkContainer');
+  //   if (parent) {
+  //     parent.appendChild(div);
+  //   } else {
+  //     console.error('Container element not found!');
+  //   }
+  // }
 
   /**
    * 아이콘 UI 생성
    */
+
   private createCasts(x: number, y: number, id: string) {
     console.log('creaetCasts called');
     const img = document.createElement('img');
@@ -173,38 +115,13 @@ export class UIManager {
     }
   }
 
-  private animateCast(element: HTMLElement, baseY: number) {
-    let direction = 1; // 방향 (위/아래 전환)
-    let opacity = 0.7; // 초기 투명도
-    let position = baseY; // 초기 위치
-    const offset = Math.min(this.scale, 2);
-    // 애니메이션 반복 설정
-    setInterval(() => {
-      // 위치 변경 (위아래 10px 이동)
-      position += direction * 0.5 * offset;
 
-      // 투명도 전환
-      opacity -= direction * 0.02;
 
-      // 적용
-      element.style.top = `${position}px`;
-      element.style.opacity = `${opacity}`;
-
-      // 방향 전환
-      if (position > baseY || position < baseY - 5 * offset) {
-        direction *= -1;
-      }
-    }, 30); // 500ms 간격으로 반복
   }
 
-  // UI용 div 제거
-  private destroyUI() {
-    const elements = document.querySelectorAll('.ui'); // UI 전용 클래스 선택
-    elements.forEach((el) => el.remove());
-  }
 
   // Cast용 div 제거
-  private destroyAllCasts() {
+  private hideCasts() {
     const elements = document.querySelectorAll('.cast'); // Cast 전용 클래스 선택
     elements.forEach((el) => el.remove());
   }
