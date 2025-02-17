@@ -14,20 +14,9 @@ import ContextMenu from '../components/ContextMenu/ContextMenu';
 import CastContainer from '../components/CastContainer/CastContainer';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
-
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  // const [contextMenu, setContextMenu] = useState<{
-  //   position: { x: number; y: number } | null;
-  //   items: [string, () => void][];
-  //   userId: string | null;
-  // }>({
-  //   position: null,
-  //   items: [],
-  //   userId: null,
-  // });
-
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
@@ -38,24 +27,8 @@ export default function Landing() {
     },
   };
 
-
-  const { networkManager, networkContainer } = useNetwork(callbacks);
-  const { uiManager } = useUI(networkManager);
   const [castStatus, setCastStatus] = useState<Record<string, { x: number; y: number }>>({});
-  // useEffect(() => {
-  //   console.log('networkManager set');
-  //   if (networkManager == undefined) {
-  //     console.log('setIsLoading set as false');
-  //     setIsLoading(true);
-  //   } else {
-  //     console.log('setIsLoading set as true');
-  //     setIsLoading(false);
-  //   }
-  // }, [networkManager]);
-
   const { networkManager, networkContainer, contextMenu, setContextMenu, castsList } = useNetwork(callbacks);
-  // const {} = useUI(networkManager);
-
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -75,50 +48,8 @@ export default function Landing() {
   }, [selectedUserId, networkManager, router]);
 
   useEffect(() => {
-    if (networkManager) {
-      networkManager.setObserver(({ event, data }) => {
-        switch (event) {
-          case 'loggedInUserClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: MY_NODE_MENU_ITEMS as [string, () => void][],
-              userId: null,
-            });
-            break;
-          case 'roommateNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'neighborNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'backgroundClicked':
-            setContextMenu({ position: null, items: [], userId: null });
-            break;
-          case 'startDrawing':
-            setContextMenu({ position: null, items: [], userId: null });
-            setCastStatus({});
-          case 'finishDrawing':
-            if (data) {
-              setCastStatus(data as Record<string, { x: number; y: number }>);
-            }
-            break;
-        }
-      });
-    }
-  }, [networkManager]);
-
-
-  useEffect(() => {
     console.log(castStatus);
-  },[castStatus]);
+  }, [castStatus]);
   const cast_function = () => {
     console.log('cast function');
   };
@@ -142,7 +73,7 @@ export default function Landing() {
               <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
 
-            <div className={style.visNetContainer} id="NetworkContainer" >
+            <div className={style.visNetContainer} id="NetworkContainer">
               <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
               <ContextMenu
                 items={contextMenu.items}
@@ -150,11 +81,7 @@ export default function Landing() {
                 onClose={() => setContextMenu({ position: null, items: [], userId: null })}
                 userId={contextMenu.userId}
               />
-              <CastContainer
-                castStatus={castStatus}
-                scale={networkManager?.getScale() || 1}
-              />
-
+              <CastContainer castStatus={castStatus} scale={networkManager?.getScale() || 1} />
             </div>
           </div>
         </>

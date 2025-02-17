@@ -28,5 +28,5 @@ export interface Cast {
   duration: number;
   created_at: string;
   node_id: string;
-  deleted_at: string;
+  creator: string;
 }
