@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import Input from '@/src/components/Input/DefaultInput';
@@ -8,7 +8,6 @@ import PwInput from '@/src/components/Input/PwInput/PwInput';
 import { useState } from 'react';
 import { API_URL } from '@/src/lib/config';
 import { useRouter } from 'next/navigation';
-import { userApi } from '@/src/lib/api';
 
 type signinRequestData = {
   email: string;

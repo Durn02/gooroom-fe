@@ -20,8 +20,8 @@ type NetworkEvent = { event: string; data?: unknown; scale?: number };
 export class NetworkManager {
   private network: Network;
   private loggedInUser: User;
-  private neighborsData: User[];
-  private roommatesWithNeighbors: RoommateWithNeighbors[];
+  private neighborsData: Map<string, User>;
+  private roommatesWithNeighbors: Map<string, RoommateWithNeighbors>;
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
   private interactedNodeId: string | null = null;
@@ -43,8 +43,13 @@ export class NetworkManager {
     callbacks: { [key: string]: (node_id: string) => void },
   ) {
     this.loggedInUser = loggedInUser;
-    this.neighborsData = neighborsData;
-    this.roommatesWithNeighbors = roommatesWithNeighbors;
+    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.node_id, neighbor]));
+    this.roommatesWithNeighbors = new Map(
+      roommatesWithNeighbors.map((roommateWithNeighbors) => [
+        roommateWithNeighbors.roommate.node_id,
+        roommateWithNeighbors,
+      ]),
+    );
 
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesWithNeighbors, neighborsData));
     this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors, neighborsData));
@@ -89,7 +94,7 @@ export class NetworkManager {
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
             scale: this.network.getScale(),
           });
-        } else if (this.roommatesWithNeighbors.some((roommate) => roommate.roommate.node_id === nodeId)) {
+        } else if (this.roommatesWithNeighbors.keys().some((roommateId) => roommateId === nodeId)) {
           this.observer?.({
             event: 'roommateNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
@@ -227,7 +232,7 @@ export class NetworkManager {
   declare getLoggedInUserPosition: () => Position;
   declare getRoommatesPosition: () => Position[];
   declare getRoommatesByNeighborsPositions: () => { [x: string]: Position[] }[];
-  
+
   private bind() {
     this.zoomIn = zoomIn.bind(this);
     this.zoomOut = zoomOut.bind(this);

@@ -5,14 +5,11 @@ import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-// import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
-
 import CastContainer from '../components/CastContainer/CastContainer';
-import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 
 export default function Landing() {
   const router = useRouter();
@@ -37,7 +34,10 @@ export default function Landing() {
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
       router.push('/myprofile');
     } else if (
-      networkManager.getRoommatesWithNeighbors().some((instance) => instance.roommate.node_id === selectedUserId)
+      networkManager
+        .getRoommatesWithNeighbors()
+        .keys()
+        .some((roommateId) => roommateId === selectedUserId)
     ) {
       const encryptedUserId = encrypt(selectedUserId);
       router.push(`/roommateprofile/${encodeURIComponent(encryptedUserId)}`);
