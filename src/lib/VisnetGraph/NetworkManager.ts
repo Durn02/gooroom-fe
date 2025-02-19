@@ -14,6 +14,7 @@ import {
   softenGraph,
 } from './graphInteraction';
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
+import { addRoommate } from './constructNetwork';
 
 type NetworkEvent = { event: string; data?: unknown; scale?: number };
 
@@ -52,7 +53,7 @@ export class NetworkManager {
     );
 
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesWithNeighbors, neighborsData));
-    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors, neighborsData));
+    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors));
 
     this.network = new Network(
       networkContainer,
@@ -134,6 +135,7 @@ export class NetworkManager {
       }, 200); // 텀 조절 (밀리초 단위)
     });
   }
+
   public addLock() {
     this.lock++;
     console.log('lock:', this.lock);
@@ -194,34 +196,33 @@ export class NetworkManager {
   public getNetwork() {
     return this.network;
   }
-  public setNetwork() {}
+
   public getLoggeInUser() {
     return this.loggedInUser;
   }
-  public setLoggeInUser() {}
+
   public getNeighborsData() {
     return this.neighborsData;
   }
-  public setNeighborsData() {}
+
   public getRoommatesWithNeighbors() {
     return this.roommatesWithNeighbors;
   }
-  public setRoommatesWithNeighbors() {}
-  public getNodesDataSet() {}
-  public setNodesDataSet() {}
-  public getEdgesDataSet() {}
-  public setEdgesDataSet() {}
+
+  public getNodesDataSet() {
+    return this.nodesDataSet;
+  }
+
+  public getEdgesDataSet() {
+    return this.edgesDataSet;
+  }
 
   declare generateNodes: (
     loggedInUser: User,
     roommatesWithNeighbors: RoommateWithNeighbors[],
     neighborsData: User[],
   ) => Node[];
-  declare generateEdges: (
-    loggedInUser: User,
-    roommatesWithNeighbors: RoommateWithNeighbors[],
-    neighborsData: User[],
-  ) => Edge[];
+  declare generateEdges: (loggedInUser: User, roommatesWithNeighbors: RoommateWithNeighbors[]) => Edge[];
   declare zoomIn: () => void;
   declare zoomOut: () => void;
   declare resetPosition: () => void;
@@ -232,6 +233,7 @@ export class NetworkManager {
   declare getLoggedInUserPosition: () => Position;
   declare getRoommatesPosition: () => Position[];
   declare getRoommatesByNeighborsPositions: () => { [x: string]: Position[] }[];
+  declare addRoommate: (newRoommate: User, newNeighbors: User[]) => void;
 
   private bind() {
     this.zoomIn = zoomIn.bind(this);
@@ -244,6 +246,7 @@ export class NetworkManager {
     this.getLoggedInUserPosition = getLoggedInUserPosition.bind(this);
     this.getRoommatesPosition = getRoommatesPosition.bind(this);
     this.getRoommatesByNeighborsPositions = getRoommatesByNeighborsPositions.bind(this);
+    this.addRoommate = addRoommate.bind(this);
   }
 }
 
