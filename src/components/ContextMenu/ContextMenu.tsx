@@ -8,9 +8,17 @@ interface ContextMenuProps {
   onClose: () => void;
   userId?: string;
   onViewKnockList: () => void;
+  onViewBlockMuteList: () => void;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, onClose, userId, onViewKnockList }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({
+  items,
+  position,
+  onClose,
+  userId,
+  onViewKnockList,
+  onViewBlockMuteList,
+}) => {
   const router_in_component = useRouter();
 
   if (!position) return null;
@@ -20,6 +28,9 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, onClose, use
     if (itemName === MY_NODE_MENU_ITEMS[1][0]) {
       // MY_NODE_MENU_ITEMS[1][0] is 'view knock list'
       onViewKnockList();
+    } else if (itemName === MY_NODE_MENU_ITEMS[2][0]) {
+      // MY_NODE_MENU_ITEMS[2][0] is 'view block/mute list'
+      onViewBlockMuteList();
     } else {
       itemFunction(userId, router_in_component);
     }

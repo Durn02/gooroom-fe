@@ -13,7 +13,9 @@ import ContextMenu from '../components/ContextMenu/ContextMenu';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
 import { getKnocks } from '../lib/api/knock.api';
-import { KnockEdge } from '../types/landingPage.type';
+import { BlockMuteList, KnockEdge } from '../types/landingPage.type';
+import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMuteListModal';
+import { getBlockMuteList } from '../lib/api/user.api';
 
 export default function Landing() {
   const router = useRouter();
@@ -30,10 +32,19 @@ export default function Landing() {
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
   const [knocks, setKnocks] = useState<KnockEdge[]>([]);
 
+  const [isBlockMuteListModalOpen, setIsBlockMuteListModalOpen] = useState(false);
+  const [blockMuteList, setBlockMuteList] = useState<BlockMuteList>({ blockList: [], muteList: [] });
+
   const handleViewKnockList = async () => {
     const data = await getKnocks();
     setKnocks(data.knocks);
     setIsKnockListModalOpen(true);
+  };
+
+  const handleBlockMuteList = async () => {
+    const data = await getBlockMuteList();
+    setBlockMuteList(data.blockMuteList);
+    setIsBlockMuteListModalOpen(true);
   };
 
   const callbacks = {
@@ -139,6 +150,7 @@ export default function Landing() {
                 onClose={() => setContextMenu({ position: null, items: [], userId: null })}
                 userId={contextMenu.userId}
                 onViewKnockList={handleViewKnockList}
+                onViewBlockMuteList={handleBlockMuteList}
               />
             </div>
             {isKnockListModalOpen && (
@@ -146,6 +158,13 @@ export default function Landing() {
                 knocks={knocks}
                 onClose={() => setIsKnockListModalOpen(false)}
                 isOpen={isKnockListModalOpen}
+              />
+            )}
+            {isBlockMuteListModalOpen && (
+              <BlockMuteListModal
+                blockMuteList={blockMuteList}
+                onClose={() => setIsBlockMuteListModalOpen(false)}
+                isOpen={isBlockMuteListModalOpen}
               />
             )}
           </div>

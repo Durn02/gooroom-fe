@@ -1,5 +1,6 @@
 import apiClient from './axiosApiClient';
 import { logout } from '../sign';
+import { BlockMuteList } from '@/src/types/landingPage.type';
 
 export const fetchMyInfo = async () => {
   try {
@@ -40,13 +41,17 @@ export const onLogoutButtonClickHandler = async () => {
   }
 };
 
-export const viewBlockMuteList = async () => {
+export const getBlockMuteList = async (): Promise<{
+  blockMuteList: BlockMuteList;
+}> => {
   try {
-    const block_list_data = await apiClient.post('/domain/block/get-members');
-    const mute_list_data = await apiClient.post('/domain/mute/get-members');
+    const block_list_response = await apiClient.post('/domain/block/get-members');
+    const mute_list_response = await apiClient.post('/domain/mute/get-members');
     const data = {
-      block_list_data,
-      mute_list_data,
+      blockMuteList: {
+        blockList: block_list_response.data || [],
+        muteList: mute_list_response.data || [],
+      },
     };
     return data;
   } catch (error) {

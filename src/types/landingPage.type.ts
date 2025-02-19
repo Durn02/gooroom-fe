@@ -43,3 +43,20 @@ export interface GetCastsResponse {
   cast_node: CastNode;
   creator: Creator;
 }
+
+interface BlockList {
+  block_edge_id: string;
+  user_id: string;
+  user_nickname: string;
+}
+
+interface MuteList {
+  mute_edge_id: string;
+  user_id: string;
+  user_nickname: string;
+}
+
+export interface BlockMuteList {
+  blockList: BlockList[];
+  muteList: MuteList[];
+}

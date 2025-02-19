@@ -28,6 +28,20 @@ export const blockFreind = async (userNodeId: string) => {
   }
 };
 
+export const unblockFriend = async (blockEdgeId: string) => {
+  try {
+    const response = await apiClient.delete('/domain/block/pop-members', {
+      data: { block_edge_id: blockEdgeId },
+    });
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error('사용자 차단 해제에 실패했습니다.', error);
+    throw error;
+  }
+};
+
 export const muteFreind = async (userNodeId: string) => {
   try {
     const response = await apiClient.post('/domain/mute/add_member', {
@@ -39,6 +53,20 @@ export const muteFreind = async (userNodeId: string) => {
     }
   } catch (error) {
     console.error('사용자 음소거에 실패했습니다.', error);
+    throw error;
+  }
+};
+
+export const unmuteFriend = async (muteEdgeId: string) => {
+  try {
+    const response = await apiClient.delete('/domain/mute/pop-members', {
+      data: { mute_edge_id: muteEdgeId },
+    });
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error('사용자 음소거 해제에 실패했습니다.', error);
     throw error;
   }
 };
