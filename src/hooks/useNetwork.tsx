@@ -19,7 +19,6 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
   const networkContainer = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    let isMounted = true;
     const init = async () => {
       await initDB();
       const cachedRoommates = await getAllRoommates();
@@ -93,32 +92,49 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
               break;
           }
         });
-
-        const pollNewCasts = async () => {
-          while (isMounted) {
-            try {
-              console.debug('Polling new casts...');
-              const newContents = await landingApi.fetchNewContents();
-
-              if (newContents.casts_received.length > 0) {
-                console.log("there's new contents");
-              }
-            } catch (error) {
-              console.error('Error fetching new cast data:', error);
-            }
-          }
-        };
-
-        pollNewCasts();
       }
     };
 
     init();
+
     return () => {
-      isMounted = false;
       networkManager?.destroy();
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!networkManager) return;
+    let isMounted = true;
+
+    const pollNewCasts = async () => {
+      while (isMounted) {
+        try {
+          console.debug('Polling new casts...');
+          const newContents = await landingApi.fetchNewContents();
+
+          //newRoommate가 최우선
+          if (newContents.new_roommates.length > 0) {
+            newContents.new_roommates.forEach((newRoommate) => {
+              console.log('newRoommate : ', newRoommate);
+              networkManager.addRoommate(newRoommate.new_roommate, newRoommate.neighbors);
+            });
+          }
+
+          if (newContents.casts_received.length > 0) {
+            console.log("there's new contents");
+          }
+        } catch (error) {
+          console.error('Error fetching new cast data:', error);
+        }
+      }
+    };
+
+    pollNewCasts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [networkManager]);
 
   return {
     networkManager,

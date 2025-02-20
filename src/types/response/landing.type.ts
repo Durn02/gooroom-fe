@@ -7,7 +7,7 @@ export interface GetContentsResponse {
 }
 
 interface NewRoommate {
-  new_rooomate: User;
+  new_roommate: User;
   neighbors: User[];
 }
 

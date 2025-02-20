@@ -326,7 +326,7 @@ export default function MyProfile() {
             setIsCreateStickerModalOpen(false);
             stickerApi.fetchMyStickers().then((data) => setStickers(data));
           }}
-          userId={userInfo.user_node_id}
+          userId={userInfo.node_id}
         />
       )}
       <PostModal
@@ -344,7 +344,7 @@ export default function MyProfile() {
             setIsCreatePostModalOpen(false);
             postApi.fetchPosts().then((data) => setPosts(data));
           }}
-          userId={userInfo.user_node_id}
+          userId={userInfo.node_id}
         />
       )}
     </div>
