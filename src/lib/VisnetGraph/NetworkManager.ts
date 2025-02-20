@@ -16,7 +16,7 @@ import {
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 import { addRoommate } from './constructNetwork';
 
-type NetworkEvent = { event: string; data?: unknown; scale?: number };
+type NetworkEvent = { event: string; data?: unknown; };
 
 export class NetworkManager {
   private network: Network;
@@ -93,26 +93,26 @@ export class NetworkManager {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
-            scale: this.network.getScale(),
+  
           });
         } else if (this.roommatesWithNeighbors.keys().some((roommateId) => roommateId === nodeId)) {
           this.observer?.({
             event: 'roommateNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-            scale: this.network.getScale(),
+  
           });
         } else {
           this.observer?.({
             event: 'neighborNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-            scale: this.network.getScale(),
+  
           });
         }
       } else {
         this.observer?.({
           event: 'backgroundClicked',
           data: null,
-          scale: this.network.getScale(),
+
         });
       }
     });
@@ -138,12 +138,12 @@ export class NetworkManager {
 
   public addLock() {
     this.lock++;
-    console.log('lock:', this.lock);
+
   }
   public removeLock() {
     if (this.lock > 0) {
       this.lock--;
-      console.log('lock:', this.lock);
+
     }
   }
   public getScale() {
@@ -166,9 +166,9 @@ export class NetworkManager {
   public startObservation() {
     this.addLock();
     this.observer?.({
-      event: 'startDrawing', // div 제거 이벤트
+      event: 'startObservation', // div 제거 이벤트
       data: null,
-      scale: this.network.getScale(),
+
     });
   }
 
@@ -176,11 +176,11 @@ export class NetworkManager {
     this.removeLock();
     if (this.lock > 0) return;
     this.observer?.({
-      event: 'finishDrawing', // div 재생성 이벤트
+      event: 'finishObservation', // div 재생성 이벤트
       data: this.getPositions(), // 추후 cast get positions 로 변경
-      scale: this.network.getScale(),
+
     });
-    console.log(this.network.getScale());
+
   }
 
   public destroy() {
@@ -191,6 +191,16 @@ export class NetworkManager {
     this.nodesDataSet.clear();
     this.edgesDataSet.clear();
     console.log('Nodes and edges cleared.');
+  }
+
+  public getSize(nodeId: string) {
+    return this.nodesDataSet.get(nodeId).size;
+  }
+
+  public getPosition(nodeId: string) { 
+    const pos = this.network.getPositions()[nodeId];
+    if (!pos) return null;
+    return this.network.canvasToDOM(pos);
   }
 
   public getNetwork() {

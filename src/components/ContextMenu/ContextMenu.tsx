@@ -6,19 +6,17 @@ import { useRouter } from 'next/navigation';
 interface ContextMenuProps {
   items: [string, () => void][];
   position: { x: number; y: number } | null;
-  onClose: () => void;
+
   userId?: string;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, onClose, userId }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, userId }) => {
   const router_in_component = useRouter();
   if (!position) return null;
 
   const handleItemClick = (item: [string, (userId: string, router: ReturnType<typeof useRouter>) => void]) => {
     const [, itemFunction] = item;
     itemFunction(userId, router_in_component);
-
-    onClose();
   };
 
   return (

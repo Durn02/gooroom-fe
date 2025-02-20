@@ -15,7 +15,11 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     items: [],
     userId: null,
   });
-  const [castsList, setCastsList] = useState<{ id: string; x: number; y: number; content: string }[]>([]);
+
+
+  const [castData, setCastData] = useState({});
+  const [initData, setInitData] = useState([]);
+  const [observing, setObserving] = useState(false);
   const networkContainer = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -51,7 +55,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
         fetchedCasts = contentsResponse.casts;
       }
 
-      setCastsList(fetchedCasts);
+      setInitData(fetchedCasts);
 
       if (networkContainer.current && loggedInUser) {
         const manager = new NetworkManager(
@@ -90,6 +94,12 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
             case 'backgroundClicked':
               setContextMenu({ position: null, items: [], userId: null });
               break;
+            case 'startObservation':
+              setObserving(true);
+              break;
+            case 'finishObservation':
+              setObserving(false);
+              break;
           }
         });
       }
@@ -105,6 +115,33 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
   useLayoutEffect(() => {
     if (!networkManager) return;
     let isMounted = true;
+    if(initData.length > 0) {
+      if(initData.length > 0) {
+        const groupedData = initData.reduce((acc, cast) => {
+            if (acc[cast.creator]) {
+                // 기존 userId에 content 추가
+                acc[cast.creator].content.push({
+                    message: cast.message,
+                    duration: cast.duration,
+                    createdAt: cast.created_at
+                });
+            } else {
+                // 새로운 userId로 객체 생성
+                acc[cast.creator] = {
+                    userId: cast.creator,
+                    content: [{
+                        message: cast.message,
+                        duration: cast.duration,
+                        createdAt: cast.created_at
+                    }]
+                };
+            }
+            return acc;
+        }, {});
+  
+        setCastData(groupedData);
+      }
+    }
 
     const pollNewCasts = async () => {
       while (isMounted) {
@@ -121,8 +158,33 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
           }
 
           if (newContents.casts_received.length > 0) {
-            console.log("there's new contents");
-          }
+            setCastData(prevCastData => {
+                const updatedCastData = { ...prevCastData };
+        
+                newContents.casts_received.forEach(cast => {
+                    if (updatedCastData[cast.creator]) {
+                        // 기존 userId가 있으면 content 추가
+                        updatedCastData[cast.creator].content.push({
+                            message: cast.message,
+                            duration: cast.duration,
+                            createdAt: cast.created_at
+                        });
+                    } else {
+                        // 새로운 userId면 새 객체 생성
+                        updatedCastData[cast.creator] = {
+                            userId: cast.creator,
+                            content: [{
+                                message: cast.message,
+                                duration: cast.duration,
+                                createdAt: cast.created_at
+                            }]
+                        };
+                    }
+                });
+    
+                return updatedCastData;
+            });
+        }
         } catch (error) {
           console.error('Error fetching new cast data:', error);
         }
@@ -133,6 +195,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
 
     return () => {
       isMounted = false;
+      networkManager?.destroy();
     };
   }, [networkManager]);
 
@@ -141,7 +204,9 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     networkContainer,
     contextMenu,
     setContextMenu,
-    castsList,
+    castData,
+    setCastData,
+    observing,
   };
 };
 
