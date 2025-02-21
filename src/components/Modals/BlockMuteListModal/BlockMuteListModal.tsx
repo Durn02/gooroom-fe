@@ -2,6 +2,7 @@
 import { BlockMuteList } from '@/src/types/landingPage.type';
 import { unblockFriend, unmuteFriend } from '@/src/lib/api/friend/friend.api';
 import React, { useEffect, useState, useCallback } from 'react';
+import { clearStore } from '@/src/utils/indexedDB';
 
 interface BlockMuteListModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ const BlockMuteListModal: React.FC<BlockMuteListModalProps> = ({ isOpen, onClose
       console.error('Failed to unblock friend');
       alert('차단 해제를 실패했습니다');
     } else {
+      Promise.all([clearStore('roommates'), clearStore('neighbors')]);
       alert('차단을 해제했습니다');
       window.location.reload();
     }
