@@ -31,8 +31,15 @@ const muteFriendFunc = (nodeId: string) => {
 
 const sendKnockFunc = async (nodeId: string) => {
   alert('send knock to ' + nodeId);
-  const data = await sendKnock(nodeId);
-  console.log(data);
+  try {
+    const data = await sendKnock(nodeId);
+    if (data.status === 200) {
+      alert('노크를 성공적으로 보냈습니다.');
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const MY_NODE_MENU_ITEMS = [
