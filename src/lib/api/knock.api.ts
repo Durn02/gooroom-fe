@@ -62,7 +62,7 @@ export const sendKnock = async (nodeId: string) => {
     const response = await apiClient.post('/domain/friend/knock/send', {
       to_user_node_id: nodeId,
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Failed to send knock:', error);
     throw error;
