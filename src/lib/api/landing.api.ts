@@ -11,11 +11,10 @@ export const fetchFriends = async (): Promise<{
   roommatesWithNeighbors: RoommateWithNeighbors[];
 }> => {
   try {
-    const { data } = await apiClient.get('/domain/friend/get-members');
+    const response = await apiClient.get('/domain/friend/get-members');
 
-    if (data.length > 0) {
-      const friendsData = data[0];
-      console.log('data:', friendsData);
+    if (response?.data?.length > 0) {
+      const friendsData = response.data[0];
       return {
         loggedInUser: friendsData.me,
         neighborsData: friendsData.pure_neighbors,
@@ -33,12 +32,11 @@ export const fetchFriends = async (): Promise<{
     throw error;
   }
 };
+
 export const fetchContents = async (): Promise<GetContentsResponse> => {
   try {
-    const { data } = await apiClient.get('/domain/content/get-contents');
-    console.debug('Fetched contents:', data);
-
-    return data ?? DEFAULT_CONTENTS;
+    const response = await apiClient.get('/domain/content/get-contents');
+    return response?.data ?? DEFAULT_CONTENTS;
   } catch (error) {
     console.error('Failed to fetch contents:', error);
     throw error;
@@ -47,10 +45,9 @@ export const fetchContents = async (): Promise<GetContentsResponse> => {
 
 export const fetchNewContents = async (): Promise<GetNewContentsResponse> => {
   try {
-    const { data } = await apiClient.get('/domain/content/get-new-contents');
-    console.debug('Fetched new contents:', data);
+    const response = await apiClient.get('/domain/content/get-new-contents');
 
-    return data ?? DEFAULT_NEW_CONTENTS;
+    return response?.data ?? DEFAULT_NEW_CONTENTS;
   } catch (error) {
     console.error('Failed to fetch newContents:', error);
     throw error;

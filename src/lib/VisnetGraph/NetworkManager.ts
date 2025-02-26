@@ -16,7 +16,7 @@ import {
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 import { addRoommate } from './constructNetwork';
 
-type NetworkEvent = { event: string; data?: unknown; };
+type NetworkEvent = { event: string; data?: unknown };
 
 export class NetworkManager {
   private network: Network;
@@ -31,9 +31,7 @@ export class NetworkManager {
   private lock: number = 0;
 
   setObserver(observer: (event: NetworkEvent) => void) {
-    console.log('set Observer called');
     this.observer = observer;
-    console.debug(observer);
   }
 
   constructor(
@@ -93,26 +91,22 @@ export class NetworkManager {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
-  
           });
         } else if (this.roommatesWithNeighbors.keys().some((roommateId) => roommateId === nodeId)) {
           this.observer?.({
             event: 'roommateNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-  
           });
         } else {
           this.observer?.({
             event: 'neighborNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-  
           });
         }
       } else {
         this.observer?.({
           event: 'backgroundClicked',
           data: null,
-
         });
       }
     });
@@ -138,12 +132,10 @@ export class NetworkManager {
 
   public addLock() {
     this.lock++;
-
   }
   public removeLock() {
     if (this.lock > 0) {
       this.lock--;
-
     }
   }
   public getScale() {
@@ -168,7 +160,6 @@ export class NetworkManager {
     this.observer?.({
       event: 'startObservation', // div 제거 이벤트
       data: null,
-
     });
   }
 
@@ -178,9 +169,7 @@ export class NetworkManager {
     this.observer?.({
       event: 'finishObservation', // div 재생성 이벤트
       data: this.getPositions(), // 추후 cast get positions 로 변경
-
     });
-
   }
 
   public destroy() {
@@ -197,7 +186,7 @@ export class NetworkManager {
     return this.nodesDataSet.get(nodeId).size;
   }
 
-  public getPosition(nodeId: string) { 
+  public getPosition(nodeId: string) {
     const pos = this.network.getPositions()[nodeId];
     if (!pos) return null;
     return this.network.canvasToDOM(pos);
