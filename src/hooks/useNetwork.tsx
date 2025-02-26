@@ -16,7 +16,6 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     userId: null,
   });
 
-
   const [castData, setCastData] = useState({});
   const [initData, setInitData] = useState([]);
   const [observing, setObserving] = useState(false);
@@ -28,34 +27,27 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
       const cachedRoommates = await getAllRoommates();
       const cachedNeighbors = await getAllData('neighbors');
 
-      let loggedInUser, neighborsData, roommatesWithNeighbors, fetchedCasts;
+      let loggedInUser, neighborsData, roommatesWithNeighbors;
+
+      landingApi.fetchContents().then((contentsResponse) => {
+        setInitData(contentsResponse.casts);
+      });
 
       if (cachedRoommates.length === 0 || cachedNeighbors.length === 0) {
-        const [friendsResponse, contentsResponse] = await Promise.all([
-          landingApi.fetchFriends(),
-          landingApi.fetchContents(),
-        ]);
-
+        const friendsResponse = await landingApi.fetchFriends();
         loggedInUser = friendsResponse.loggedInUser;
         neighborsData = friendsResponse.neighborsData;
         roommatesWithNeighbors = friendsResponse.roommatesWithNeighbors;
-        fetchedCasts = contentsResponse.casts;
 
         saveRoommates(roommatesWithNeighbors);
         saveDatas('neighbors', neighborsData);
       } else {
-        const [myInfoResponse, contentsResponse] = await Promise.all([
-          userApi.fetchMyInfo(),
-          landingApi.fetchContents(),
-        ]);
+        const myInfoResponse = await userApi.fetchMyInfo();
 
         loggedInUser = myInfoResponse;
         neighborsData = cachedNeighbors;
         roommatesWithNeighbors = cachedRoommates;
-        fetchedCasts = contentsResponse.casts;
       }
-
-      setInitData(fetchedCasts);
 
       if (networkContainer.current && loggedInUser) {
         const manager = new NetworkManager(
@@ -115,32 +107,32 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
   useLayoutEffect(() => {
     if (!networkManager) return;
     let isMounted = true;
-    if(initData.length > 0) {
-      if(initData.length > 0) {
-        const groupedData = initData.reduce((acc, cast) => {
-            if (acc[cast.creator]) {
-                // 기존 userId에 content 추가
-                acc[cast.creator].content.push({
-                    message: cast.message,
-                    duration: cast.duration,
-                    createdAt: cast.created_at
-                });
-            } else {
-                // 새로운 userId로 객체 생성
-                acc[cast.creator] = {
-                    userId: cast.creator,
-                    content: [{
-                        message: cast.message,
-                        duration: cast.duration,
-                        createdAt: cast.created_at
-                    }]
-                };
-            }
-            return acc;
-        }, {});
-  
-        setCastData(groupedData);
-      }
+    if (initData.length > 0) {
+      const groupedData = initData.reduce((acc, cast) => {
+        if (acc[cast.creator]) {
+          // 기존 userId에 content 추가
+          acc[cast.creator].content.push({
+            message: cast.message,
+            duration: cast.duration,
+            createdAt: cast.created_at,
+          });
+        } else {
+          // 새로운 userId로 객체 생성
+          acc[cast.creator] = {
+            userId: cast.creator,
+            content: [
+              {
+                message: cast.message,
+                duration: cast.duration,
+                createdAt: cast.created_at,
+              },
+            ],
+          };
+        }
+        return acc;
+      }, {});
+
+      setCastData(groupedData);
     }
 
     const pollNewCasts = async () => {
@@ -158,33 +150,35 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
           }
 
           if (newContents.casts_received.length > 0) {
-            setCastData(prevCastData => {
-                const updatedCastData = { ...prevCastData };
-        
-                newContents.casts_received.forEach(cast => {
-                    if (updatedCastData[cast.creator]) {
-                        // 기존 userId가 있으면 content 추가
-                        updatedCastData[cast.creator].content.push({
-                            message: cast.message,
-                            duration: cast.duration,
-                            createdAt: cast.created_at
-                        });
-                    } else {
-                        // 새로운 userId면 새 객체 생성
-                        updatedCastData[cast.creator] = {
-                            userId: cast.creator,
-                            content: [{
-                                message: cast.message,
-                                duration: cast.duration,
-                                createdAt: cast.created_at
-                            }]
-                        };
-                    }
-                });
-    
-                return updatedCastData;
+            setCastData((prevCastData) => {
+              const updatedCastData = { ...prevCastData };
+
+              newContents.casts_received.forEach((cast) => {
+                if (updatedCastData[cast.creator]) {
+                  // 기존 userId가 있으면 content 추가
+                  updatedCastData[cast.creator].content.push({
+                    message: cast.message,
+                    duration: cast.duration,
+                    createdAt: cast.created_at,
+                  });
+                } else {
+                  // 새로운 userId면 새 객체 생성
+                  updatedCastData[cast.creator] = {
+                    userId: cast.creator,
+                    content: [
+                      {
+                        message: cast.message,
+                        duration: cast.duration,
+                        createdAt: cast.created_at,
+                      },
+                    ],
+                  };
+                }
+              });
+
+              return updatedCastData;
             });
-        }
+          }
         } catch (error) {
           console.error('Error fetching new cast data:', error);
         }
@@ -197,7 +191,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
       isMounted = false;
       networkManager?.destroy();
     };
-  }, [networkManager]);
+  }, [networkManager, initData]);
 
   return {
     networkManager,
