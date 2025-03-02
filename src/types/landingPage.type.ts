@@ -23,25 +23,12 @@ export interface RoommateWithNeighbors {
   neighbors: string[];
 }
 
-interface CastNode {
+export interface Cast {
+  message: string;
   duration: number;
   created_at: string;
-  message: string;
-  deleted_at: string;
   node_id: string;
-}
-
-interface Creator {
-  my_memo: string;
-  nickname: string;
-  username: string;
-  node_id: string;
-  tags: string[];
-}
-
-export interface GetCastsResponse {
-  cast_node: CastNode;
-  creator: Creator;
+  creator: string;
 }
 
 interface BlockList {

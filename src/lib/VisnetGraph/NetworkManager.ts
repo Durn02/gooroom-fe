@@ -14,14 +14,15 @@ import {
   softenGraph,
 } from './graphInteraction';
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
+import { addRoommate } from './constructNetwork';
 
-type NetworkEvent = { event: string; data?: unknown; scale?: number };
+type NetworkEvent = { event: string; data?: unknown };
 
 export class NetworkManager {
   private network: Network;
   private loggedInUser: User;
-  private neighborsData: User[];
-  private roommatesWithNeighbors: RoommateWithNeighbors[];
+  private neighborsData: Map<string, User>;
+  private roommatesWithNeighbors: Map<string, RoommateWithNeighbors>;
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
   private interactedNodeId: string | null = null;
@@ -41,11 +42,16 @@ export class NetworkManager {
     callbacks: { [key: string]: (node_id: string) => void },
   ) {
     this.loggedInUser = loggedInUser;
-    this.neighborsData = neighborsData;
-    this.roommatesWithNeighbors = roommatesWithNeighbors;
+    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.node_id, neighbor]));
+    this.roommatesWithNeighbors = new Map(
+      roommatesWithNeighbors.map((roommateWithNeighbors) => [
+        roommateWithNeighbors.roommate.node_id,
+        roommateWithNeighbors,
+      ]),
+    );
 
     this.nodesDataSet.add(this.generateNodes(loggedInUser, roommatesWithNeighbors, neighborsData));
-    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors, neighborsData));
+    this.edgesDataSet.add(this.generateEdges(loggedInUser, roommatesWithNeighbors));
 
     this.network = new Network(
       networkContainer,
@@ -85,26 +91,22 @@ export class NetworkManager {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
-            scale: this.network.getScale(),
           });
-        } else if (this.roommatesWithNeighbors.some((roommate) => roommate.roommate.node_id === nodeId)) {
+        } else if (this.roommatesWithNeighbors.keys().some((roommateId) => roommateId === nodeId)) {
           this.observer?.({
             event: 'roommateNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-            scale: this.network.getScale(),
           });
         } else {
           this.observer?.({
             event: 'neighborNodeClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y, userId: nodeId },
-            scale: this.network.getScale(),
           });
         }
       } else {
         this.observer?.({
           event: 'backgroundClicked',
           data: null,
-          scale: this.network.getScale(),
         });
       }
     });
@@ -127,16 +129,19 @@ export class NetworkManager {
       }, 200); // 텀 조절 (밀리초 단위)
     });
   }
+
   public addLock() {
     this.lock++;
-    console.log('lock:', this.lock);
   }
   public removeLock() {
     if (this.lock > 0) {
       this.lock--;
-      console.log('lock:', this.lock);
     }
   }
+  public getScale() {
+    return this.network.getScale();
+  }
+
   public getPositions() {
     // 모든 노드의 원래 위치 가져오기
     const positions = this.network.getPositions(); // { node1: {x, y}, node2: {x, y} }
@@ -153,9 +158,8 @@ export class NetworkManager {
   public startObservation() {
     this.addLock();
     this.observer?.({
-      event: 'startDrawing', // div 제거 이벤트
+      event: 'startObservation', // div 제거 이벤트
       data: null,
-      scale: this.network.getScale(),
     });
   }
 
@@ -163,11 +167,9 @@ export class NetworkManager {
     this.removeLock();
     if (this.lock > 0) return;
     this.observer?.({
-      event: 'finishDrawing', // div 재생성 이벤트
+      event: 'finishObservation', // div 재생성 이벤트
       data: this.getPositions(), // 추후 cast get positions 로 변경
-      scale: this.network.getScale(),
     });
-    console.log(this.network.getScale());
   }
 
   public destroy() {
@@ -180,37 +182,50 @@ export class NetworkManager {
     console.log('Nodes and edges cleared.');
   }
 
+  public getSize(nodeId: string) {
+    return this.nodesDataSet.get(nodeId).size;
+  }
+
+  public getPosition(nodeId: string) {
+    const pos = this.network.getPositions()[nodeId];
+    if (!pos) return null;
+    return this.network.canvasToDOM(pos);
+  }
+
   public getNetwork() {
     return this.network;
   }
-  public setNetwork() {}
+
   public getLoggeInUser() {
     return this.loggedInUser;
   }
-  public setLoggeInUser() {}
+
   public getNeighborsData() {
     return this.neighborsData;
   }
-  public setNeighborsData() {}
+
   public getRoommatesWithNeighbors() {
     return this.roommatesWithNeighbors;
   }
-  public setRoommatesWithNeighbors() {}
-  public getNodesDataSet() {}
-  public setNodesDataSet() {}
-  public getEdgesDataSet() {}
-  public setEdgesDataSet() {}
+
+  public getNodesDataSet() {
+    return this.nodesDataSet;
+  }
+
+  public getEdgesDataSet() {
+    return this.edgesDataSet;
+  }
+
+  public getAddRoommate() {
+    return this.addRoommate;
+  }
 
   declare generateNodes: (
     loggedInUser: User,
     roommatesWithNeighbors: RoommateWithNeighbors[],
     neighborsData: User[],
   ) => Node[];
-  declare generateEdges: (
-    loggedInUser: User,
-    roommatesWithNeighbors: RoommateWithNeighbors[],
-    neighborsData: User[],
-  ) => Edge[];
+  declare generateEdges: (loggedInUser: User, roommatesWithNeighbors: RoommateWithNeighbors[]) => Edge[];
   declare zoomIn: () => void;
   declare zoomOut: () => void;
   declare resetPosition: () => void;
@@ -221,6 +236,7 @@ export class NetworkManager {
   declare getLoggedInUserPosition: () => Position;
   declare getRoommatesPosition: () => Position[];
   declare getRoommatesByNeighborsPositions: () => { [x: string]: Position[] }[];
+  declare addRoommate: (newRoommate: User, newNeighbors: User[]) => void;
 
   private bind() {
     this.zoomIn = zoomIn.bind(this);
@@ -233,6 +249,7 @@ export class NetworkManager {
     this.getLoggedInUserPosition = getLoggedInUserPosition.bind(this);
     this.getRoommatesPosition = getRoommatesPosition.bind(this);
     this.getRoommatesByNeighborsPositions = getRoommatesByNeighborsPositions.bind(this);
+    this.addRoommate = addRoommate.bind(this);
   }
 }
 

@@ -1,7 +1,9 @@
 'use client';
 
+import { DEFAULT_CONTENTS, DEFAULT_NEW_CONTENTS } from '@/src/constants/landing/default';
 import apiClient from '@/src/lib/api/axiosApiClient';
 import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
+import { GetContentsResponse, GetNewContentsResponse } from '@/src/types/response/landing.type';
 
 export const fetchFriends = async (): Promise<{
   loggedInUser: User | undefined;
@@ -9,11 +11,10 @@ export const fetchFriends = async (): Promise<{
   roommatesWithNeighbors: RoommateWithNeighbors[];
 }> => {
   try {
-    const { data } = await apiClient.get('/domain/friend/get-members');
+    const response = await apiClient.get('/domain/friend/get-members');
 
-    if (data.length > 0) {
-      const friendsData = data[0];
-      console.log('data:', friendsData);
+    if (response?.data?.length > 0) {
+      const friendsData = response.data[0];
       return {
         loggedInUser: friendsData.me,
         neighborsData: friendsData.pure_neighbors,
@@ -28,6 +29,27 @@ export const fetchFriends = async (): Promise<{
     };
   } catch (error) {
     console.error('Failed to fetch friends:', error);
+    throw error;
+  }
+};
+
+export const fetchContents = async (): Promise<GetContentsResponse> => {
+  try {
+    const response = await apiClient.get('/domain/content/get-contents');
+    return response?.data ?? DEFAULT_CONTENTS;
+  } catch (error) {
+    console.error('Failed to fetch contents:', error);
+    throw error;
+  }
+};
+
+export const fetchNewContents = async (): Promise<GetNewContentsResponse> => {
+  try {
+    const response = await apiClient.get('/domain/content/get-new-contents');
+
+    return response?.data ?? DEFAULT_NEW_CONTENTS;
+  } catch (error) {
+    console.error('Failed to fetch newContents:', error);
     throw error;
   }
 };

@@ -1,6 +1,8 @@
 import apiClient from './axiosApiClient';
 import { logout } from '../sign';
 import { BlockMuteList } from '@/src/types/landingPage.type';
+import axios from 'axios';
+import { API_URL } from '../config';
 
 export const fetchMyInfo = async () => {
   try {
@@ -60,12 +62,18 @@ export const getBlockMuteList = async (): Promise<{
   }
 };
 
-// export const checkLogin = async () => {
-//   try {
-//     await apiClient.get('domain/auth/verify-access-token');
-//     return true;
-//   } catch (error) {
-//     console.error('access token 검증 실패', error);
-//     throw error;
-//   }
-// };
+export const checkLogin = async (): Promise<boolean> => {
+  try {
+    const response = await axios.get(`${API_URL}/domain/auth/verify-access-token`, {
+      withCredentials: true,
+    });
+
+    if (response.status === 200) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('로그인 체크 중 오류 발생:', error);
+    return false;
+  }
+};

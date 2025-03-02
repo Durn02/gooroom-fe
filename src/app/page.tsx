@@ -5,30 +5,21 @@ import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import style from './LandingPage.module.css';
-import useUI from '@/src/hooks/useUI';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
-import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
 import { getKnocks } from '../lib/api/knock.api';
 import { BlockMuteList, KnockEdge } from '../types/landingPage.type';
 import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMuteListModal';
 import { getBlockMuteList } from '../lib/api/user.api';
+import CastUI from '../components/UI/CastUI';
 
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [contextMenu, setContextMenu] = useState<{
-    position: { x: number; y: number } | null;
-    items: [string, () => void][];
-    userId: string | null;
-  }>({
-    position: null,
-    items: [],
-    userId: null,
-  });
+
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
   const [knocks, setKnocks] = useState<KnockEdge[]>([]);
 
@@ -56,19 +47,7 @@ export default function Landing() {
     },
   };
 
-  const { networkManager, networkContainer } = useNetwork(callbacks);
-  const {} = useUI(networkManager);
-
-  // useEffect(() => {
-  //   console.log('networkManager set');
-  //   if (networkManager == undefined) {
-  //     console.log('setIsLoading set as false');
-  //     setIsLoading(true);
-  //   } else {
-  //     console.log('setIsLoading set as true');
-  //     setIsLoading(false);
-  //   }
-  // }, [networkManager]);
+  const { networkManager, networkContainer, castData, contextMenu, setContextMenu, observing } = useNetwork(callbacks);
 
   useEffect(() => {
     if (selectedUserId === '') {
@@ -77,7 +56,10 @@ export default function Landing() {
     if (selectedUserId === networkManager.getLoggeInUser().node_id) {
       router.push('/myprofile');
     } else if (
-      networkManager.getRoommatesWithNeighbors().some((instance) => instance.roommate.node_id === selectedUserId)
+      networkManager
+        .getRoommatesWithNeighbors()
+        .keys()
+        .some((roommateId) => roommateId === selectedUserId)
     ) {
       const encryptedUserId = encrypt(selectedUserId);
       router.push(`/roommateprofile/${encodeURIComponent(encryptedUserId)}`);
@@ -86,39 +68,6 @@ export default function Landing() {
       router.push(`/neighborprofile/${encodeURIComponent(encryptedUserId)}`);
     }
   }, [selectedUserId, networkManager, router]);
-
-  useEffect(() => {
-    if (networkManager) {
-      networkManager.setObserver(({ event, data }) => {
-        switch (event) {
-          case 'loggedInUserClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: MY_NODE_MENU_ITEMS as [string, () => void][],
-              userId: null,
-            });
-            break;
-          case 'roommateNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: ROOMMATE_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'neighborNodeClicked':
-            setContextMenu({
-              position: data as { x: number; y: number },
-              items: NEIGHBOR_NODE_MENU_ITEMS as [string, () => void][],
-              userId: (data as { x: number; y: number; userId: string }).userId,
-            });
-            break;
-          case 'backgroundClicked':
-            setContextMenu({ position: null, items: [], userId: null });
-            break;
-        }
-      });
-    }
-  }, [networkManager]);
 
   const cast_function = () => {
     console.log('cast function');
@@ -142,8 +91,8 @@ export default function Landing() {
             <div className={style.signoutButtonContainer}>
               <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
             </div>
-            <div className={style.visNetContainer}>
-              <div ref={networkContainer} id="NetworkContainer" style={{ height: '100vh', width: '100vw' }} />
+            <div className={style.visNetContainer} id="NetworkContainer">
+              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
               <ContextMenu
                 items={contextMenu.items}
                 position={contextMenu.position}
@@ -152,12 +101,31 @@ export default function Landing() {
                 onViewKnockList={handleViewKnockList}
                 onViewBlockMuteList={handleBlockMuteList}
               />
+
+              {!observing &&
+                Object.keys(castData).length > 0 &&
+                Object.values(castData).map(({ userId, content }) => {
+                  const position = networkManager?.getPosition(userId);
+                  if (!position) return null;
+                  return (
+                    <CastUI
+                      key={userId}
+                      content={content}
+                      userId={userId}
+                      scale={networkManager?.getScale() || 1}
+                      size={networkManager?.getSize(userId) || 1}
+                      position={{ x: position.x, y: position.y }}
+                      contentCount={content.length} // content 개수 전달
+                    />
+                  );
+                })}
             </div>
             {isKnockListModalOpen && (
               <KnockListModal
                 knocks={knocks}
                 onClose={() => setIsKnockListModalOpen(false)}
                 isOpen={isKnockListModalOpen}
+                addRoommate={networkManager.addRoommate}
               />
             )}
             {isBlockMuteListModalOpen && (

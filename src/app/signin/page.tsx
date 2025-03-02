@@ -8,7 +8,6 @@ import PwInput from '@/src/components/Input/PwInput/PwInput';
 import { useState } from 'react';
 import { API_URL } from '@/src/lib/config';
 import { useRouter } from 'next/navigation';
-// import { userApi } from '@/src/lib/api';
 
 type signinRequestData = {
   email: string;

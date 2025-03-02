@@ -38,6 +38,8 @@ export const saveRoommates = async (roommatesWithNeighbors: RoommateWithNeighbor
       ...item,
       node_id: item.roommate?.node_id,
     }));
+
+    console.log('transformedBatch : ', transformedBatch);
     await Promise.all(transformedBatch.map((transformedBatch) => store.put(transformedBatch)));
   }
 

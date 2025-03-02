@@ -1,7 +1,8 @@
 // constructNetwork.ts
 import { Node, Edge } from 'vis-network';
 import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
-// import { DataSet } from 'vis-data';
+import { NetworkManager } from './NetworkManager';
+import { saveRoommates, saveDatas, deleteData } from '@/src/utils/indexedDB';
 
 export function generateNodes(
   loggedInUser: User,
@@ -18,7 +19,7 @@ export function generateNodes(
   const roommateNodes: Node[] = roommatesWithNeighbors.map((e) => ({
     id: e.roommate.node_id,
     label: e.roommate.nickname,
-    group: e.roommate_edge.group ? e.roommate_edge.group : 'friend',
+    group: e.roommate_edge.group ? e.roommate_edge.group : 'roommate',
     size: 15,
   }));
 
@@ -39,6 +40,7 @@ export function generateEdges(loggedInUser: User, roommatesWithNeighbors: Roomma
   roommatesWithNeighbors.forEach((e) => {
     const edgeKey = `${loggedInUser.node_id}-${e.roommate.node_id}`;
     edges.push({
+      id: edgeKey,
       from: loggedInUser.node_id,
       to: e.roommate.node_id,
     });
@@ -64,476 +66,80 @@ export function generateEdges(loggedInUser: User, roommatesWithNeighbors: Roomma
   return edges;
 }
 
-// export const addFriend = (
-//   currentFriendsData: {
-//     loggedInUser: User;
-//     roommates: RoomMateData[];
-//     neighbors: User[];
-//     roommatesWithNeighbors: RoommateWithNeighbors[];
-//   },
-//   newFriendsData: {
-//     loggedInUser: User;
-//     roommates: RoomMateData[];
-//     neighbors: User[];
-//     roommatesWithNeighbors: RoommateWithNeighbors[];
-//   },
-//   currentNodesDataset: DataSet<Node>,
-//   currentEdgesDataset: DataSet<Edge>,
-// ) => {
-//   const newNodes: Node[] = generateNodes(
-//     newFriendsData.loggedInUser,
-//     newFriendsData.roommates,
-//     newFriendsData.neighbors,
-//   );
-
-//   const newEdges: Edge[] = generateEdges(
-//     newFriendsData.loggedInUser,
-//     newFriendsData.roommates,
-//     newFriendsData.roommatesWithNeighbors,
-//   );
-
-//   const newNodesDataset: DataSet<Node> = new DataSet<Node>();
-//   newNodesDataset.add(newNodes);
-
-//   const currentNodesIds = new Set(currentNodesDataset.getIds());
-//   const newNodesIds = new Set(newNodesDataset.getIds());
-//   const nodesToAdd = newNodesIds.difference(currentNodesIds);
-//   const arrNodesToAdd = Array.from(nodesToAdd);
-
-//   const newEdgesDataset: DataSet<Edge> = new DataSet<Edge>();
-//   newEdgesDataset.add(newEdges);
-
-//   const currentEdgesIds = new Set(currentEdgesDataset.getIds());
-//   const newEdgesIds = new Set(newEdgesDataset.getIds());
-//   const edgesToAdd = newEdgesIds.difference(currentEdgesIds);
-//   const arrEdgesToAdd = Array.from(edgesToAdd);
-
-//   currentNodesDataset.add(newNodesDataset.get(arrNodesToAdd));
-//   currentEdgesDataset.add(newEdgesDataset.get(arrEdgesToAdd));
-
-//   currentFriendsData.loggedInUser = newFriendsData.loggedInUser;
-//   currentFriendsData.roommates = newFriendsData.roommates;
-//   currentFriendsData.neighbors = newFriendsData.neighbors;
-//   currentFriendsData.roommatesWithNeighbors = newFriendsData.roommatesWithNeighbors;
-
-// Convert currentNodes and newNodes arrays into hash maps for fast lookup
-// const currentNodeMap: { [key: string]: Node } = currentNodes.reduce(
-//   (map, node) => {
-//     if (node.id) {
-//       map[node.id] = node;
-//     }
-//     return map;
-//   },
-//   {} as { [key: string]: Node },
-// );
-
-// currentNodesDataset.getIds()
-
-// const newNodeMap: { [key: string]: Node } = newNodes.reduce(
-//   (map, node) => {
-//     if (node.id) {
-//       map[node.id] = node;
-//     }
-//     return map;
-//   },
-//   {} as { [key: string]: Node },
-// );
-
-// // Convert currentEdges and newEdges into hash maps for fast lookup
-// const currentEdgeMap: { [key: string]: Edge } = currentEdges.reduce(
-//   (map, edge) => {
-//     const edgeKey = `${edge.from}-${edge.to}`;
-//     map[edgeKey] = edge;
-//     return map;
-//   },
-//   {} as { [key: string]: Edge },
-// );
-
-// const newEdgeMap: { [key: string]: Edge } = newEdges.reduce(
-//   (map, edge) => {
-//     const edgeKey = `${edge.from}-${edge.to}`;
-//     map[edgeKey] = edge;
-//     return map;
-//   },
-//   {} as { [key: string]: Edge },
-// );
-
-// // Get the current node and edge IDs
-// const currentNodeIds = Object.keys(currentNodeMap);
-// const currentEdgeIds = Object.keys(currentEdgeMap);
-
-// // Get new node and edge IDs
-// const newNodeIds = Object.keys(newNodeMap);
-// const newEdgeIds = Object.keys(newEdgeMap);
-
-// // 1. Identify nodes to add, update, and remove
-// const nodesToAdd = newNodeIds
-//   .filter((id) => !currentNodeMap[id]) // Nodes that don't exist in current data
-//   .map((id) => newNodeMap[id]);
-
-// const nodesToUpdate = newNodeIds
-//   .filter((id) => currentNodeMap[id] && JSON.stringify(currentNodeMap[id]) !== JSON.stringify(newNodeMap[id])) // Nodes that have changed
-//   .map((id) => newNodeMap[id]);
-
-// const nodesToRemove = currentNodeIds.filter((id) => !newNodeMap[id]); // Nodes that exist in current data but not in new data
-
-// // 2. Identify edges to add, update, and remove
-// // const edgesToAdd = newEdgeIds
-// //   .filter((id) => !currentEdgeMap[id]) // Edges that don't exist in current data
-// //   .map((id) => newEdgeMap[id]);
-
-// const edgesToUpdate = newEdgeIds
-//   .filter((id) => currentEdgeMap[id] && JSON.stringify(currentEdgeMap[id]) !== JSON.stringify(newEdgeMap[id])) // Edges that have changed
-//   .map((id) => newEdgeMap[id]);
-
-// const edgesToRemove = currentEdgeIds.filter((id) => !newEdgeMap[id]); // Edges that exist in current data but not in new data
-
-// Add new nodes and edges
-// if (nodesToAdd.length > 0) {
-//   nodesDataset.add(nodesToAdd);
-//   console.log('Added nodes: ', nodesToAdd);
-// }
-
-// if (edgesToAdd.length > 0) {
-//   edgesDataset.add(edgesToAdd);
-//   console.log('Added edges: ', edgesToAdd);
-// }
-
-// // Update existing nodes and edges
-// if (nodesToUpdate.length > 0) {
-//   nodesDataset.update(nodesToUpdate);
-//   console.log('Updated nodes: ', nodesToUpdate);
-// }
-
-// if (edgesToUpdate.length > 0) {
-//   edgesDataset.update(edgesToUpdate);
-//   console.log('Updated edges: ', edgesToUpdate);
-// }
-
-// // Remove old nodes and edges
-// if (nodesToRemove.length > 0) {
-//   nodesDataset.remove(nodesToRemove);
-//   console.log('Removed nodes: ', nodesToRemove);
-// }
-
-// if (edgesToRemove.length > 0) {
-//   edgesDataset.remove(edgesToRemove);
-//   console.log('Removed edges: ', edgesToRemove);
-// }
-// };
-
-// export const addFriend = (
-//   currentFriendsData: {
-//     loggedInUser: User;
-//     roommates: RoomMateData[];
-//     neighbors: User[];
-//     roommatesWithNeighbors: RoommateWithNeighbors[];
-//   },
-//   newFriendsData: {
-//     loggedInUser: User;
-//     roommates: RoomMateData[];
-//     neighbors: User[];
-//     roommatesWithNeighbors: RoommateWithNeighbors[];
-//   },
-//   currentNodesDataset: DataSet<Node>,
-//   currentEdgesDataset: DataSet<Edge>,
-// ) => {
-//   const newNodes: Node[] = generateNodes(
-//     newFriendsData.loggedInUser,
-//     newFriendsData.roommates,
-//     newFriendsData.neighbors,
-//   );
-
-//   const newEdges: Edge[] = generateEdges(
-//     newFriendsData.loggedInUser,
-//     newFriendsData.roommates,
-//     newFriendsData.roommatesWithNeighbors,
-//   );
-
-//   const newNodesDataset: DataSet<Node> = new DataSet<Node>();
-//   newNodesDataset.add(newNodes);
-
-//   const currentNodesIds = new Set(currentNodesDataset.getIds());
-//   const newNodesIds = new Set(newNodesDataset.getIds());
-//   const nodesToAdd = newNodesIds.difference(currentNodesIds);
-//   const arrNodesToAdd = Array.from(nodesToAdd);
-
-//   const newEdgesDataset: DataSet<Edge> = new DataSet<Edge>();
-//   newEdgesDataset.add(newEdges);
-
-//   const currentEdgesIds = new Set(currentEdgesDataset.getIds());
-//   const newEdgesIds = new Set(newEdgesDataset.getIds());
-//   const edgesToAdd = newEdgesIds.difference(currentEdgesIds);
-//   const arrEdgesToAdd = Array.from(edgesToAdd);
-
-//   currentNodesDataset.add(newNodesDataset.get(arrNodesToAdd));
-//   currentEdgesDataset.add(newEdgesDataset.get(arrEdgesToAdd));
-
-//   currentFriendsData.loggedInUser = newFriendsData.loggedInUser;
-//   currentFriendsData.roommates = newFriendsData.roommates;
-//   currentFriendsData.neighbors = newFriendsData.neighbors;
-//   currentFriendsData.roommatesWithNeighbors = newFriendsData.roommatesWithNeighbors;
-
-// Convert currentNodes and newNodes arrays into hash maps for fast lookup
-// const currentNodeMap: { [key: string]: Node } = currentNodes.reduce(
-//   (map, node) => {
-//     if (node.id) {
-//       map[node.id] = node;
-//     }
-//     return map;
-//   },
-//   {} as { [key: string]: Node },
-// );
-
-// currentNodesDataset.getIds()
-
-// const newNodeMap: { [key: string]: Node } = newNodes.reduce(
-//   (map, node) => {
-//     if (node.id) {
-//       map[node.id] = node;
-//     }
-//     return map;
-//   },
-//   {} as { [key: string]: Node },
-// );
-
-// // Convert currentEdges and newEdges into hash maps for fast lookup
-// const currentEdgeMap: { [key: string]: Edge } = currentEdges.reduce(
-//   (map, edge) => {
-//     const edgeKey = `${edge.from}-${edge.to}`;
-//     map[edgeKey] = edge;
-//     return map;
-//   },
-//   {} as { [key: string]: Edge },
-// );
-
-// const newEdgeMap: { [key: string]: Edge } = newEdges.reduce(
-//   (map, edge) => {
-//     const edgeKey = `${edge.from}-${edge.to}`;
-//     map[edgeKey] = edge;
-//     return map;
-//   },
-//   {} as { [key: string]: Edge },
-// );
-
-// // Get the current node and edge IDs
-// const currentNodeIds = Object.keys(currentNodeMap);
-// const currentEdgeIds = Object.keys(currentEdgeMap);
-
-// // Get new node and edge IDs
-// const newNodeIds = Object.keys(newNodeMap);
-// const newEdgeIds = Object.keys(newEdgeMap);
-
-// // 1. Identify nodes to add, update, and remove
-// const nodesToAdd = newNodeIds
-//   .filter((id) => !currentNodeMap[id]) // Nodes that don't exist in current data
-//   .map((id) => newNodeMap[id]);
-
-// const nodesToUpdate = newNodeIds
-//   .filter((id) => currentNodeMap[id] && JSON.stringify(currentNodeMap[id]) !== JSON.stringify(newNodeMap[id])) // Nodes that have changed
-//   .map((id) => newNodeMap[id]);
-
-// const nodesToRemove = currentNodeIds.filter((id) => !newNodeMap[id]); // Nodes that exist in current data but not in new data
-
-// // 2. Identify edges to add, update, and remove
-// // const edgesToAdd = newEdgeIds
-// //   .filter((id) => !currentEdgeMap[id]) // Edges that don't exist in current data
-// //   .map((id) => newEdgeMap[id]);
-
-// const edgesToUpdate = newEdgeIds
-//   .filter((id) => currentEdgeMap[id] && JSON.stringify(currentEdgeMap[id]) !== JSON.stringify(newEdgeMap[id])) // Edges that have changed
-//   .map((id) => newEdgeMap[id]);
-
-// const edgesToRemove = currentEdgeIds.filter((id) => !newEdgeMap[id]); // Edges that exist in current data but not in new data
-
-// Add new nodes and edges
-// if (nodesToAdd.length > 0) {
-//   nodesDataset.add(nodesToAdd);
-//   console.log('Added nodes: ', nodesToAdd);
-// }
-
-// if (edgesToAdd.length > 0) {
-//   edgesDataset.add(edgesToAdd);
-//   console.log('Added edges: ', edgesToAdd);
-// }
-
-// // Update existing nodes and edges
-// if (nodesToUpdate.length > 0) {
-//   nodesDataset.update(nodesToUpdate);
-//   console.log('Updated nodes: ', nodesToUpdate);
-// }
-
-// if (edgesToUpdate.length > 0) {
-//   edgesDataset.update(edgesToUpdate);
-//   console.log('Updated edges: ', edgesToUpdate);
-// }
-
-// // Remove old nodes and edges
-// if (nodesToRemove.length > 0) {
-//   nodesDataset.remove(nodesToRemove);
-//   console.log('Removed nodes: ', nodesToRemove);
-// }
-
-// if (edgesToRemove.length > 0) {
-//   edgesDataset.remove(edgesToRemove);
-//   console.log('Removed edges: ', edgesToRemove);
-// }
-// };
-
-export const addFriend = (
-  currentFriendsData: {
-    loggedInUser: User;
-    roommates: RoomMateData[];
-    neighbors: User[];
-    roommatesWithNeighbors: RoommateWithNeighbors[];
-  },
-  newFriendsData: {
-    loggedInUser: User;
-    roommates: RoomMateData[];
-    neighbors: User[];
-    roommatesWithNeighbors: RoommateWithNeighbors[];
-  },
-  currentNodesDataset: DataSet<Node>,
-  currentEdgesDataset: DataSet<Edge>,
-) => {
-  const newNodes: Node[] = generateNodes(
-    newFriendsData.loggedInUser,
-    newFriendsData.roommates,
-    newFriendsData.neighbors,
-  );
-
-  const newEdges: Edge[] = generateEdges(
-    newFriendsData.loggedInUser,
-    newFriendsData.roommates,
-    newFriendsData.roommatesWithNeighbors,
-  );
-
-  const newNodesDataset: DataSet<Node> = new DataSet<Node>();
-  newNodesDataset.add(newNodes);
-
-  const currentNodesIds = new Set(currentNodesDataset.getIds());
-  const newNodesIds = new Set(newNodesDataset.getIds());
-  const nodesToAdd = newNodesIds.difference(currentNodesIds);
-  const arrNodesToAdd = Array.from(nodesToAdd);
-
-  const newEdgesDataset: DataSet<Edge> = new DataSet<Edge>();
-  newEdgesDataset.add(newEdges);
-
-  const currentEdgesIds = new Set(currentEdgesDataset.getIds());
-  const newEdgesIds = new Set(newEdgesDataset.getIds());
-  const edgesToAdd = newEdgesIds.difference(currentEdgesIds);
-  const arrEdgesToAdd = Array.from(edgesToAdd);
-
-  currentNodesDataset.add(newNodesDataset.get(arrNodesToAdd));
-  currentEdgesDataset.add(newEdgesDataset.get(arrEdgesToAdd));
-
-  currentFriendsData.loggedInUser = newFriendsData.loggedInUser;
-  currentFriendsData.roommates = newFriendsData.roommates;
-  currentFriendsData.neighbors = newFriendsData.neighbors;
-  currentFriendsData.roommatesWithNeighbors = newFriendsData.roommatesWithNeighbors;
-
-  // Convert currentNodes and newNodes arrays into hash maps for fast lookup
-  // const currentNodeMap: { [key: string]: Node } = currentNodes.reduce(
-  //   (map, node) => {
-  //     if (node.id) {
-  //       map[node.id] = node;
-  //     }
-  //     return map;
-  //   },
-  //   {} as { [key: string]: Node },
-  // );
-
-  // currentNodesDataset.getIds()
-
-  // const newNodeMap: { [key: string]: Node } = newNodes.reduce(
-  //   (map, node) => {
-  //     if (node.id) {
-  //       map[node.id] = node;
-  //     }
-  //     return map;
-  //   },
-  //   {} as { [key: string]: Node },
-  // );
-
-  // // Convert currentEdges and newEdges into hash maps for fast lookup
-  // const currentEdgeMap: { [key: string]: Edge } = currentEdges.reduce(
-  //   (map, edge) => {
-  //     const edgeKey = `${edge.from}-${edge.to}`;
-  //     map[edgeKey] = edge;
-  //     return map;
-  //   },
-  //   {} as { [key: string]: Edge },
-  // );
-
-  // const newEdgeMap: { [key: string]: Edge } = newEdges.reduce(
-  //   (map, edge) => {
-  //     const edgeKey = `${edge.from}-${edge.to}`;
-  //     map[edgeKey] = edge;
-  //     return map;
-  //   },
-  //   {} as { [key: string]: Edge },
-  // );
-
-  // // Get the current node and edge IDs
-  // const currentNodeIds = Object.keys(currentNodeMap);
-  // const currentEdgeIds = Object.keys(currentEdgeMap);
-
-  // // Get new node and edge IDs
-  // const newNodeIds = Object.keys(newNodeMap);
-  // const newEdgeIds = Object.keys(newEdgeMap);
-
-  // // 1. Identify nodes to add, update, and remove
-  // const nodesToAdd = newNodeIds
-  //   .filter((id) => !currentNodeMap[id]) // Nodes that don't exist in current data
-  //   .map((id) => newNodeMap[id]);
-
-  // const nodesToUpdate = newNodeIds
-  //   .filter((id) => currentNodeMap[id] && JSON.stringify(currentNodeMap[id]) !== JSON.stringify(newNodeMap[id])) // Nodes that have changed
-  //   .map((id) => newNodeMap[id]);
-
-  // const nodesToRemove = currentNodeIds.filter((id) => !newNodeMap[id]); // Nodes that exist in current data but not in new data
-
-  // // 2. Identify edges to add, update, and remove
-  // // const edgesToAdd = newEdgeIds
-  // //   .filter((id) => !currentEdgeMap[id]) // Edges that don't exist in current data
-  // //   .map((id) => newEdgeMap[id]);
-
-  // const edgesToUpdate = newEdgeIds
-  //   .filter((id) => currentEdgeMap[id] && JSON.stringify(currentEdgeMap[id]) !== JSON.stringify(newEdgeMap[id])) // Edges that have changed
-  //   .map((id) => newEdgeMap[id]);
-
-  // const edgesToRemove = currentEdgeIds.filter((id) => !newEdgeMap[id]); // Edges that exist in current data but not in new data
-
-  // Add new nodes and edges
-  // if (nodesToAdd.length > 0) {
-  //   nodesDataset.add(nodesToAdd);
-  //   console.log('Added nodes: ', nodesToAdd);
-  // }
-
-  // if (edgesToAdd.length > 0) {
-  //   edgesDataset.add(edgesToAdd);
-  //   console.log('Added edges: ', edgesToAdd);
-  // }
-
-  // // Update existing nodes and edges
-  // if (nodesToUpdate.length > 0) {
-  //   nodesDataset.update(nodesToUpdate);
-  //   console.log('Updated nodes: ', nodesToUpdate);
-  // }
-
-  // if (edgesToUpdate.length > 0) {
-  //   edgesDataset.update(edgesToUpdate);
-  //   console.log('Updated edges: ', edgesToUpdate);
-  // }
-
-  // // Remove old nodes and edges
-  // if (nodesToRemove.length > 0) {
-  //   nodesDataset.remove(nodesToRemove);
-  //   console.log('Removed nodes: ', nodesToRemove);
-  // }
-
-  // if (edgesToRemove.length > 0) {
-  //   edgesDataset.remove(edgesToRemove);
-  //   console.log('Removed edges: ', edgesToRemove);
-  // }
-};
+export function addRoommate(this: NetworkManager, newRoommate: User, newNeighbors: User[]) {
+  const roommatesWithNeighbors = this.getRoommatesWithNeighbors();
+  const neighborsData = this.getNeighborsData();
+  const nodes = this.getNodesDataSet();
+  const edges = this.getEdgesDataSet();
+
+  // 1. roommatesWithNeighbors에 newRoommate에 newNeighbors의 node_id들을 property로 붙여서 추가
+  const newRoommateWithNeighbors: RoommateWithNeighbors = {
+    roommate: newRoommate,
+    roommate_edge: {
+      memo: '',
+      edge_id: '',
+      group: '',
+    },
+    neighbors: newNeighbors.map((neighbor) => neighbor.node_id),
+  };
+  roommatesWithNeighbors.set(newRoommate.node_id, newRoommateWithNeighbors);
+
+  // 2. newRoommate가 기존 neighborsData에 존재했었다면 제거
+  neighborsData.delete(newRoommate.node_id);
+
+  // 3. newNeighbors를 순회하면서 roommatesWithNeighbors와 neighborsData에 존재하지 않으면 추가, 별도의 Node[]에 저장
+  const newNeighborNodes: Node[] = [];
+  const newNeighborsForIdb: User[] = [];
+  newNeighbors.forEach((neighbor) => {
+    if (!(neighborsData.get(neighbor.node_id) || roommatesWithNeighbors.get(neighbor.node_id))) {
+      neighborsData.set(neighbor.node_id, neighbor);
+      newNeighborNodes.push({
+        id: neighbor.node_id,
+        label: neighbor.nickname,
+        group: 'neighbor',
+        size: 10,
+      });
+      newNeighborsForIdb.push(neighbor);
+    }
+  });
+
+  // 4. NodeDataSet에 newRoommate_id를 가진 노드가 존재했다면(Roommate,Neighbor 어떻든 상관없음) update. 그렇지 않다면 추가
+  nodes.update({
+    id: newRoommate.node_id,
+    label: newRoommate.nickname,
+    group: 'roommate',
+    size: 15,
+  });
+
+  // 5. newRoommate와 newNeighbors의 Edges를 생성. 기존 EdgeDataSet을 참고해서 nR->nN,nN->nR edge가 존재하지 않으면 생성
+  const newEdges: Edge[] = [];
+  newNeighbors.forEach((neighbor) => {
+    if (
+      !edges.get(`${newRoommate.node_id}-${neighbor.node_id}0`) &&
+      !edges.get(`${neighbor.node_id}-${newRoommate.node_id}0`)
+    ) {
+      newEdges.push({
+        id: `${newRoommate.node_id}-${neighbor.node_id}0`,
+        from: newRoommate.node_id,
+        to: neighbor.node_id,
+      });
+    }
+  });
+
+  // 6. loggedInUser와 newRoommate 연결
+  const loggedInUserId = this.getLoggeInUser().node_id;
+  newEdges.push({
+    id: `${loggedInUserId}-${newRoommate.node_id}`,
+    from: loggedInUserId,
+    to: newRoommate.node_id,
+  });
+
+  // 7. NodeDataSet에 3에서 추가된 newNeighbors Nodes를 추가, 구성해놓은 edges 추가가
+  nodes.add(newNeighborNodes);
+  edges.add(newEdges);
+
+  console.log('newRoommateWithNeighbors : ', newRoommateWithNeighbors);
+  deleteData('neighbors', newRoommate.node_id);
+  saveRoommates([newRoommateWithNeighbors]);
+  saveDatas('neighbors', newNeighborsForIdb);
+}

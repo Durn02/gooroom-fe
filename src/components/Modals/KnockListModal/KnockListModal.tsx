@@ -2,16 +2,17 @@
 'use client';
 import { acceptKnock, rejectKnock } from '@/src/lib/api/knock.api';
 import { KnockEdge } from '@/src/types/landingPage.type';
-import { clearStore } from '@/src/utils/indexedDB';
 import React, { useEffect, useState, useCallback } from 'react';
+import { User } from '@/src/types/landingPage.type';
 
 interface KnockListModalProps {
   isOpen: boolean;
   onClose: () => void;
   knocks?: KnockEdge[];
+  addRoommate: (newRoommate: User, newNeighbors: User[]) => void;
 }
 
-const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks }) => {
+const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks, addRoommate }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -50,8 +51,9 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
     const select = window.confirm('노크를 수락하시겠습니까?');
     if (!select) return;
     const data = await acceptKnock(knockId);
-    Promise.all([clearStore('roommates'), clearStore('neighbors')]);
-    window.location.reload();
+    console.log('knockData in acceptknock func : ', data);
+    console.log('addRoommate in acceptknock func : ', addRoommate);
+    addRoommate(data.newRoommate, data.newNeighbors);
     if (!data) {
       console.error('Failed to accept knock');
       alert('노크 수락을 실패했습니다');

@@ -22,22 +22,13 @@ export const acceptKnock = async (
   newNeighbors: User[];
 }> => {
   try {
-    const { data } = await apiClient.post('/domain/friend/knock/accept', {
+    const response = await apiClient.post('/domain/friend/knock/accept', {
       knock_id: knockId,
     });
 
-    if (data.length > 0) {
-      const knockData = data[0];
-      console.log('data:', knockData);
-      return {
-        newRoommate: knockData.new_roommate,
-        newNeighbors: knockData.new_neighbors,
-      };
-    }
-
     return {
-      newRoommate: {} as User,
-      newNeighbors: [],
+      newRoommate: response.data?.new_roommate,
+      newNeighbors: response.data?.new_neighbors,
     };
   } catch (error) {
     console.error('Failed to accept knock:', error);
