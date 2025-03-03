@@ -48,7 +48,11 @@ export const muteFreind = async (userNodeId: string) => {
       user_node_id: userNodeId,
     });
     if (response.status === 200) {
-      alert('사용자를 음소거했습니다.');
+      if (response.data?.message === 'muted successfully') {
+        alert('사용자를 음소거했습니다.');
+      } else if (response.data?.message === 'already muted') {
+        alert('이미 사용자를 음소거했습니다.');
+      }
       return response.data;
     }
   } catch (error) {
