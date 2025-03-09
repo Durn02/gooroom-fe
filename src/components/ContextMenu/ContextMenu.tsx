@@ -9,6 +9,7 @@ interface ContextMenuProps {
   userId?: string;
   onViewKnockList: () => void;
   onViewBlockMuteList: () => void;
+  onCreateCast: () => void;
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -18,6 +19,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   userId,
   onViewKnockList,
   onViewBlockMuteList,
+  onCreateCast,
 }) => {
   const router_in_component = useRouter();
 
@@ -31,7 +33,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     } else if (itemName === MY_NODE_MENU_ITEMS[2][0]) {
       // MY_NODE_MENU_ITEMS[2][0] is 'view block/mute list'
       onViewBlockMuteList();
-    } else {
+    } else if (itemName === MY_NODE_MENU_ITEMS[3][0]) {
+      onCreateCast();
+    } 
+    else {
       itemFunction(userId, router_in_component);
     }
     onClose();

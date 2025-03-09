@@ -15,6 +15,7 @@ import { BlockMuteList, KnockEdge } from '../types/landingPage.type';
 import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMuteListModal';
 import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
+import CastModal from '../components/Modals/CastModal/CastModal';
 
 export default function Landing() {
   const router = useRouter();
@@ -25,6 +26,9 @@ export default function Landing() {
 
   const [isBlockMuteListModalOpen, setIsBlockMuteListModalOpen] = useState(false);
   const [blockMuteList, setBlockMuteList] = useState<BlockMuteList>({ blockList: [], muteList: [] });
+  
+  const [isCreateCastModalOpen, setIsCreateCastModalOpen] = useState(false);
+
 
   const handleViewKnockList = async () => {
     const data = await getKnocks();
@@ -36,6 +40,10 @@ export default function Landing() {
     const data = await getBlockMuteList();
     setBlockMuteList(data.blockMuteList);
     setIsBlockMuteListModalOpen(true);
+  };
+
+  const handleCreateCast = () => {
+    setIsCreateCastModalOpen(true);
   };
 
   const callbacks = {
@@ -100,6 +108,7 @@ export default function Landing() {
                 userId={contextMenu.userId}
                 onViewKnockList={handleViewKnockList}
                 onViewBlockMuteList={handleBlockMuteList}
+                onCreateCast={handleCreateCast}
               />
 
               {!observing &&
@@ -133,6 +142,14 @@ export default function Landing() {
                 blockMuteList={blockMuteList}
                 onClose={() => setIsBlockMuteListModalOpen(false)}
                 isOpen={isBlockMuteListModalOpen}
+              />
+            )}
+            {isCreateCastModalOpen && (
+              <CastModal
+                isOpen={isCreateCastModalOpen}
+                onClose={() => setIsCreateCastModalOpen(false)}
+                setCastMessage={() => {}}
+                cast={() => {}}
               />
             )}
           </div>

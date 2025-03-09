@@ -58,6 +58,7 @@ export const MY_NODE_MENU_ITEMS = [
   ['view my profile', viewMyProfile],
   ['view knock list', () => {}],
   ['view block/mute list', () => {}],
+  ['create cast', () => {}],
   ['logout', userApi.onLogoutButtonClickHandler],
 ];
 
