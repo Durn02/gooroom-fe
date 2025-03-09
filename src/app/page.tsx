@@ -148,8 +148,6 @@ export default function Landing() {
               <CastModal
                 isOpen={isCreateCastModalOpen}
                 onClose={() => setIsCreateCastModalOpen(false)}
-                setCastMessage={() => {}}
-                cast={() => {}}
               />
             )}
           </div>
