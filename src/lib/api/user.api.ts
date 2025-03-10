@@ -67,13 +67,13 @@ export const checkLogin = async (): Promise<boolean> => {
     const response = await axios.get(`${API_URL}/domain/auth/verify-access-token`, {
       withCredentials: true,
     });
-
     if (response.status === 200) {
       return true;
     }
     return false;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('로그인 체크 중 오류 발생:', error);
+    console.log('로그인이 필요합니다');
     return false;
   }
 };

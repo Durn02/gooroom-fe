@@ -30,6 +30,10 @@ export function generateNodes(
     size: 10,
   }));
 
+  console.log('userNode : ', userNode);
+  console.log('roommateNodes : ', roommateNodes);
+  console.log('neighborNodes : ', neighborNodes);
+
   return [userNode, ...roommateNodes, ...neighborNodes];
 }
 
