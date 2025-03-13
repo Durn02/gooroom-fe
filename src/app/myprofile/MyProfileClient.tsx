@@ -3,46 +3,41 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
-import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
+import ProfileModal from '@/src/components/Modals/ProfileModal/ProfileModal';
+import { UserInfo, Sticker, Post } from '@/src/types/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
+import CreateStickerModal from '@/src/components/Modals/CreateStickerModal/CreateStickerModal';
+import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
-import { friendApi } from '@/src/lib/api';
-import { EditBox } from '@/src/components/EditBox/EditBox';
-import { decrypt } from '@/src/utils/crypto';
+import { deleteFromS3 } from '@/src/lib/s3/handleS3';
+import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/src/lib/config';
 
-type Props = {
-  params: {
-    encryptedUserId: string;
-  };
-};
-
-export default function RoommateProfile({ params }: Props) {
-  const selectedUserId = decrypt(decodeURIComponent(params.encryptedUserId));
-  const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
-  const [roommateMemo, setRoommateMemo] = useState<string>('');
-  const [stickers, setStickers] = useState<Sticker[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
+export default function MyProfileClient({ initialUserInfo, initialStickers, initialPosts }) {
+  const router = useRouter();
+  const [userInfo, setUserInfo] = useState<UserInfo>(initialUserInfo);
+  const [stickers, setStickers] = useState<Sticker[]>(initialStickers);
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
   const { width, handleMouseDown } = useResizeSection({
     minWidth: 10,
     maxWidth: 80,
     initialWidth: 30,
   });
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
+  const [isCreateStickerModalOpen, setIsCreateStickerModalOpen] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
-    friendApi.fetchFriendInfo(selectedUserId).then((data) => {
-      setFriendInfo(data.friend);
-      setStickers(data.stickers);
-      setPosts(data.posts);
-      setRoommateMemo(data.roommate_edge.memo);
-    });
-  }, [selectedUserId]);
+    userApi.fetchMyInfo().then((data) => setUserInfo(data));
+    stickerApi.fetchMyStickers().then((data) => setStickers(data));
+    postApi.fetchPosts().then((data) => setPosts(data));
+  }, []);
 
   const handleStickerDoubleClick = (selected_sticker: Sticker) => {
     setSelectedSticker(selected_sticker);
@@ -55,6 +50,75 @@ export default function RoommateProfile({ params }: Props) {
 
   const gohomeButtonHandler = () => {
     router.replace('/');
+  };
+
+  const handleDeleteSticker = async (sticker: Sticker) => {
+    const response = window.confirm('스티커를 삭제하시겠습니까?');
+    if (!response) {
+      return;
+    }
+    try {
+      for (const imageUrl of sticker.image_url) {
+        await deleteFromS3(imageUrl);
+      }
+    } catch (error) {
+      console.error('Error deleting sticker:', error);
+      alert('스티커 삭제 중 오류가 발생했습니다.');
+      return;
+    }
+
+    const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id }),
+    });
+    if (!result.ok) {
+      alert('스티커 삭제에 실패했습니다.');
+      return;
+    } else {
+      alert('스티커가 삭제되었습니다.');
+      await stickerApi.fetchMyStickers().then((data) => setStickers(data));
+    }
+  };
+
+  const handleDeletePost = async (posts: Post) => {
+    const isDelete = window.confirm('게시글을 삭제하시겠습니까?');
+    if (!isDelete) {
+      return;
+    }
+
+    try {
+      for (const imageUrl of posts.image_url) {
+        await deleteFromS3(imageUrl);
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ post_node_id: posts.post_node_id }),
+        });
+        if (response.ok) {
+          setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
+          alert('게시글이 삭제되었습니다.');
+        } else {
+          alert('게시글 삭제에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('Error deleting sticker:', error);
+      alert('스티커 삭제 중 오류가 발생했습니다.');
+      return;
+    }
   };
 
   return (
@@ -71,21 +135,32 @@ export default function RoommateProfile({ params }: Props) {
       <>
         <div className="relative bg-white shadow-md overflow-auto group" style={{ width: `${width}vw` }}>
           <div className="p-8">
-            {friendInfo && (
+            {userInfo && (
               <>
                 <div className="flex justify-between items-center mb-2">
-                  <h1 className="text-3xl font-bold">@{friendInfo.nickname}</h1>
+                  <h1 className="text-3xl font-bold">@{userInfo.nickname}</h1>
+                  <button
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                  >
+                    정보 변경
+                  </button>
                 </div>
-                <Image src={userImage} alt="User profile" width={100} height={100} className="rounded-full" />
-                <p className="text-gray-600 mb-2 font-bold">{friendInfo.username}</p>
-                {friendInfo.my_memo && (
-                  <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
-                    {friendInfo.my_memo}
-                  </p>
-                )}
-                <EditBox currentMemo={roommateMemo} setRoommateMemo={setRoommateMemo} />
+                <Image
+                  src={userInfo.profile_image_url || userImage}
+                  alt="User profile"
+                  width={100}
+                  height={100}
+                  className="rounded-full object-cover"
+                  style={{ width: '100px', height: '100px' }}
+                />
+
+                <p className="text-gray-600 mb-2 font-bold">{userInfo.username}</p>
+                <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
+                  {userInfo.my_memo}
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {friendInfo.tags.map((tag, index) => (
+                  {userInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
                       {tag}
                     </span>
@@ -107,6 +182,12 @@ export default function RoommateProfile({ params }: Props) {
         <>
           <div className="flex justify-between items-center mb-4 mt-12">
             <h2 className="text-2xl font-bold text-gray-800">Stickers</h2>
+            <button
+              onClick={() => setIsCreateStickerModalOpen(true)}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded"
+            >
+              작성하기
+            </button>
           </div>
           <div className="overflow-x-auto whitespace-nowrap mb-8 pb-4">
             <div className="inline-flex space-x-4">
@@ -124,6 +205,12 @@ export default function RoommateProfile({ params }: Props) {
                         <p className="font-semibold mb-2 text-gray-800 max-w-48 truncate overflow-hidden">
                           {sticker.content}
                         </p>
+                        <button
+                          className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center text-gray-600"
+                          onClick={() => handleDeleteSticker(sticker)}
+                        >
+                          X
+                        </button>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -155,6 +242,12 @@ export default function RoommateProfile({ params }: Props) {
         <>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Posts</h2>
+            <button
+              onClick={() => setIsCreatePostModalOpen(true)}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded"
+            >
+              작성하기
+            </button>
           </div>
           <div className="space-y-6">
             {posts.map((post) => {
@@ -166,6 +259,12 @@ export default function RoommateProfile({ params }: Props) {
                     handlePostDoubleClick(post);
                   }}
                 >
+                  <button
+                    onClick={() => handleDeletePost(post)}
+                    className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-gray-600"
+                  >
+                    X
+                  </button>
                   <div className="p-6">
                     <h3 className="text-xl font-semibold mb-2 text-gray-800 pr-8">{post.title}</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -204,21 +303,50 @@ export default function RoommateProfile({ params }: Props) {
           </div>
         </>
       </div>
-
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          userApi.fetchMyInfo().then((data) => setUserInfo(data));
+        }}
+        myProfile={userInfo}
+      />
       <StickerModal
         isOpen={isStickerModalOpen}
         onClose={() => {
           setIsStickerModalOpen(false);
+          stickerApi.fetchMyStickers().then((data) => setStickers(data));
         }}
         sticker={selectedSticker}
       />
+      {userInfo && (
+        <CreateStickerModal
+          isOpen={isCreateStickerModalOpen}
+          onClose={() => {
+            setIsCreateStickerModalOpen(false);
+            stickerApi.fetchMyStickers().then((data) => setStickers(data));
+          }}
+          userId={userInfo.node_id}
+        />
+      )}
       <PostModal
         isOpen={isPostModalOpen}
         onClose={() => {
           setIsPostModalOpen(false);
+          postApi.fetchPosts().then((data) => setPosts(data));
         }}
         post={selectedPost}
       />
+      {userInfo && (
+        <CreatePostModal
+          isOpen={isCreatePostModalOpen}
+          onClose={() => {
+            setIsCreatePostModalOpen(false);
+            postApi.fetchPosts().then((data) => setPosts(data));
+          }}
+          userId={userInfo.node_id}
+        />
+      )}
     </div>
   );
 }

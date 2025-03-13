@@ -9,6 +9,7 @@ import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { friendApi } from '@/src/lib/api';
 import { decrypt } from '@/src/utils/crypto';
+import { useRouter } from 'next/navigation';
 
 type Props = {
   params: {
@@ -30,6 +31,7 @@ export default function NeighborProfile({ params }: Props) {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     friendApi.fetchFriendInfo(selectedUserId).then((data) => {
@@ -49,7 +51,7 @@ export default function NeighborProfile({ params }: Props) {
   };
 
   const gohomeButtonHandler = () => {
-    window.location.href = '/';
+    router.replace('/');
   };
 
   return (
