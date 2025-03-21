@@ -25,11 +25,10 @@ export const createCast = async ({ message, friends, duration }: CastProps) => {
 
 export const getCastReplies = async (getCastRepliesRequest: GetCastRepliesRequest) => {
   try {
-    const response: GetCastRepliesResponse[] = await apiClient.post(
-      '/domain/content/cast/reply/get-members',
-      getCastRepliesRequest,
-    );
-    return response;
+    const response = await apiClient.post('/domain/content/cast/reply/get-members', getCastRepliesRequest);
+    const data: GetCastRepliesResponse[] = response.data;
+    console.log('GetCastRepliesResponse : ', data);
+    return data;
   } catch (error) {
     console.error('Failed to get cast replies:', error);
     throw error;
