@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
-import { useState } from 'react';
 import { API_URL } from '@/src/lib/config';
 import { useRouter } from 'next/navigation';
+import { userApi } from '@/src/lib/api';
 
 type signinRequestData = {
   email: string;
@@ -119,13 +119,14 @@ export default function Signin() {
     }
   };
 
-  // useEffect(() => {
-  //   const isLoggedIn = userApi.checkLogin();
-  //   if (isLoggedIn) {
-  //     alert('이미 로그인 되어있습니다');
-  //     router.push('/');
-  //   }
-  // }, [router]);
+  useEffect(() => {
+    userApi.checkLogin().then((isLoggedIn) => {
+      if (isLoggedIn) {
+        alert('이미 로그인 되어있습니다');
+        router.push('/');
+      }
+    });
+  }, [router]);
 
   return (
     <>
