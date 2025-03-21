@@ -26,9 +26,8 @@ export default function Landing() {
 
   const [isBlockMuteListModalOpen, setIsBlockMuteListModalOpen] = useState(false);
   const [blockMuteList, setBlockMuteList] = useState<BlockMuteList>({ blockList: [], muteList: [] });
-  
-  const [isCreateCastModalOpen, setIsCreateCastModalOpen] = useState(false);
 
+  const [isCreateCastModalOpen, setIsCreateCastModalOpen] = useState(false);
 
   const handleViewKnockList = async () => {
     const data = await getKnocks();
@@ -145,10 +144,7 @@ export default function Landing() {
               />
             )}
             {isCreateCastModalOpen && (
-              <CastModal
-                isOpen={isCreateCastModalOpen}
-                onClose={() => setIsCreateCastModalOpen(false)}
-              />
+              <CastModal isOpen={isCreateCastModalOpen} onClose={() => setIsCreateCastModalOpen(false)} />
             )}
           </div>
         </>
