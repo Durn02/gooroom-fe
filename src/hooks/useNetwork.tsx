@@ -3,6 +3,7 @@ import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
 import { initDB, getAllData, saveDatas, getAllRoommates, saveRoommates } from '../utils/indexedDB';
 import { landingApi, userApi } from '../lib/api';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
+import { Cast, CastsByUser } from '../types/cast.type';
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
   const [networkManager, setNetworkManager] = useState<NetworkManager | null>(null);
@@ -16,8 +17,8 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     userId: null,
   });
 
-  const [castData, setCastData] = useState({});
-  const [initData, setInitData] = useState([]);
+  const [castData, setCastData] = useState<CastsByUser>({});
+  const [initData, setInitData] = useState<Cast[]>([]);
   const [observing, setObserving] = useState(false);
   const networkContainer = useRef<HTMLDivElement>(null);
 
@@ -108,13 +109,14 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     if (!networkManager) return;
     let isMounted = true;
     if (initData.length > 0) {
-      const groupedData = initData.reduce((acc, cast) => {
+      const groupedData: CastsByUser = initData.reduce((acc, cast) => {
         if (acc[cast.creator]) {
           // 기존 userId에 content 추가
           acc[cast.creator].content.push({
+            node_id: cast.node_id,
             message: cast.message,
             duration: cast.duration,
-            createdAt: cast.created_at,
+            created_at: cast.created_at,
           });
         } else {
           // 새로운 userId로 객체 생성
@@ -122,9 +124,10 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
             userId: cast.creator,
             content: [
               {
+                node_id: cast.node_id,
                 message: cast.message,
                 duration: cast.duration,
-                createdAt: cast.created_at,
+                created_at: cast.created_at,
               },
             ],
           };
@@ -157,19 +160,20 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
                 if (updatedCastData[cast.creator]) {
                   // 기존 userId가 있으면 content 추가
                   updatedCastData[cast.creator].content.push({
+                    node_id: cast.node_id,
                     message: cast.message,
                     duration: cast.duration,
-                    createdAt: cast.created_at,
+                    created_at: cast.created_at,
                   });
                 } else {
                   // 새로운 userId면 새 객체 생성
                   updatedCastData[cast.creator] = {
-                    userId: cast.creator,
                     content: [
                       {
+                        node_id: cast.node_id,
                         message: cast.message,
                         duration: cast.duration,
-                        createdAt: cast.created_at,
+                        created_at: cast.created_at,
                       },
                     ],
                   };

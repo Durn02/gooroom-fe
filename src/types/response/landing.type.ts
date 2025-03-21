@@ -1,4 +1,5 @@
-import { Cast, User } from '../landingPage.type';
+import { User } from '../landingPage.type';
+import { Cast } from '../cast.type';
 
 export interface GetContentsResponse {
   casts: Cast[];

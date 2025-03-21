@@ -23,14 +23,6 @@ export interface RoommateWithNeighbors {
   neighbors: string[];
 }
 
-export interface Cast {
-  message: string;
-  duration: number;
-  created_at: string;
-  node_id: string;
-  creator: string;
-}
-
 interface BlockList {
   block_edge_id: string;
   user_id: string;
