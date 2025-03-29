@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AiFillMessage, AiOutlineMessage } from "react-icons/ai";
 
+
 interface CastUIProps {
   position: { x: number; y: number } | null;
   userId?: string;
@@ -13,6 +14,13 @@ interface CastUIProps {
 const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size, contentCount }) => {
   const [onRead, setOnRead] = useState<boolean>(false);
   const [scaled, setScaled] = useState<{ x: number; y: number, width: number, height: number } | null>(null);
+
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    const options = { year: "numeric", month: "2-digit", day: "2-digit", hour: "numeric", minute: "2-digit", hour12: true };
+    return date.toLocaleString("en-US", options).replace(",", "");
+  };
 
   useEffect(() => {
     if (!position) return;
@@ -48,8 +56,8 @@ const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size,
     >
       {onRead === false && (
         <div className="relative w-full h-full animate-bounce" >
-          <AiFillMessage
-            className="cursor-pointer text-blue-500 w-full h-full"
+          <AiOutlineMessage
+            className="cursor-pointer text-neutral-800 w-full h-full"
             onClick={() => setOnRead(true)}
           />
           {contentCount > 1 && (
@@ -59,24 +67,26 @@ const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size,
           )}
         </div>
       )}
-      {onRead === true && (
-        <div
-          className="flex flex-col items-start cursor-pointer bg-white rounded-lg shadow-lg p-2 border border-gray-200 max-h-40"
-          onClick={() => setOnRead(false)}
-          style={{ width: `${size * 6}px` }}
-        >
-          {content.map((item, index) => (
-            <div
-              key={index}
-              className="text-sm text-gray-800 mb-1 last:mb-0 flex items-start"
-            >
-              <span className="mr-1">•</span>
-              <p>{item.message}</p>
-              <p>{item.createdAt}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {onRead && (
+      <div
+        className="relative w-[200%] left-2 bg-white text-gray-800 rounded-2xl shadow-lg p-4 border border-gray-200 cursor-pointer"
+        onClick={() => setOnRead(false)}
+        style={{ width: `${size * 6}px` }}
+      >
+        
+        {content.map((item, index) => (
+          <div
+            key={index}
+            className="text-sm hover:opacity-80 text-gray-800 mb-2 last:mb-0 flex flex-col"
+          >
+            <p>{item.message}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formatDate(item.createdAt)}
+            </p>
+          </div>
+        ))}
+      </div>
+    )}
     </div>
   );
 };

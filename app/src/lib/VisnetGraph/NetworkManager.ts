@@ -16,7 +16,13 @@ import {
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 import { addRoommate } from './constructNetwork';
 
-type NetworkEvent = { event: string; data?: unknown };
+type NetworkEvent =
+  | { event: 'loggedInUserClicked'; data: { x: number; y: number } }
+  | { event: 'roommateNodeClicked'; data: { x: number; y: number; userId: string } }
+  | { event: 'neighborNodeClicked'; data: { x: number; y: number; userId: string } }
+  | { event: 'backgroundClicked'; data: null }
+  | { event: 'startObservation'; data: null }
+  | { event: 'finishObservation'; data: Record<string, { x: number; y: number }> };
 
 export class NetworkManager {
   private network: Network;
@@ -196,27 +202,27 @@ export class NetworkManager {
     return this.network;
   }
 
-  public getLoggeInUser() {
+  public getLoggeInUser(): User {
     return this.loggedInUser;
   }
 
-  public getNeighborsData() {
+  public getNeighborsData(): Map<string, User> {
     return this.neighborsData;
   }
 
-  public getRoommatesWithNeighbors() {
+  public getRoommatesWithNeighbors(): Map<string, RoommateWithNeighbors> {
     return this.roommatesWithNeighbors;
   }
 
-  public getNodesDataSet() {
+  public getNodesDataSet(): DataSet<Node> {
     return this.nodesDataSet;
   }
 
-  public getEdgesDataSet() {
+  public getEdgesDataSet(): DataSet<Edge> {
     return this.edgesDataSet;
   }
 
-  public getAddRoommate() {
+  public getAddRoommate(): (newRoommate: User, newNeighbors: User[]) => void {
     return this.addRoommate;
   }
 
