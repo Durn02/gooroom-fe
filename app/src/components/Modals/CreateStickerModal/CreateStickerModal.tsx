@@ -3,7 +3,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { uploadToS3 } from '@/src/lib/s3/handleS3';
 
 interface CreateStickerModalProps {
   isOpen: boolean;
@@ -54,34 +53,58 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
 
   const handleCreateSticker = async () => {
     try {
-      const uploadedUrls = await Promise.all(
-        images.map(async (file, index) => {
-          try {
-            if (!userId) {
-              alert('로그인 시간이 만료되었습니다.');
-              router.push('/');
-              throw new Error('User not found');
-            }
-            return await uploadToS3(file, index, userId);
-          } catch (error) {
-            console.error('Error uploading to S3:', error);
-            throw new Error('Failed to upload image to S3');
-          }
-        }),
-      );
-      const stickerData = {
-        content: content,
-        image_url: uploadedUrls,
-      };
+      if (!userId) {
+        alert('로그인 시간이 만료되었습니다.');
+        router.push('/');
+        throw new Error('User not found');
+      }
+
+      const formData = new FormData();
+      formData.append('content', content); // 텍스트 데이터 추가
+      images.forEach((file) => {
+        formData.append('images', file); // 이미지 파일 추가
+      });
 
       const result = await fetch(`${API_URL}/domain/content/sticker/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         credentials: 'include',
-        body: JSON.stringify(stickerData),
+        body: formData,
       });
+      // const result = await apiClient.post('/domain/content/upload', {
+      //   // const result = await apiClient.post('/domain/content/sticker/create', {
+      //   content: formData.get('content'),
+      //   images: formData.getAll('images'),
+      // });
+
+      // const uploadedUrls = images.map((file, index) => {
+      //   if (!userId) {
+      //     alert('로그인 시간이 만료되었습니다.');
+      //     router.push('/');
+      //     throw new Error('User not found');
+      //   }
+      // return await uploadToS3(file, index, userId);
+      // const currentTime = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+      // const fileName = `${userId}/sticker/${currentTime}/${index}_${file.name}`;
+      // return `https://${S3BUCKET}.s3.${AWS_REGION}.amazonaws.com/${fileName}`;
+
+      // const formData = new FormData();
+      // formData.append('file', file);
+      // return { [index]: { formData } };
+      // });
+
+      // const stickerData = {
+      //   content: content,
+      //   images: uploadedUrls,
+      // };
+      // console.log('image url:', stickerData.images);
+      // const result = await fetch(`${API_URL}/domain/content/sticker/create`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   credentials: 'include',
+      //   body: JSON.stringify(stickerData),
+      // });
 
       if (!result.ok) {
         throw new Error('Failed to create sticker');
