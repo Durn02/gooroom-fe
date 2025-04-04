@@ -1,6 +1,5 @@
-import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { AWS_REGION, S3BUCKET, S3CLIENT } from '@/src/lib/config';
-import apiClient from '../api/axiosApiClient';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3BUCKET, S3CLIENT } from '@/src/lib/config';
 
 export const deleteFromS3 = async (url: string) => {
   const key = url.split('/').slice(3).join('/');

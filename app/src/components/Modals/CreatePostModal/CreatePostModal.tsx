@@ -3,7 +3,6 @@ import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/src/types/profilePage.type';
-import { uploadToS3 } from '@/src/lib/s3/handleS3';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -12,7 +11,6 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, userId }) => {
-  // const selectedUserId = localStorage.getItem('selectedUserId');
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [postData, setPostData] = useState<Partial<Post>>({
@@ -35,43 +33,63 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
 
   const handleCreatePost = async () => {
     try {
+      if (!userId) {
+        alert('로그인 시간이 만료되었습니다.');
+        router.push('/');
+        throw new Error('User not found');
+      }
+
       if (!postData.title?.trim() || !postData.content?.trim()) {
         alert('제목과 내용을 입력해주세요.');
         return;
       }
 
-      const uploadedUrls = await Promise.all(
-        images.map(async (file, index) => {
-          try {
-            if (!userId) {
-              alert('로그인 시간이 만료되었습니다.');
-              router.push('/');
-              throw new Error('User not found');
-            }
-            return await uploadToS3(file, index, userId);
-          } catch (error) {
-            console.error('Error uploading to S3:', error);
-            throw new Error('Failed to upload image to S3');
-          }
-        }),
-      );
+      const formData = new FormData();
+      formData.append('content', postData.content);
+      formData.append('title', postData.title);
+      formData.append('tags', JSON.stringify(postData.tags));
+      formData.append('is_public', 'true');
+      images.forEach((file) => {
+        formData.append('images', file);
+      });
 
-      const submitData = {
-        content: postData.content,
-        image_url: uploadedUrls,
-        title: postData.title,
-        tags: postData.tags,
-        is_public: true,
-      };
-      console.log(submitData);
       const response = await fetch(`${API_URL}/domain/content/post/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         credentials: 'include',
-        body: JSON.stringify(submitData),
+        body: formData,
       });
+      // const uploadedUrls = await Promise.all(
+      //   images.map(async (file, index) => {
+      //     try {
+      //       if (!userId) {
+      //         alert('로그인 시간이 만료되었습니다.');
+      //         router.push('/');
+      //         throw new Error('User not found');
+      //       }
+      //       return await uploadToS3(file, index, userId);
+      //     } catch (error) {
+      //       console.error('Error uploading to S3:', error);
+      //       throw new Error('Failed to upload image to S3');
+      //     }
+      //   }),
+      // );
+
+      // const submitData = {
+      //   content: postData.content,
+      //   image_url: uploadedUrls,
+      //   title: postData.title,
+      //   tags: postData.tags,
+      //   is_public: true,
+      // };
+      // console.log(submitData);
+      // const response = await fetch(`${API_URL}/domain/content/post/create`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   credentials: 'include',
+      //   body: JSON.stringify(submitData),
+      // });
 
       if (!response.ok) {
         throw new Error('Failed to create post');
