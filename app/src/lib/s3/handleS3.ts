@@ -1,22 +1,22 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { S3BUCKET, S3CLIENT } from '@/src/lib/config';
 
-export const deleteFromS3 = async (url: string) => {
-  const key = url.split('/').slice(3).join('/');
-  try {
-    const command = new DeleteObjectCommand({
-      Bucket: S3BUCKET,
-      Key: key,
-    });
+// export const deleteFromS3 = async (url: string) => {
+//   const key = url.split('/').slice(3).join('/');
+//   try {
+//     const command = new DeleteObjectCommand({
+//       Bucket: S3BUCKET,
+//       Key: key,
+//     });
 
-    const res = await S3CLIENT.send(command);
-    console.log(res);
-    console.log(`File ${key} deleted successfully from S3`);
-  } catch (error) {
-    console.error('Error deleting file from S3:', error);
-    throw error;
-  }
-};
+//     const res = await S3CLIENT.send(command);
+//     console.log(res);
+//     console.log(`File ${key} deleted successfully from S3`);
+//   } catch (error) {
+//     console.error('Error deleting file from S3:', error);
+//     throw error;
+//   }
+// };
 
 // export const uploadToS3 = async (file: File, fileIndex: number, userNodeId: string) => {
 // try {

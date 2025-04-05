@@ -11,7 +11,6 @@ import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/src/components/Modals/CreateStickerModal/CreateStickerModal';
 import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
-import { deleteFromS3 } from '@/src/lib/s3/handleS3';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
 
@@ -57,15 +56,15 @@ export default function MyProfile() {
     if (!response) {
       return;
     }
-    try {
-      for (const imageUrl of sticker.image_url) {
-        await deleteFromS3(imageUrl);
-      }
-    } catch (error) {
-      console.error('Error deleting sticker:', error);
-      alert('스티커 삭제 중 오류가 발생했습니다.');
-      return;
-    }
+    // try {
+    //   for (const imageUrl of sticker.image_url) {
+    //     await deleteFromS3(imageUrl);
+    //   }
+    // } catch (error) {
+    //   console.error('Error deleting sticker:', error);
+    //   alert('스티커 삭제 중 오류가 발생했습니다.');
+    //   return;
+    // }
 
     const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
       method: 'DELETE',
@@ -73,7 +72,7 @@ export default function MyProfile() {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id }),
+      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id, sticker_image_urls: sticker.image_url }),
     });
     if (!result.ok) {
       alert('스티커 삭제에 실패했습니다.');
@@ -91,33 +90,23 @@ export default function MyProfile() {
     }
 
     try {
-      for (const imageUrl of posts.image_url) {
-        await deleteFromS3(imageUrl);
-      }
-
-      try {
-        const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ post_node_id: posts.post_node_id }),
-        });
-        if (response.ok) {
-          setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
-          alert('게시글이 삭제되었습니다.');
-        } else {
-          alert('게시글 삭제에 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        alert('게시글 삭제 중 오류가 발생했습니다.');
+      const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ post_node_id: posts.post_node_id, post_image_urls: posts.image_url }),
+      });
+      if (response.ok) {
+        setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
+        alert('게시글이 삭제되었습니다.');
+      } else {
+        alert('게시글 삭제에 실패했습니다.');
       }
     } catch (error) {
-      console.error('Error deleting sticker:', error);
-      alert('스티커 삭제 중 오류가 발생했습니다.');
-      return;
+      console.error('Error deleting post:', error);
+      alert('게시글 삭제 중 오류가 발생했습니다.');
     }
   };
 
