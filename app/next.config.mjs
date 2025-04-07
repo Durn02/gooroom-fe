@@ -2,8 +2,15 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ['gooroom-bucket.s3.ap-northeast-2.amazonaws.com', ''],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'gooroom-bucket.s3.ap-northeast-2.amazonaws.com',
+        pathname: '/**',
+      },
+    ],
   },
+  loader: 'default',
 };
 
 export default nextConfig;
