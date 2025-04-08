@@ -4,7 +4,7 @@ export interface UserInfo {
   username: string;
   node_id: string;
   tags: string[];
-  profile_image_url: string;
+  profile_image_url: File;
 }
 
 export interface FriendInfo {

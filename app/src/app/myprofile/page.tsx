@@ -136,7 +136,7 @@ export default function MyProfile() {
                   </button>
                 </div>
                 <Image
-                  src={userInfo.profile_image_url || userImage}
+                  src={typeof userInfo.profile_image_url === 'string' ? userInfo.profile_image_url : userImage}
                   alt="User profile"
                   width={100}
                   height={100}
