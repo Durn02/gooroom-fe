@@ -236,7 +236,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
           name="my_memo"
           value={profileData.my_memo}
           onChange={handleChange}
-          className="w-full h-[8rem] p-2 border rounded resize-none mt-4"
+          className="w-full h-[6rem] p-2 border rounded resize-vertical mt-4"
           placeholder="메모를 입력하세요"
         />
 
