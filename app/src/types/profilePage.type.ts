@@ -4,6 +4,7 @@ export interface UserInfo {
   username: string;
   node_id: string;
   tags: string[];
+  remove_profile_image: boolean;
   profile_image_url: File;
 }
 

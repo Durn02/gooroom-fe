@@ -23,6 +23,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       node_id: '',
       tags: [],
       profile_image_url: null,
+      remove_profile_image: false,
     },
   );
   const [newTags, setNewTags] = useState<string>('');
@@ -30,6 +31,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
     typeof myProfile?.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src,
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [removeProfileImage, setRemoveProfileImage] = useState<boolean>(false);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -61,6 +63,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         node_id: myProfile.node_id || '',
         tags: myProfile.tags || [],
         profile_image_url: myProfile.profile_image_url || null,
+        remove_profile_image: myProfile.remove_profile_image || false,
       });
       setPreviewImage(typeof myProfile.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src);
     }
@@ -105,6 +108,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       formData.append('username', profileData.username);
       formData.append('my_memo', profileData.my_memo);
       formData.append('tags', JSON.stringify(profileData.tags));
+      if (removeProfileImage) {
+        formData.append('remove_profile_image', 'True');
+      }
       if (imageFile) {
         formData.append('profile_image', imageFile);
       }
@@ -186,28 +192,47 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
 
         <h2 className="text-2xl font-bold mb-4">My Profile</h2>
 
-        <div className="flex gap-6">
-          {/* Profile Image Preview */}
-          <div className="relative w-[8rem] h-[8rem] border rounded-full overflow-hidden flex-shrink-0 group">
-            <Image
-              src={previewImage}
-              alt="프로필 미리보기"
-              className="w-full h-full object-cover"
-              width={128}
-              height={128}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = userImage.src;
-              }}
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-              <span className="text-white opacity-0 group-hover:opacity-100 text-sm">이미지 변경</span>
+        <div className="flex gap-2">
+          <div className="relative w-[9rem] h-[8rem] overflow-hidden flex-shrink-0 group">
+            {/* Delete Button (Visible only if not default image) */}
+            {previewImage !== userImage.src && (
+              <button
+                className="absolute top-1 right-1 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-gray-400 transition-colors"
+                onClick={() => {
+                  if (window.confirm('기본이미지로 변경하시겠습니까?')) {
+                    setPreviewImage(userImage.src);
+                    setImageFile(null);
+                    setRemoveProfileImage(true);
+                  }
+                }}
+              >
+                🗑️
+              </button>
+            )}
+            {/* Profile Image Preview */}
+            <div className="relative w-[8rem] h-[8rem] border rounded-full overflow-hidden flex-shrink-0 group">
+              <Image
+                src={previewImage}
+                alt="프로필 미리보기"
+                className="w-full h-full object-cover"
+                width={128}
+                height={128}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = userImage.src;
+                }}
+              />
+              {/* Overlay for changing image */}
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 text-sm">이미지 변경</span>
+              </div>
+              {/* File Input to change profile image */}
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={handleImageChange}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              onChange={handleImageChange}
-            />
           </div>
 
           {/* Profile Inputs */}
