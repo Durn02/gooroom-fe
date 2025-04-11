@@ -1,8 +1,10 @@
 'use client';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import loading_circle from '@/src/assets/gif/loading_circle.gif';
 
 interface CreateStickerModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
   const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -59,10 +62,12 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
         throw new Error('User not found');
       }
 
+      setLoading(true);
+
       const formData = new FormData();
-      formData.append('content', content); // 텍스트 데이터 추가
+      formData.append('content', content);
       images.forEach((file) => {
-        formData.append('images', file); // 이미지 파일 추가
+        formData.append('images', file);
       });
 
       const result = await fetch(`${API_URL}/domain/content/sticker/create`, {
@@ -117,10 +122,14 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
     } catch (error) {
       console.error('Error creating sticker:', error);
       alert('스티커 작성에 실패했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (loading) return;
+
     if (event.target === event.currentTarget) {
       onClose();
     }
@@ -136,6 +145,14 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-full min-w-[520px] relative">
+        {/* Loading Screen */}
+        {loading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
+            <div className="text-white text-lg mb-4">Loading...</div> {/* Added margin-bottom */}
+            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+          </div>
+        )}
+
         <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
           <svg
             className="w-6 h-6"
@@ -206,4 +223,5 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
     </div>
   );
 };
+
 export default CreateStickerModal;
