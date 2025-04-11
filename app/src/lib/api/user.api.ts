@@ -31,6 +31,9 @@ export const onSignoutButtonClickHandler = async () => {
 };
 
 export const onLogoutButtonClickHandler = async () => {
+  const isLogout = window.confirm('로그아웃을 진행하시겠습니까?');
+  if (!isLogout) return;
+
   try {
     const { data } = await apiClient.post('/domain/auth/logout');
 
