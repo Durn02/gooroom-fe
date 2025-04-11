@@ -187,16 +187,23 @@ export default function Signup() {
 
         {/* Email Input */}
         <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Email <span className="text-red-500">*</span>
+          </label>
           <Input placeholder="Enter your email" value={userEmailInput} onChange={(e) => setEmailInput(e)} />
         </div>
 
         {/* Password Input */}
         <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Password <span className="text-red-500">*</span>
+          </label>
           <PwInput placeholder="Enter your password" value={userPwInput} onChange={(e) => setUserPwInput(e)} />
         </div>
 
         {/* Concern Input */}
         <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">Concerns</label>
           <Input
             placeholder="Enter your concerns (comma-separated)"
             value={userConcernInput}
@@ -206,6 +213,9 @@ export default function Signup() {
 
         {/* Nickname Input */}
         <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Nickname <span className="text-red-500">*</span>
+          </label>
           <Input
             placeholder="Enter your nickname"
             value={userNicknameInput}
@@ -215,6 +225,9 @@ export default function Signup() {
 
         {/* Username Input */}
         <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Username <span className="text-red-500">*</span>
+          </label>
           <Input placeholder="Enter your username" value={usernameInput} onChange={(e) => setUsernameInput(e)} />
         </div>
 
