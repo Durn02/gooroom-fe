@@ -83,7 +83,7 @@ export default function RoommateProfile({ params }: Props) {
                     {friendInfo.my_memo}
                   </p>
                 )}
-                <EditBox currentMemo={roommateMemo} setRoommateMemo={setRoommateMemo} />
+                <EditBox currentMemo={roommateMemo} setRoommateMemo={setRoommateMemo} selectedUserId={selectedUserId} />
                 <div className="flex flex-wrap gap-2">
                   {friendInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
