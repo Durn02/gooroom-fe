@@ -1,8 +1,6 @@
 'use client';
 
-import React from "react";
-import { useState } from "react";
-import style from "./PwInput.module.css";
+import React, { useState } from 'react';
 
 interface props {
   placeholder: string;
@@ -12,37 +10,33 @@ interface props {
 }
 
 const PwInput = ({ placeholder, value, onChange, onEnter }: props) => {
-  const [setShow, setShowState] = useState("password");
+  const [showPassword, setShowPassword] = useState(false);
+
   const handlePressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (onEnter && e.key === "Enter") {
+    if (onEnter && e.key === 'Enter') {
       onEnter();
     }
   };
 
   return (
-    <div className={style.pwInputContainer}>
+    <div className="relative w-full">
       <input
-        className={style.inputContainer}
-        type={setShow}
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+        type={showPassword ? 'text' : 'password'}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handlePressEnter}
-      ></input>
+      />
 
-      <div className={style.pwShowButtonContainer}>
-        <button
-          className={style.pwShowButton}
-          onMouseDown={() => {
-            setShowState("text");
-          }}
-          onMouseUp={() => {
-            setShowState("password");
-          }}
-        >
-          확인
-        </button>
-      </div>
+      <button
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-700 transition-colors"
+        type="button"
+        onMouseDown={() => setShowPassword(true)}
+        onMouseUp={() => setShowPassword(false)}
+      >
+        Show
+      </button>
     </div>
   );
 };

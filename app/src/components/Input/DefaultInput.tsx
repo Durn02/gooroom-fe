@@ -1,7 +1,6 @@
 'use client';
 
-import React from "react";
-import style from "./DefaultInput.module.css";
+import React from 'react';
 
 interface props {
   placeholder: string;
@@ -12,20 +11,20 @@ interface props {
 
 const Input = ({ placeholder, value, onChange, onEnter }: props) => {
   const handlePressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (onEnter && e.key === "Enter") {
+    if (onEnter && e.key === 'Enter') {
       onEnter();
     }
   };
 
   return (
     <input
-      className={style.input}
-      type="input"
+      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+      type="text"
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={handlePressEnter}
-    ></input>
+    />
   );
 };
 
