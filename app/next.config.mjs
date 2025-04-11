@@ -10,7 +10,6 @@ const nextConfig = {
       },
     ],
   },
-  loader: 'default',
 };
 
 export default nextConfig;
