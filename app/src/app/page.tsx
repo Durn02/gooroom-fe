@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
 import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-import style from './LandingPage.module.css';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
@@ -76,79 +75,87 @@ export default function Landing() {
     }
   }, [selectedUserId, networkManager, router]);
 
-  const cast_function = () => {
-    console.log('cast function');
-  };
-
   return (
-    <>
-      {/* {isLoading && <div>isLoading</div>} */}
+    <div className="min-h-screen bg-gradient-to-br to-indigo-100 flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+        <h1
+          className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
+          onClick={() => {
+            window.location.reload();
+          }}
+        >
+          GooRoom
+        </h1>
+        <DefaultButton placeholder="Sign Out" onClick={() => userApi.onSignoutButtonClickHandler()} />
+      </header>
 
-      {true && (
-        <>
-          <div>
-            <div className={style.castPostStickerDropdownButton}>
-              <CastPostStickerDropdownButton cast_fuction={cast_function} />
-            </div>
-            <div className={style.magnifyButtonContainer}>
-              <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
-              <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
-              <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
-            </div>
-            <div className={style.signoutButtonContainer}>
-              <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
-            </div>
-            <div className={style.visNetContainer} id="NetworkContainer">
-              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
-              <ContextMenu
-                items={contextMenu.items}
-                position={contextMenu.position}
-                onClose={() => setContextMenu({ position: null, items: [], userId: null })}
-                userId={contextMenu.userId}
-                onViewKnockList={handleViewKnockList}
-                onViewBlockMuteList={handleBlockMuteList}
-                onCreateCast={handleCreateCast}
-              />
+      {/* Main Content */}
+      <main className="flex-grow relative">
+        {/* Dropdown Button */}
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 w-10">
+          <CastPostStickerDropdownButton cast_fuction={() => console.log('cast function')} />
+        </div>
 
-              {!observing &&
-                Object.keys(castData).length > 0 &&
-                Object.values(castData).map(({ userId, content }) => {
-                  const position = networkManager?.getPosition(userId);
-                  if (!position) return null;
-                  return (
-                    <CastUI
-                      key={userId}
-                      content={content}
-                      userId={userId}
-                      scale={networkManager?.getScale() || 1}
-                      size={networkManager?.getSize(userId) || 1}
-                      position={{ x: position.x, y: position.y }}
-                      contentCount={content.length} // content 개수 전달
-                    />
-                  );
-                })}
-            </div>
-            {isKnockListModalOpen && (
-              <KnockListModal
-                knocks={knocks}
-                onClose={() => setIsKnockListModalOpen(false)}
-                isOpen={isKnockListModalOpen}
-                addRoommate={networkManager.addRoommate}
-              />
-            )}
-            {isBlockMuteListModalOpen && (
-              <BlockMuteListModal
-                blockMuteList={blockMuteList}
-                onClose={() => setIsBlockMuteListModalOpen(false)}
-                isOpen={isBlockMuteListModalOpen}
-              />
-            )}
-            {isCreateCastModalOpen && (
-              <CastModal isOpen={isCreateCastModalOpen} onClose={() => setIsCreateCastModalOpen(false)} />
-            )}
-          </div>
-        </>
+        {/* Magnify Buttons */}
+        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2 w-10">
+          <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
+          <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
+          <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
+        </div>
+
+        {/* Network Container */}
+        <div className="relative w-full h-[90vh] bg-white border border-gray-300 shadow-lg overflow-hidden">
+          <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+          <ContextMenu
+            items={contextMenu.items}
+            position={contextMenu.position}
+            onClose={() => setContextMenu({ position: null, items: [], userId: null })}
+            userId={contextMenu.userId}
+            onViewKnockList={handleViewKnockList}
+            onViewBlockMuteList={handleBlockMuteList}
+            onCreateCast={handleCreateCast}
+          />
+
+          {!observing &&
+            Object.keys(castData).length > 0 &&
+            Object.values(castData).map(({ userId, content }) => {
+              const position = networkManager?.getPosition(userId);
+              if (!position) return null;
+              return (
+                <CastUI
+                  key={userId}
+                  content={content}
+                  userId={userId}
+                  scale={networkManager?.getScale() || 1}
+                  size={networkManager?.getSize(userId) || 1}
+                  position={{ x: position.x, y: position.y }}
+                  contentCount={content.length} // content 개수 전달
+                />
+              );
+            })}
+        </div>
+      </main>
+
+      {/* Modals */}
+      {isKnockListModalOpen && (
+        <KnockListModal
+          knocks={knocks}
+          onClose={() => setIsKnockListModalOpen(false)}
+          isOpen={isKnockListModalOpen}
+          addRoommate={networkManager.addRoommate}
+        />
       )}
-    </>
+      {isBlockMuteListModalOpen && (
+        <BlockMuteListModal
+          blockMuteList={blockMuteList}
+          onClose={() => setIsBlockMuteListModalOpen(false)}
+          isOpen={isBlockMuteListModalOpen}
+        />
+      )}
+      {isCreateCastModalOpen && (
+        <CastModal isOpen={isCreateCastModalOpen} onClose={() => setIsCreateCastModalOpen(false)} />
+      )}
+    </div>
   );
 }
