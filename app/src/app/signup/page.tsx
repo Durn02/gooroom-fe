@@ -37,10 +37,10 @@ export default function Signup() {
   const router = useRouter();
 
   const handleBackNavigation = () => {
-    setIsTransitioning(true); // 페이드아웃 시작
+    setIsTransitioning(true);
     setTimeout(() => {
-      router.push('/main'); // 페이지 이동
-    }, 300); // 애니메이션 지속 시간 (300ms)
+      router.back();
+    }, 300);
   };
 
   const onSignupClickHandler = async () => {
@@ -141,7 +141,7 @@ export default function Signup() {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // 쿠키를 포함시키기 위해 필요
+          credentials: 'include',
         });
 
         if (response.ok) {
