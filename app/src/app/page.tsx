@@ -76,7 +76,7 @@ export default function Landing() {
   }, [selectedUserId, networkManager, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br to-indigo-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
         <h1
@@ -98,10 +98,28 @@ export default function Landing() {
         </div>
 
         {/* Magnify Buttons */}
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2 w-10">
-          <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
-          <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
-          <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
+        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+          <button
+            onClick={() => networkManager.zoomIn()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Zoom In"
+          >
+            +
+          </button>
+          <button
+            onClick={() => networkManager.resetPosition()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Reset Position"
+          >
+            O
+          </button>
+          <button
+            onClick={() => networkManager.zoomOut()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Zoom Out"
+          >
+            -
+          </button>
         </div>
 
         {/* Network Container */}
@@ -130,7 +148,7 @@ export default function Landing() {
                   scale={networkManager?.getScale() || 1}
                   size={networkManager?.getSize(userId) || 1}
                   position={{ x: position.x, y: position.y }}
-                  contentCount={content.length} // content 개수 전달
+                  contentCount={content.length}
                 />
               );
             })}
