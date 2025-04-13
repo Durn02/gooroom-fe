@@ -30,13 +30,24 @@ const MySelection: React.FC<MySelectionProps> = ({ onClose, width, handleMouseDo
       className="h-full bg-white shadow-lg p-4 flex flex-col relative overflow-auto group"
       style={{ width: `${width}vw` }}
     >
+      {/* Close Button with SVG */}
       <button
         onClick={onClose}
         className="self-end text-gray-500 hover:text-gray-700 transition-colors"
         aria-label="Close"
       >
-        ✖
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-8 h-8" // 크기 조정
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 19.5L15.75 12L8.25 4.5" />
+        </svg>
       </button>
+
       <h2 className="text-xl font-bold mb-4">My Selection</h2>
       <input
         type="text"
@@ -58,7 +69,6 @@ const MySelection: React.FC<MySelectionProps> = ({ onClose, width, handleMouseDo
     </div>
   );
 };
-
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -99,7 +109,6 @@ export default function Landing() {
 
   const { networkManager, networkContainer, castData, contextMenu, setContextMenu, observing } = useNetwork(callbacks);
 
-  // 사이드바 크기 조정 훅 사용
   const { width, handleMouseDown } = useResizeSection({
     minWidth: 20,
     maxWidth: 50,
@@ -148,11 +157,13 @@ export default function Landing() {
       </header>
 
       {/* Sidebar */}
-      {isSidebarOpen && (
-        <div className="absolute top-0 right-0 h-full z-20">
-          <MySelection onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
-        </div>
-      )}
+      <div
+        className={`fixed top-0 right-0 h-full z-20 transform transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <MySelection onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
+      </div>
 
       {/* Main Content */}
       <main className="flex-grow flex">
