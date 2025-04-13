@@ -18,13 +18,18 @@ import { useResizeSection } from '@/src/hooks/useResizeSection';
 
 interface MySelectionProps {
   onClose: () => void;
+  width: number;
+  handleMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-const MySelection: React.FC<MySelectionProps> = ({ onClose }) => {
+const MySelection: React.FC<MySelectionProps> = ({ onClose, width, handleMouseDown }) => {
   const [inputValue, setInputValue] = useState('');
 
   return (
-    <div className="w-64 h-full bg-white shadow-lg p-4 flex flex-col">
+    <div
+      className="h-full bg-white shadow-lg p-4 flex flex-col relative overflow-auto group"
+      style={{ width: `${width}vw` }}
+    >
       <button
         onClick={onClose}
         className="self-end text-gray-500 hover:text-gray-700 transition-colors"
@@ -45,6 +50,11 @@ const MySelection: React.FC<MySelectionProps> = ({ onClose }) => {
         onClick={() => userApi.onSignoutButtonClickHandler()}
         className="bg-red-500 hover:bg-red-600 text-gray-500 w-full py-2 rounded-lg"
       />
+      {/* Resize Handle - 왼쪽에 배치 */}
+      <div
+        className="absolute top-0 left-0 w-1 h-full bg-transparent hover:bg-gray-300 cursor-ew-resize z-10"
+        onMouseDown={handleMouseDown}
+      ></div>
     </div>
   );
 };
@@ -89,6 +99,14 @@ export default function Landing() {
 
   const { networkManager, networkContainer, castData, contextMenu, setContextMenu, observing } = useNetwork(callbacks);
 
+  // 사이드바 크기 조정 훅 사용
+  const { width, handleMouseDown } = useResizeSection({
+    minWidth: 20,
+    maxWidth: 50,
+    initialWidth: 30,
+    sectionSide: 'right',
+  });
+
   useEffect(() => {
     if (selectedUserId === '') {
       return;
@@ -115,9 +133,7 @@ export default function Landing() {
       <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
         <h1
           className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
-          onClick={() => {
-            window.location.reload();
-          }}
+          onClick={() => window.location.reload()}
         >
           GooRoom
         </h1>
@@ -134,34 +150,9 @@ export default function Landing() {
       {/* Sidebar */}
       {isSidebarOpen && (
         <div className="absolute top-0 right-0 h-full z-20">
-          <MySelection onClose={() => setIsSidebarOpen(false)} />
+          <MySelection onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
         </div>
       )}
-
-      {/* Magnify Buttons */}
-      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
-        <button
-          onClick={() => networkManager.zoomIn()}
-          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
-          aria-label="Zoom In"
-        >
-          +
-        </button>
-        <button
-          onClick={() => networkManager.resetPosition()}
-          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
-          aria-label="Reset Position"
-        >
-          O
-        </button>
-        <button
-          onClick={() => networkManager.zoomOut()}
-          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
-          aria-label="Zoom Out"
-        >
-          -
-        </button>
-      </div>
 
       {/* Main Content */}
       <main className="flex-grow flex">
