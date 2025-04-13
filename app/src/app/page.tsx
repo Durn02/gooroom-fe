@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DefaultButton from '@/src/components/Button/DefaultButton';
-import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
 import useNetwork from '@/src/hooks/useNetwork';
 import { userApi } from '../lib/api';
 import { encrypt } from '../utils/crypto';
@@ -16,9 +15,43 @@ import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
 import CastModal from '../components/Modals/CastModal/CastModal';
 
+interface MySelectionProps {
+  onClose: () => void;
+}
+
+const MySelection: React.FC<MySelectionProps> = ({ onClose }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  return (
+    <div className="w-64 h-full bg-white shadow-lg p-4 flex flex-col">
+      <button
+        onClick={onClose}
+        className="self-end text-gray-500 hover:text-gray-700 transition-colors"
+        aria-label="Close"
+      >
+        ✖
+      </button>
+      <h2 className="text-xl font-bold mb-4">My Selection</h2>
+      <input
+        type="text"
+        placeholder="Enter something..."
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        className="p-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <DefaultButton
+        placeholder="Sign Out"
+        onClick={() => userApi.onSignoutButtonClickHandler()}
+        className="bg-red-500 hover:bg-red-600 text-gray-500 w-full py-2 rounded-lg"
+      />
+    </div>
+  );
+};
+
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
   const [knocks, setKnocks] = useState<KnockEdge[]>([]);
@@ -87,43 +120,52 @@ export default function Landing() {
         >
           GooRoom
         </h1>
-        <DefaultButton placeholder="Sign Out" onClick={() => userApi.onSignoutButtonClickHandler()} />
+        {/* Hamburger Button */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="w-12 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md shadow-md transition-all flex items-center justify-center select-none"
+          aria-label="Toggle Sidebar"
+        >
+          ☰
+        </button>
       </header>
 
+      {/* Sidebar */}
+      {isSidebarOpen && (
+        <div className="absolute top-0 right-0 h-full z-20">
+          <MySelection onClose={() => setIsSidebarOpen(false)} />
+        </div>
+      )}
+
+      {/* Magnify Buttons */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+        <button
+          onClick={() => networkManager.zoomIn()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
+          aria-label="Zoom In"
+        >
+          +
+        </button>
+        <button
+          onClick={() => networkManager.resetPosition()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
+          aria-label="Reset Position"
+        >
+          O
+        </button>
+        <button
+          onClick={() => networkManager.zoomOut()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all select-none"
+          aria-label="Zoom Out"
+        >
+          -
+        </button>
+      </div>
+
       {/* Main Content */}
-      <main className="flex-grow relative">
-        {/* Dropdown Button */}
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 w-10">
-          <CastPostStickerDropdownButton cast_fuction={() => console.log('cast function')} />
-        </div>
-
-        {/* Magnify Buttons */}
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
-          <button
-            onClick={() => networkManager.zoomIn()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Zoom In"
-          >
-            +
-          </button>
-          <button
-            onClick={() => networkManager.resetPosition()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Reset Position"
-          >
-            O
-          </button>
-          <button
-            onClick={() => networkManager.zoomOut()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Zoom Out"
-          >
-            -
-          </button>
-        </div>
-
+      <main className="flex-grow flex">
         {/* Network Container */}
-        <div className="relative w-full h-[90vh] bg-white border border-gray-300 shadow-lg overflow-hidden">
+        <div className="flex-grow bg-white border border-gray-300 shadow-lg overflow-hidden">
           <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
           <ContextMenu
             items={contextMenu.items}
