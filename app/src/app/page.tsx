@@ -14,6 +14,7 @@ import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMut
 import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
 import CastModal from '../components/Modals/CastModal/CastModal';
+import { useResizeSection } from '@/src/hooks/useResizeSection';
 
 interface MySelectionProps {
   onClose: () => void;

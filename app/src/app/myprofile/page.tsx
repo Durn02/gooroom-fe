@@ -23,6 +23,7 @@ export default function MyProfile() {
     minWidth: 10,
     maxWidth: 80,
     initialWidth: 30,
+    sectionSide: 'left',
   });
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);

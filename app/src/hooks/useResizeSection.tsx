@@ -4,9 +4,10 @@ interface UseResizableProps {
   minWidth: number;
   maxWidth: number;
   initialWidth: number;
+  sectionSide?: 'left' | 'right' | 'top' | 'bottom';
 }
 
-export const useResizeSection = ({ minWidth, maxWidth, initialWidth }: UseResizableProps) => {
+export const useResizeSection = ({ minWidth, maxWidth, initialWidth, sectionSide }: UseResizableProps) => {
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
   const [width, setWidth] = useState(initialWidth);
@@ -25,7 +26,8 @@ export const useResizeSection = ({ minWidth, maxWidth, initialWidth }: UseResiza
     (e: MouseEvent) => {
       if (isResizing) {
         requestAnimationFrame(() => {
-          const newWidth = width + ((e.clientX - initialX) / window.innerWidth) * 100;
+          const delta = ((e.clientX - initialX) / window.innerWidth) * 100;
+          const newWidth = sectionSide === 'left' ? width + delta : sectionSide === 'right' ? width - delta : width;
           if (newWidth >= minWidth && newWidth <= maxWidth) {
             setWidth(newWidth);
           }
