@@ -198,6 +198,32 @@ export default function Landing() {
               );
             })}
         </div>
+        {/* Magnify Buttons */}
+        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+          <button
+            onClick={() => networkManager.zoomIn()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Zoom In"
+          >
+            +
+          </button>
+
+          <button
+            onClick={() => networkManager.resetPosition()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Reset Position"
+          >
+            O
+          </button>
+
+          <button
+            onClick={() => networkManager.zoomOut()}
+            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+            aria-label="Zoom Out"
+          >
+            -
+          </button>
+        </div>
       </main>
 
       {/* Modals */}
