@@ -39,12 +39,16 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
         const response = await apiClient.post<User[]>(`${API_URL}/domain/user/search/get-members`, {
           query: inputValue,
         });
+        if (!response.data[0]['nickname']) {
+          setSearchResults([]);
+          return;
+        }
         setSearchResults(response.data);
       } catch (error) {
         console.error('검색 실패:', error);
         setSearchResults([]);
       }
-    }, 1000);
+    }, 700);
 
     return () => {
       if (timerRef.current) {
