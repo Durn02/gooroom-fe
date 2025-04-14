@@ -45,6 +45,9 @@ const sendKnockFunc = async (nodeId: string) => {
     } else if (data.message === 'cannot send to myself') {
       alert('자신에게 노크를 보낼 수 없습니다.');
       return;
+    } else if (data.message === 'already roommate') {
+      alert('이미 룸메이트입니다.');
+      return;
     } else {
       alert('알 수 없는 오류가 발생했습니다.');
       return;
