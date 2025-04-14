@@ -4,21 +4,43 @@ import { initDB, getAllData, saveDatas, getAllRoommates, saveRoommates } from '.
 import { landingApi, userApi } from '../lib/api';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
 import { Cast, CastsByUser } from '../types/cast.type';
+import { InitData, CastData, ContextMenuState } from '../types/networkTypes';
+
+// Adapter function to transform InitData to CastData
+const transformToCastData = (initData: InitData): CastData => {
+  return initData.reduce((acc, cast) => {
+    if (acc[cast.creator]) {
+      acc[cast.creator].content.push({
+        message: cast.message,
+        duration: cast.duration,
+        createdAt: cast.created_at,
+      });
+    } else {
+      acc[cast.creator] = {
+        userId: cast.creator,
+        content: [
+          {
+            message: cast.message,
+            duration: cast.duration,
+            createdAt: cast.created_at,
+          },
+        ],
+      };
+    }
+    return acc;
+  }, {} as CastData);
+};
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
   const [networkManager, setNetworkManager] = useState<NetworkManager | null>(null);
-  const [contextMenu, setContextMenu] = useState<{
-    position: { x: number; y: number } | null;
-    items: [string, () => void][];
-    userId: string | null;
-  }>({
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     position: null,
     items: [],
     userId: null,
   });
 
-  const [castData, setCastData] = useState<CastsByUser>({});
-  const [initData, setInitData] = useState<Cast[]>([]);
+  const [castData, setCastData] = useState<CastData>({});
+  const [initData, setInitData] = useState<InitData>([]);
   const [observing, setObserving] = useState(false);
   const networkContainer = useRef<HTMLDivElement>(null);
 
@@ -109,32 +131,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     if (!networkManager) return;
     let isMounted = true;
     if (initData.length > 0) {
-      const groupedData: CastsByUser = initData.reduce((acc, cast) => {
-        if (acc[cast.creator]) {
-          // 기존 userId에 content 추가
-          acc[cast.creator].content.push({
-            node_id: cast.node_id,
-            message: cast.message,
-            duration: cast.duration,
-            created_at: cast.created_at,
-          });
-        } else {
-          // 새로운 userId로 객체 생성
-          acc[cast.creator] = {
-            userId: cast.creator,
-            content: [
-              {
-                node_id: cast.node_id,
-                message: cast.message,
-                duration: cast.duration,
-                created_at: cast.created_at,
-              },
-            ],
-          };
-        }
-        return acc;
-      }, {});
-
+      const groupedData = transformToCastData(initData);
       setCastData(groupedData);
     }
 

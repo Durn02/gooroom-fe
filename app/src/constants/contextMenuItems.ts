@@ -4,6 +4,7 @@ import { blockFreind, muteFreind } from '../lib/api/friend/friend.api';
 import { sendKnock } from '../lib/api/knock.api';
 import { encrypt } from '../utils/crypto';
 import { clearStore } from '../utils/indexedDB';
+import { createKnockLink } from '../lib/api/knock.api';
 
 const viewMyProfile = () => {
   window.location.href = '/myprofile';
@@ -54,11 +55,22 @@ const sendKnockFunc = async (nodeId: string) => {
   }
 };
 
+const createKnockLinkFunc = async () => {
+  try {
+    const data = await createKnockLink();
+    navigator.clipboard.writeText(`${window.location.origin}/knock/${data.link_id}`);
+    alert('노크 링크가 복사되었습니다.');
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export const MY_NODE_MENU_ITEMS = [
   ['view my profile', viewMyProfile],
   ['view knock list', () => {}],
   ['view block/mute list', () => {}],
   ['create cast', () => {}],
+  ['create knock link', () => createKnockLinkFunc()],
   ['logout', userApi.onLogoutButtonClickHandler],
 ];
 

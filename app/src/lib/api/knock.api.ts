@@ -59,3 +59,23 @@ export const sendKnock = async (nodeId: string) => {
     throw error;
   }
 };
+
+export const createKnockLink = async () => {
+  try {
+    const response = await apiClient.post('/domain/friend/knock/create-link');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to create knock link:', error);
+    throw error;
+  }
+};
+
+export const acceptKnockLink = async (linkId: string) => {
+  try {
+    const response = await apiClient.post(`/domain/friend/knock/accept-by-link/${linkId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to accept knock link:', error);
+    throw error;
+  }
+};
