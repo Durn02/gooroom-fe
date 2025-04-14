@@ -76,7 +76,14 @@ export default function RoommateProfile({ params }: Props) {
                 <div className="flex justify-between items-center mb-2">
                   <h1 className="text-3xl font-bold">@{friendInfo.nickname}</h1>
                 </div>
-                <Image src={userImage} alt="User profile" width={100} height={100} className="rounded-full" />
+                <Image
+                  src={typeof friendInfo.profile_image_url === 'string' ? friendInfo.profile_image_url : userImage}
+                  alt="User profile"
+                  width={100}
+                  height={100}
+                  className="rounded-full object-cover"
+                  style={{ width: '100px', height: '100px' }}
+                />
                 <p className="text-gray-600 mb-2 font-bold">{friendInfo.username}</p>
                 {friendInfo.my_memo && (
                   <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
