@@ -4,7 +4,7 @@ interface UseResizableProps {
   minWidth: number;
   maxWidth: number;
   initialWidth: number;
-  sectionSide?: 'left' | 'right' | 'top' | 'bottom';
+  sectionSide: 'left' | 'right' | 'top' | 'bottom';
 }
 
 export const useResizeSection = ({ minWidth, maxWidth, initialWidth, sectionSide }: UseResizableProps) => {
