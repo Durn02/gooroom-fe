@@ -14,6 +14,7 @@ import CastUI from '../components/UI/CastUI';
 import CastModal from '../components/Modals/CastModal/CastModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { LandingPageSideBar } from '../components/SideBar/LandingPageSideBar';
+import { clearStore } from '../utils/indexedDB';
 
 export default function Landing() {
   const router = useRouter();
@@ -88,7 +89,10 @@ export default function Landing() {
       <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
         <h1
           className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            Promise.all([clearStore('roommates'), clearStore('neighbors')]);
+            window.location.reload();
+          }}
         >
           GooRoom
         </h1>
