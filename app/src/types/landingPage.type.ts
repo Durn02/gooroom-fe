@@ -47,3 +47,12 @@ export interface BlockMuteList {
   blockList: BlockList[];
   muteList: MuteList[];
 }
+
+export interface SearchedUser {
+  nickname: string;
+  username: string;
+  profile_image_url: string | null;
+  node_id: string;
+  is_roommate: boolean;
+  sent_knock: boolean;
+}

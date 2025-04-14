@@ -5,15 +5,7 @@ import Image from 'next/image';
 import { API_URL } from '@/src/lib/config';
 import DefaultButton from '../Button/DefaultButton';
 import { knockApi, userApi } from '@/src/lib/api';
-
-interface User {
-  nickname: string;
-  username: string;
-  profile_image_url: string | null;
-  node_id: string;
-  is_roommate: boolean;
-  sent_knock: boolean;
-}
+import { SearchedUser } from '@/src/types/landingPage.type';
 
 interface LandingPageSideBarProps {
   onClose: () => void;
@@ -23,7 +15,7 @@ interface LandingPageSideBarProps {
 
 export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose, width, handleMouseDown }) => {
   const [inputValue, setInputValue] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchedUser[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -38,7 +30,7 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
 
     timerRef.current = setTimeout(async () => {
       try {
-        const response = await apiClient.post<User[]>(`${API_URL}/domain/user/search/get-members`, {
+        const response = await apiClient.post<SearchedUser[]>(`${API_URL}/domain/user/search/get-members`, {
           query: inputValue,
         });
         if (!response.data[0]['nickname']) {
