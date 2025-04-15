@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import apiClient from '@/src/lib/api/axiosApiClient';
 import loading_circle from '@/src/assets/gif/loading_circle.gif';
 import Image from 'next/image';
+import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
 
 export default function ResetPassword() {
   const [email, setEmail] = useState<string>('');
+  const [verificationCode, setVerificationCode] = useState<string>('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [loading, setLoading] = useState(false); // 로딩 상태 추가
+  const [loading, setLoading] = useState(false);
+  const [showVerifySection, setShowVerifySection] = useState(false);
 
   const router = useRouter();
 
@@ -20,27 +23,54 @@ export default function ResetPassword() {
     }, 300);
   };
 
-  const handleSendEmail = async (email: string) => {
+  const handleSendVerificationCode = async () => {
     try {
-      setLoading(true); // 로딩 시작
-      const response = await apiClient.post('/domain/auth/pw/reset', { email });
-      if (response.status !== 200) {
-        alert('비밀번호 재설정 이메일 전송에 실패했습니다.');
-        return;
+      setLoading(true);
+      const response = await apiClient.post('/domain/auth/send-verification-code', { email });
+
+      if (response.status === 200) {
+        alert('인증 코드가 이메일로 전송되었습니다.');
+        setShowVerifySection(true);
       }
-      alert('비밀번호 재설정 이메일이 전송되었습니다.');
-      router.push('/signin');
     } catch (error) {
-      alert('오류가 발생했습니다. 다시 시도해주세요.');
-      console.error('Error sending email:', error);
+      alert('이메일 전송에 실패했습니다. 다시 시도해주세요.');
+      console.error('Error sending verification code:', error);
     } finally {
-      setLoading(false); // 로딩 종료
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCodeAndReset = async () => {
+    const confirm = window.confirm('비밀번호를 재설정하시겠습니까?');
+    if (!confirm) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await apiClient.post('/domain/auth/pw/reset', {
+        email,
+        verifycode: verificationCode,
+      });
+
+      if (response.status === 200) {
+        alert('재설정한 비밀번호가 이메일로 전송되었습니다.');
+        router.push('/signin');
+      }
+    } catch (error) {
+      alert('비밀번호 재설정 실패. 정보를 확인해주세요.');
+      console.error('Error resetting password:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
-      handleSendEmail(email);
+      if (!showVerifySection) {
+        handleSendVerificationCode();
+      } else {
+        handleVerifyCodeAndReset();
+      }
     }
   };
 
@@ -61,7 +91,6 @@ export default function ResetPassword() {
       )}
 
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md relative">
-        {/* Back Arrow */}
         <button
           onClick={handleBackNavigation}
           className="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition-colors"
@@ -80,26 +109,35 @@ export default function ResetPassword() {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">비밀번호 재설정</h1>
-        <p className="text-gray-600 text-center mb-6">이메일을 통해 비밀번호를 재설정하세요.</p>
 
-        {/* Email Input */}
-        <div className="mb-4">
-          <input
-            type="email"
-            placeholder="이메일 주소"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-
-        {/* Send Email Button */}
-        <button
-          onClick={() => handleSendEmail(email)}
-          className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
-        >
-          비밀번호 재설정 이메일 보내기
-        </button>
+        {!showVerifySection ? (
+          <>
+            <div className="mb-4">
+              <input
+                type="email"
+                placeholder="가입한 이메일 주소"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
+            <button
+              onClick={handleSendVerificationCode}
+              className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
+            >
+              인증 코드 전송
+            </button>
+          </>
+        ) : (
+          <div className="mb-4">
+            <VerifyInput
+              placeholder="인증 코드 입력"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e)}
+              onClick={handleVerifyCodeAndReset}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
