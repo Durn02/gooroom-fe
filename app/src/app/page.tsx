@@ -47,6 +47,7 @@ export default function Landing() {
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
+      setContextMenu({ position: null, items: [], userId: null });
       setSelectedUserId(userId);
     },
     onNodeClick: (userId: string) => {
@@ -113,7 +114,7 @@ export default function Landing() {
         <div className="flex-1 relative bg-white border border-gray-300 shadow-lg">
           <div
             ref={networkContainer}
-            className="w-full h-full min-w-[50vw] max-h-[calc(100vh-4rem)]" // ⬅️ 주요 변경 부분
+            className="w-full h-full min-w-[50vw] max-h-[calc(100vh-4rem)]"
             style={{ aspectRatio: '1 / 1' }}
           />
           <ContextMenu

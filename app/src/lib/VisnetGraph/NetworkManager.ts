@@ -70,7 +70,10 @@ export class NetworkManager {
       const { nodes: clickedNodes } = event;
       if (clickedNodes.length > 0) {
         const clickedNodeId = clickedNodes[0];
-
+        this.observer?.({
+          event: 'doubleClick',
+          data: { nodeId: clickedNodeId },
+        });
         this.network.focus(clickedNodeId, {
           scale: 100,
           animation: {
@@ -78,10 +81,7 @@ export class NetworkManager {
             easingFunction: 'easeInOutQuad',
           },
         });
-
-        setTimeout(() => {
-          callbacks.onNodeDoubleClick(clickedNodeId);
-        }, 800);
+        setTimeout(() => callbacks.onNodeDoubleClick(clickedNodeId), 800);
       }
     });
 

@@ -92,6 +92,9 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
             case 'finishObservation':
               setObserving(false);
               break;
+            case 'doubleClick':
+              setContextMenu({ position: null, items: [], userId: null });
+              break;
           }
         });
       }
