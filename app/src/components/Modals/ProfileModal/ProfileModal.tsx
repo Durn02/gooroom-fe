@@ -185,132 +185,118 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       }`}
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-lg p-6 overflow-y-auto w-100 max-h-[70vh] min-h-[24rem] max-w-full min-w-[520px] relative">
+      <div className="bg-white rounded-2xl p-10 overflow-y-auto w-full max-w-2xl min-h-[28rem] relative shadow-xl">
         {/* Loading Screen */}
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
-            <div className="text-white text-lg mb-4">Loading...</div> {/* Added margin-bottom */}
+            <div className="text-white text-lg mb-4">Loading...</div>
             <Image src={loading_circle} alt="Loading" width={50} height={50} />
           </div>
         )}
-        <div className="bg-white rounded-lg p-6 overflow-y-auto w-[90%] max-h-[70vh] min-h-[24rem] max-w-[35rem] relative">
-          <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
 
-          <h2 className="text-2xl font-bold mb-4">My Profile</h2>
+        <button className="absolute top-6 right-6 text-gray-500 hover:text-gray-700" onClick={onClose}>
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-          <div className="flex gap-2">
-            <div className="relative w-[9rem] h-[8rem] overflow-hidden flex-shrink-0 group">
-              {/* Delete Button (Visible only if not default image) */}
-              {previewImage !== userImage.src && (
-                <button
-                  className="absolute top-1 right-1 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-gray-400 transition-colors"
-                  onClick={() => {
-                    if (window.confirm('기본이미지로 변경하시겠습니까?')) {
-                      setPreviewImage(userImage.src);
-                      setImageFile(null);
-                      setRemoveProfileImage(true);
-                    }
-                  }}
-                >
-                  🗑️
-                </button>
-              )}
-              {/* Profile Image Preview */}
-              <div className="relative w-[8rem] h-[8rem] border rounded-full overflow-hidden flex-shrink-0 group">
-                <Image
-                  src={previewImage}
-                  alt="프로필 미리보기"
-                  className="w-full h-full object-cover"
-                  width={128}
-                  height={128}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = userImage.src;
-                  }}
-                />
-                {/* Overlay for changing image */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-                  <span className="text-white opacity-0 group-hover:opacity-100 text-sm">이미지 변경</span>
-                </div>
-                {/* File Input to change profile image */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleImageChange}
-                />
-              </div>
-            </div>
+        <h2 className="text-2xl font-bold mb-8">My Profile</h2>
+        <div className="flex gap-8 mb-6">
+          {/* Profile Image */}
+          <div className="relative w-[9rem] h-[9rem] flex-shrink-0 group">
+            {previewImage !== userImage.src && (
+              <button
+                className="absolute -top-3 -right-3 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md hover:bg-gray-400 transition-colors z-10"
+                onClick={() => {
+                  if (window.confirm('기본이미지로 변경하시겠습니까?')) {
+                    setPreviewImage(userImage.src);
+                    setImageFile(null);
+                    setRemoveProfileImage(true);
+                  }
+                }}
+              >
+                🗑️
+              </button>
+            )}
 
-            {/* Profile Inputs */}
-            <div className="flex-grow">
-              <input
-                type="text"
-                name="nickname"
-                value={profileData.nickname}
-                onChange={handleChange}
-                className="w-full p-2 border rounded mb-4"
-                placeholder="닉네임을 입력하세요"
+            <div className="relative w-[9rem] h-[9rem] border rounded-full overflow-hidden group">
+              <Image
+                src={previewImage}
+                alt="프로필 미리보기"
+                className="w-full h-full object-cover"
+                width={144}
+                height={144}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = userImage.src;
+                }}
               />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 text-sm">이미지 변경</span>
+              </div>
               <input
-                type="text"
-                name="username"
-                value={profileData.username}
-                onChange={handleChange}
-                className="w-full p-2 border rounded mb-4"
-                placeholder="사용자 이름을 입력하세요"
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={handleImageChange}
               />
             </div>
           </div>
-
-          {/* Memo */}
-          <textarea
-            name="my_memo"
-            value={profileData.my_memo}
-            onChange={handleChange}
-            className="w-full h-[6rem] p-2 border rounded resize-vertical mt-4"
-            placeholder="메모를 입력하세요"
-          />
-
-          {/* Tags */}
-          <div className="mt-4">
+          {/* Profile Inputs */}
+          <div className="flex-grow flex flex-col gap-5">
             <input
               type="text"
-              value={newTags}
-              onChange={(e) => setNewTags(e.target.value)}
-              onKeyDown={handleNewTagsKeyPress}
-              className="w-full p-2 border rounded mb-4"
-              placeholder="태그를 입력하고 Enter를 누르세요"
+              name="nickname"
+              value={profileData.nickname}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="닉네임을 입력하세요"
             />
-            <div className="flex flex-wrap gap-2">
-              {profileData.tags.map((tag, index) => (
-                <span key={index} className="bg-gray-100 px-3 py-1.5 rounded-full text-sm flex items-center gap-2">
-                  {tag}
-                  <button onClick={() => removeTags(index)} className="text-gray-400 hover:text-gray-600">
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
+            <input
+              type="text"
+              name="username"
+              value={profileData.username}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="사용자 이름을 입력하세요"
+            />
           </div>
-
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded mt-6 w-full text-center"
-          >
-            프로필 저장
-          </button>
         </div>
+
+        <textarea
+          name="my_memo"
+          value={profileData.my_memo}
+          onChange={handleChange}
+          className="w-full h-[6rem] px-4 py-3 border border-gray-300 rounded-lg resize-vertical mb-5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="메모를 입력하세요"
+        />
+
+        <div className="mb-5">
+          <input
+            type="text"
+            value={newTags}
+            onChange={(e) => setNewTags(e.target.value)}
+            onKeyDown={handleNewTagsKeyPress}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="태그를 입력하고 Enter를 누르세요"
+          />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {profileData.tags.map((tag, index) => (
+              <span key={index} className="bg-gray-100 px-3 py-1.5 rounded-full text-sm flex items-center gap-2">
+                {tag}
+                <button onClick={() => removeTags(index)} className="text-gray-400 hover:text-gray-600">
+                  x
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-3 rounded-lg w-full text-center text-lg"
+        >
+          프로필 저장
+        </button>
       </div>
     </div>
   );
