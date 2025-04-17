@@ -11,12 +11,20 @@ interface LandingPageSideBarProps {
   onClose: () => void;
   width: number;
   handleMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
+  isOpen: boolean;
 }
 
-export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose, width, handleMouseDown }) => {
+export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose, width, handleMouseDown, isOpen }) => {
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState<SearchedUser[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (inputValue.trim() === '') {
@@ -124,6 +132,7 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
       {/* 검색 입력창 */}
       <input
         type="text"
+        ref={inputRef}
         placeholder="닉네임이나 사용자명을 입력하세요"
         value={inputValue}
         onChange={handleSearchInputChange}

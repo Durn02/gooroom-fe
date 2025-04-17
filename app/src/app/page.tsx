@@ -152,7 +152,12 @@ export default function Landing() {
           isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <LandingPageSideBar onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
+        <LandingPageSideBar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          width={width}
+          handleMouseDown={handleMouseDown}
+        />
       </div>
       {/* Magnify Buttons */}
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
