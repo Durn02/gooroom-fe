@@ -1,4 +1,4 @@
-//NetworkManager.ts
+// NetworkManager.ts ../lib/VisnetGraph/NetworkManager
 import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
 import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
@@ -26,6 +26,7 @@ export class NetworkManager {
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
   private interactedNodeId: string | null = null;
+  private resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   private observer?: (event: NetworkEvent) => void;
   private lock: number = 0;
@@ -61,6 +62,7 @@ export class NetworkManager {
       },
       visnet_options,
     );
+    this.network.fit({ animation: true });
 
     this.bind();
 
@@ -121,12 +123,18 @@ export class NetworkManager {
       }, 200);
     });
     this.network.on('resize', () => {
-      this.startObservation(); // 첫 번째 메서드 즉시 실행
+      this.startObservation();
 
-      // 500ms(0.5초) 후 두 번째 메서드 실행
-      setTimeout(() => {
+      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => {
+        this.network.fit({
+          animation: {
+            duration: 500,
+            easingFunction: 'easeInOutQuad',
+          },
+        });
         this.stopObservation();
-      }, 200); // 텀 조절 (밀리초 단위)
+      }, 300);
     });
   }
 

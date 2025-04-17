@@ -86,7 +86,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+      <header className="h-16 bg-white shadow-md px-6 flex justify-between items-center">
         <h1
           className="text-2xl font-bold text-gray-800 cursor-pointer select-none"
           onClick={() => {
@@ -106,20 +106,16 @@ export default function Landing() {
         </button>
       </header>
 
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 right-0 h-full z-20 transform transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <LandingPageSideBar onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
-      </div>
-
       {/* Main Content */}
-      <main className="flex-grow flex">
+      {/* Main Content */}
+      <main className="flex-1 flex relative overflow-hidden">
         {/* Network Container */}
-        <div className="flex-grow bg-white border border-gray-300 shadow-lg overflow-hidden">
-          <div ref={networkContainer} style={{ height: '100%', width: '100%' }} />
+        <div className="flex-1 relative bg-white border border-gray-300 shadow-lg">
+          <div
+            ref={networkContainer}
+            className="w-full h-full min-w-[50vw] max-h-[calc(100vh-4rem)]" // ⬅️ 주요 변경 부분
+            style={{ aspectRatio: '1 / 1' }}
+          />
           <ContextMenu
             items={contextMenu.items}
             position={contextMenu.position}
@@ -148,33 +144,41 @@ export default function Landing() {
               );
             })}
         </div>
-        {/* Magnify Buttons */}
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
-          <button
-            onClick={() => networkManager.zoomIn()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Zoom In"
-          >
-            +
-          </button>
-
-          <button
-            onClick={() => networkManager.resetPosition()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Reset Position"
-          >
-            O
-          </button>
-
-          <button
-            onClick={() => networkManager.zoomOut()}
-            className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
-            aria-label="Zoom Out"
-          >
-            -
-          </button>
-        </div>
       </main>
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 right-0 h-full z-20 transform transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <LandingPageSideBar onClose={() => setIsSidebarOpen(false)} width={width} handleMouseDown={handleMouseDown} />
+      </div>
+      {/* Magnify Buttons */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+        <button
+          onClick={() => networkManager.zoomIn()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+          aria-label="Zoom In"
+        >
+          +
+        </button>
+
+        <button
+          onClick={() => networkManager.resetPosition()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+          aria-label="Reset Position"
+        >
+          O
+        </button>
+
+        <button
+          onClick={() => networkManager.zoomOut()}
+          className="p-3 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow-md transition-all"
+          aria-label="Zoom Out"
+        >
+          -
+        </button>
+      </div>
 
       {/* Modals */}
       {isKnockListModalOpen && (
