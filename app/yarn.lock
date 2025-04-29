@@ -1646,15 +1646,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/next@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@types/next@npm:9.0.0"
-  dependencies:
-    next: "npm:*"
-  checksum: 10c0/2148aadba745e6f094d33e483875656dece95e4049d7d99ce0ca0678035d1d48e73d6e2cba45e2b5fb0762bfd7b48587139d7ecf464876fb4fde9ff06cc249b8
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^20":
   version: 20.16.9
   resolution: "@types/node@npm:20.16.9"
@@ -3444,7 +3435,6 @@ __metadata:
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.726.1"
     "@types/crypto-js": "npm:^4"
-    "@types/next": "npm:^9.0.0"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
@@ -4400,7 +4390,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:*, next@npm:14.2.13":
+"next@npm:14.2.13":
   version: 14.2.13
   resolution: "next@npm:14.2.13"
   dependencies:
