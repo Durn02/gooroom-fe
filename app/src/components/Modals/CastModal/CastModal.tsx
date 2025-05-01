@@ -140,7 +140,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
                   }`}
                 >
                   {friend.nickname}
-                  <span className="text-lg">{friend.selected ? 'x' : '+'}</span>
+                  <span className="text-lg">{friend.selected ? '-' : '+'}</span>
                 </button>
               ))}
             </div>
