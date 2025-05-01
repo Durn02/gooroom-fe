@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { AiFillMessage, AiOutlineMessage } from "react-icons/ai";
+import { AiFillMessage } from 'react-icons/ai';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 interface CastUIProps {
   position: { x: number; y: number } | null;
@@ -12,7 +16,7 @@ interface CastUIProps {
 
 const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size, contentCount }) => {
   const [onRead, setOnRead] = useState<boolean>(false);
-  const [scaled, setScaled] = useState<{ x: number; y: number, width: number, height: number } | null>(null);
+  const [scaled, setScaled] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     if (!position) return;
@@ -20,20 +24,13 @@ const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size,
     const newscaled = {
       x: x + scale * 10 + size * 0.125,
       y: y - Math.min(scale * 60, 200) - size * 0.25,
-      width : scale * 60 + size * 0.1,
-      height : scale * 60 + size * 0.1,
+      width: scale * 60 + size * 0.1,
+      height: scale * 60 + size * 0.1,
     };
     setScaled(newscaled);
-    console.log(scale);
   }, [position, scale, size]);
 
-  // 디버깅 로그
-
-  if (!position || !scaled) {
-    return null;
-  }
-
-
+  if (!position || !scaled) return null;
 
   return (
     <div
@@ -44,37 +41,57 @@ const CastUI: React.FC<CastUIProps> = ({ position, userId, scale, content, size,
         top: `${scaled.y}px`,
         width: `${scaled.width}px`,
         height: `${scaled.height}px`,
+        zIndex: 30,
       }}
     >
-      {onRead === false && (
-        <div className="relative w-full h-full animate-bounce" >
+      {!onRead && (
+        <div className="relative w-full h-full animate-bounce">
           <AiFillMessage
-            className="cursor-pointer text-blue-500 w-full h-full"
+            className="cursor-pointer text-blue-500 w-full h-full drop-shadow"
             onClick={() => setOnRead(true)}
+            title="Cast 메시지 보기"
           />
           {contentCount > 1 && (
-            <span className="absolute top-1/3 right-0 text-sm font-bold text-red-500 bg-white rounded-full px-2 py-1 shadow">
+            <span className="absolute -top-2 -right-2 text-xs font-bold text-white bg-red-500 rounded-full px-2 py-0.5 shadow">
               {contentCount}
             </span>
           )}
         </div>
       )}
-      {onRead === true && (
+      {onRead && (
         <div
-          className="flex flex-col items-start cursor-pointer bg-white rounded-lg shadow-lg p-2 border border-gray-200 max-h-40"
+          className="flex flex-col items-stretch cursor-pointer bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-h-56 min-w-[180px] max-w-xs overflow-y-auto transition-all duration-200"
           onClick={() => setOnRead(false)}
-          style={{ width: `${size * 6}px` }}
+          style={{ width: `${Math.max(size * 6, 180)}px` }}
         >
-          {content.map((item, index) => (
-            <div
-              key={index}
-              className="text-sm text-gray-800 mb-1 last:mb-0 flex items-start"
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-blue-600">메시지</span>
+            <button
+              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOnRead(false);
+              }}
+              title="닫기"
             >
-              <span className="mr-1">•</span>
-              <p>{item.message}</p>
-              <p>{item.createdAt}</p>
-            </div>
-          ))}
+              ✕
+            </button>
+          </div>
+          {content
+            .slice()
+            .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf())
+            .map((item, idx) => (
+              <div key={idx} className="mb-2 last:mb-0 border-b last:border-b-0 border-gray-100 pb-2 last:pb-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-blue-400 text-xs">•</span>
+                  <span className="font-medium text-gray-800 text-sm">{item.message}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <span>{dayjs(item.createdAt).fromNow()}</span>
+                  <span>{dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}</span>
+                </div>
+              </div>
+            ))}
         </div>
       )}
     </div>
