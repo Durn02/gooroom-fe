@@ -17,6 +17,12 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
   const [isVisible, setIsVisible] = useState(false);
 
   const [friends, setFriends] = useState<{ nickname: string; node_id: string; selected: boolean }[]>([]);
+  const allSelected = friends.length > 0 && friends.every((f) => f.selected);
+
+  const toggleAllSelection = () => {
+    const newState = !allSelected;
+    setFriends(friends.map((friend) => ({ ...friend, selected: newState })));
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -104,12 +110,12 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
           ✕
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Create New Cast</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">캐스트 메시지</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="castMessage" className="block text-sm font-medium text-gray-700 mb-2">
-              Cast Message
+              메시지
             </label>
             <input
               id="castMessage"
@@ -125,7 +131,18 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
 
           {/* 전송 대상 친구 목록 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">받는 사람</label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAllSelection}
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">전체 선택</span>
+              </label>
+            </div>
             <div className="flex flex-wrap gap-2 max-h-[6.5rem] overflow-y-auto" style={{ alignContent: 'flex-start' }}>
               {friends.length === 0 && <span className="text-gray-400 text-sm">No recipients selected.</span>}
               {friends.map((friend) => (
@@ -148,7 +165,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
 
           <div>
             <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
-              Duration (minutes)
+              메시지 지속 시간 (분)
             </label>
             <input
               id="duration"
@@ -168,14 +185,14 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
               onClick={onClose}
               className="px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              취소
             </button>
             <button
               type="submit"
               className="px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
               disabled={loading || !friends.some((f) => f.selected)}
             >
-              {loading ? 'Creating...' : 'Create Cast'}
+              {loading ? '생성 중...' : '생성'}
             </button>
           </div>
         </form>
