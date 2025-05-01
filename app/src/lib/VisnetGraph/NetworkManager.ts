@@ -216,6 +216,13 @@ export class NetworkManager {
     return this.roommatesWithNeighbors;
   }
 
+  public getRoommateData(): { nickname: string; node_id: string }[] {
+    return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
+      nickname: r.roommate.nickname,
+      node_id: r.roommate.node_id,
+    }));
+  }
+
   public getNodesDataSet() {
     return this.nodesDataSet;
   }

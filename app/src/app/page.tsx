@@ -108,7 +108,6 @@ export default function Landing() {
       </header>
 
       {/* Main Content */}
-      {/* Main Content */}
       <main className="flex-1 flex relative overflow-hidden">
         {/* Network Container */}
         <div className="flex-1 relative bg-white border border-gray-300 shadow-lg">
@@ -203,7 +202,12 @@ export default function Landing() {
         />
       )}
       {isCreateCastModalOpen && (
-        <CastModal isOpen={isCreateCastModalOpen} onClose={() => setIsCreateCastModalOpen(false)} />
+        <CastModal
+          isOpen={isCreateCastModalOpen}
+          onClose={() => setIsCreateCastModalOpen(false)}
+          // roommatesInfo={networkManager.getRoommatesWithNeighbors().keys()}
+          roommatesInfo={networkManager.getRoommateData()}
+        />
       )}
     </div>
   );

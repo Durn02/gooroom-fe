@@ -6,15 +6,33 @@ import loading_circle from '@/src/assets/gif/loading_circle.gif';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  roommatesInfo: { nickname: string; node_id: string }[];
 }
 
-const CastModal = ({ isOpen, onClose }: ModalProps) => {
+const CastModal = ({ isOpen, onClose, roommatesInfo }: ModalProps) => {
   const [castMessage, setCastMessage] = useState('');
-  const [friend, setFriend] = useState('');
-  const [friends, setFriends] = useState<string[]>([]);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  const [friends, setFriends] = useState(roommatesInfo.map((roommate) => ({ ...roommate, selected: true })));
+
+  useEffect(() => {
+    if (isOpen) {
+      setFriends(roommatesInfo.map((roommate) => ({ ...roommate, selected: true })));
+      setIsVisible(true);
+      setTimeout(() => {
+        const inputElement = document.getElementById('castMessage');
+        inputElement?.focus();
+      }, 0);
+      document.addEventListener('keydown', handleKeyDown);
+    } else {
+      setTimeout(() => setIsVisible(false), 300);
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, roommatesInfo]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -25,25 +43,13 @@ const CastModal = ({ isOpen, onClose }: ModalProps) => {
     [onClose],
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      document.addEventListener('keydown', handleKeyDown);
-    } else {
-      setTimeout(() => setIsVisible(false), 300);
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, handleKeyDown]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await createCast({
+        friends: friends.filter((f) => f.selected).map((f) => f.node_id),
         message: castMessage,
-        friends,
         duration,
       });
       alert('Cast created successfully!');
@@ -56,18 +62,10 @@ const CastModal = ({ isOpen, onClose }: ModalProps) => {
     }
   };
 
-  const addFriend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (friend.trim()) {
-      setFriends([...friends, friend.trim()]);
-      setFriend('');
-    }
-  };
-
-  const removeFriend = (index: number) => {
-    if (window.confirm('Are you sure you want to remove this friend?')) {
-      setFriends(friends.filter((_, i) => i !== index));
-    }
+  const toggleFriend = (node_id: string) => {
+    setFriends(
+      friends.map((friend) => (friend.node_id === node_id ? { ...friend, selected: !friend.selected } : friend)),
+    );
   };
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -121,51 +119,28 @@ const CastModal = ({ isOpen, onClose }: ModalProps) => {
             />
           </div>
 
+          {/* 전송 대상 친구 목록 */}
           <div>
-            <label htmlFor="friendInput" className="block text-sm font-medium text-gray-700 mb-2">
-              Add Friends
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="friendInput"
-                type="text"
-                value={friend}
-                onChange={(e) => setFriend(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addFriend(e)}
-                className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter friend's name"
-                aria-label="Friend's name"
-              />
-              <button
-                onClick={addFriend}
-                className="px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                aria-label="Add friend"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {friends.length > 0 && (
+            <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
             <div className="flex flex-wrap gap-2">
-              {friends.map((friend, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-sm flex items-center gap-2"
+              {friends.length === 0 && <span className="text-gray-400 text-sm">No recipients selected.</span>}
+              {friends.map((friend) => (
+                <button
+                  type="button"
+                  key={friend.node_id}
+                  onClick={() => toggleFriend(friend.node_id)}
+                  className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 transition-colors ${
+                    friend.selected
+                      ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
                 >
-                  {friend}
-                  <button
-                    type="button"
-                    onClick={() => removeFriend(index)}
-                    className="text-blue-600 hover:text-blue-800 text-lg"
-                    aria-label={`Remove ${friend}`}
-                  >
-                    ×
-                  </button>
-                </span>
+                  {friend.nickname}
+                  <span className="text-lg">{friend.selected ? '×' : '+'}</span>
+                </button>
               ))}
             </div>
-          )}
+          </div>
 
           <div>
             <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
@@ -175,10 +150,10 @@ const CastModal = ({ isOpen, onClose }: ModalProps) => {
               id="duration"
               type="number"
               value={duration}
-              onChange={(e) => setDuration(Math.max(0, Number(e.target.value)))}
+              onChange={(e) => setDuration(Math.max(1, Number(e.target.value)))}
               className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter duration"
-              min="0"
+              min="1"
               required
             />
           </div>
@@ -194,7 +169,7 @@ const CastModal = ({ isOpen, onClose }: ModalProps) => {
             <button
               type="submit"
               className="px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-              disabled={loading}
+              disabled={loading || !friends.some((f) => f.selected)}
             >
               {loading ? 'Creating...' : 'Create Cast'}
             </button>
