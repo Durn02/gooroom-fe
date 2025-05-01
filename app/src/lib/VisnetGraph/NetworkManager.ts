@@ -211,12 +211,18 @@ export class NetworkManager {
   public getNeighborsData() {
     return this.neighborsData;
   }
+  public getNeighborsBreifData() {
+    return Array.from(this.neighborsData.values()).map((n) => ({
+      nickname: n.nickname,
+      node_id: n.node_id,
+    }));
+  }
 
   public getRoommatesWithNeighbors() {
     return this.roommatesWithNeighbors;
   }
 
-  public getRoommateData(): { nickname: string; node_id: string }[] {
+  public getRoommatesBreifData(): { nickname: string; node_id: string }[] {
     return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
       nickname: r.roommate.nickname,
       node_id: r.roommate.node_id,

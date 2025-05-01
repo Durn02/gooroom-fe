@@ -7,19 +7,23 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   roommatesInfo: { nickname: string; node_id: string }[];
+  neighborsInfo: { nickname: string; node_id: string }[];
 }
 
-const CastModal = ({ isOpen, onClose, roommatesInfo }: ModalProps) => {
+const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps) => {
   const [castMessage, setCastMessage] = useState('');
   const [duration, setDuration] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const [friends, setFriends] = useState(roommatesInfo.map((roommate) => ({ ...roommate, selected: true })));
+  const [friends, setFriends] = useState<{ nickname: string; node_id: string; selected: boolean }[]>([]);
 
   useEffect(() => {
     if (isOpen) {
-      setFriends(roommatesInfo.map((roommate) => ({ ...roommate, selected: true })));
+      setFriends([
+        ...roommatesInfo.map((r) => ({ ...r, selected: true })),
+        ...neighborsInfo.map((n) => ({ ...n, selected: false })),
+      ]);
       setIsVisible(true);
       setTimeout(() => {
         const inputElement = document.getElementById('castMessage');
@@ -32,7 +36,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo }: ModalProps) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, roommatesInfo]);
+  }, [isOpen, roommatesInfo, neighborsInfo]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -122,7 +126,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo }: ModalProps) => {
           {/* 전송 대상 친구 목록 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-h-[6.5rem] overflow-y-auto" style={{ alignContent: 'flex-start' }}>
               {friends.length === 0 && <span className="text-gray-400 text-sm">No recipients selected.</span>}
               {friends.map((friend) => (
                 <button
@@ -136,7 +140,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo }: ModalProps) => {
                   }`}
                 >
                   {friend.nickname}
-                  <span className="text-lg">{friend.selected ? '×' : '+'}</span>
+                  <span className="text-lg">{friend.selected ? 'x' : '+'}</span>
                 </button>
               ))}
             </div>

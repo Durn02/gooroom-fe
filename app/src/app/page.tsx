@@ -205,8 +205,8 @@ export default function Landing() {
         <CastModal
           isOpen={isCreateCastModalOpen}
           onClose={() => setIsCreateCastModalOpen(false)}
-          // roommatesInfo={networkManager.getRoommatesWithNeighbors().keys()}
-          roommatesInfo={networkManager.getRoommateData()}
+          roommatesInfo={networkManager.getRoommatesBreifData()}
+          neighborsInfo={networkManager.getNeighborsBreifData()}
         />
       )}
     </div>
