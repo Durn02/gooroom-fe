@@ -3,33 +3,9 @@ import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
 import { initDB, getAllData, saveDatas, getAllRoommates, saveRoommates } from '../utils/indexedDB';
 import { landingApi, userApi } from '../lib/api';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
-import { Cast, CastsByUser } from '../types/cast.type';
-import { InitData, CastData, ContextMenuState } from '../types/networkTypes';
+import { CastsByUser } from '../types/cast.type';
+import { ContextMenuState } from '../types/networkTypes';
 
-// Adapter function to transform InitData to CastData
-const transformToCastData = (initData: InitData): CastData => {
-  return initData.reduce((acc, cast) => {
-    if (acc[cast.creator]) {
-      acc[cast.creator].content.push({
-        message: cast.message,
-        duration: cast.duration,
-        createdAt: cast.created_at,
-      });
-    } else {
-      acc[cast.creator] = {
-        userId: cast.creator,
-        content: [
-          {
-            message: cast.message,
-            duration: cast.duration,
-            createdAt: cast.created_at,
-          },
-        ],
-      };
-    }
-    return acc;
-  }, {} as CastData);
-};
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
   const [networkManager, setNetworkManager] = useState<NetworkManager | null>(null);
@@ -39,8 +15,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     userId: null,
   });
 
-  const [castData, setCastData] = useState<CastData>({});
-  const [initData, setInitData] = useState<InitData>([]);
+  const [castData, setCastData] = useState<CastsByUser>({});
   const [observing, setObserving] = useState(false);
   const networkContainer = useRef<HTMLDivElement>(null);
 
@@ -53,7 +28,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
       let loggedInUser, neighborsData, roommatesWithNeighbors;
 
       landingApi.fetchContents().then((contentsResponse) => {
-        setInitData(contentsResponse.casts);
+        setCastData(contentsResponse.castData);
       });
 
       if (cachedRoommates.length === 0 || cachedNeighbors.length === 0) {
@@ -130,9 +105,8 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
   useLayoutEffect(() => {
     if (!networkManager) return;
     let isMounted = true;
-    if (initData.length > 0) {
-      const groupedData = transformToCastData(initData);
-      setCastData(groupedData);
+    if (castData) {
+      return;
     }
 
     const pollNewCasts = async () => {
@@ -192,7 +166,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
       isMounted = false;
       networkManager?.destroy();
     };
-  }, [networkManager, initData]);
+  }, [networkManager, castData]);
 
   return {
     networkManager,

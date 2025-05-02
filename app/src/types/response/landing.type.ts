@@ -1,5 +1,12 @@
 import { User } from '../landingPage.type';
-import { Cast } from '../cast.type';
+
+interface Cast {
+  message: string;
+  duration: number;
+  created_at: string;
+  node_id: string;
+  creator: string;
+}
 
 export interface GetContentsResponse {
   casts: Cast[];
