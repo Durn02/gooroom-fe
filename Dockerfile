@@ -1,10 +1,15 @@
+# Node.js 기반 이미지
 FROM node:18-alpine
-RUN corepack enable && corepack prepare yarn@4.5.1 --activate
-WORKDIR /deps
-COPY app/package.json app/yarn.lock ./
-RUN yarn config set nodeLinker node-modules
-RUN yarn install --frozen-lockfile
+
+# 작업 디렉토리 설정
 WORKDIR /app
-RUN ln -s /deps/node_modules /app/node_modules
+
+# 의존성 설치를 위한 package.json만 미리 복사 (필요 시)
+COPY package.json package-lock.json ./
+RUN npm install
+
+# 포트 노출
 EXPOSE 3000
-CMD ["yarn", "dev"]
+
+# React 개발 서버 실행
+CMD ["npm", "start"]

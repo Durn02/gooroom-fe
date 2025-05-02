@@ -1,15 +1,12 @@
 'use client';
-import { useEffect } from 'react';
-import { useState } from 'react';
-import Link from 'next/link';
-import DefaultButton from '@/src/components/Button/DefaultButton';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Input from '@/src/components/Input/DefaultInput';
-import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
-// import style from "./SignupPage.module.css";
+import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
 import { API_URL } from '@/src/lib/config';
 
-// ~RequestData는 python backend에서 요구하는 형식과 맞춰야함
 type SignupRequestData = {
   email: string;
   password: string;
@@ -35,6 +32,16 @@ export default function Signup() {
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [userVerificationCodeInput, setUserVerificationCodeInput] = useState<string>('');
   const [showVerifyIntputBox, setShowVerifyInputBox] = useState<boolean>(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const router = useRouter();
+
+  const handleBackNavigation = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      router.back();
+    }, 300);
+  };
 
   const onSignupClickHandler = async () => {
     const signupRequestData: SignupRequestData = {
@@ -47,9 +54,14 @@ export default function Signup() {
     const verificationCodeRequest: VerificationCodeRequestData = {
       email: userEmailInput,
     };
-
-    if (userEmailInput === '' || userPwInput === '' || userNicknameInput === '' || usernameInput === '') {
-      alert('모든 항목을 입력해주세요');
+    if (userEmailInput === '') {
+      alert('이메일을 입력해주세요');
+    } else if (userPwInput === '') {
+      alert('비밀번호를 입력해주세요');
+    } else if (userNicknameInput === '') {
+      alert('닉네임을 입력해주세요');
+    } else if (usernameInput === '') {
+      alert('사용자 이름을 입력해주세요');
     } else {
       try {
         const signupResponse = await fetch(`${APIURL}/domain/auth/signup`, {
@@ -62,7 +74,7 @@ export default function Signup() {
 
         if (signupResponse.ok) {
           setShowVerifyInputBox(true);
-
+          alert('인증코드가 이메일로 전송되었습니다.');
           try {
             const verifyResponse = await fetch(`${APIURL}/domain/auth/send-verification-code`, {
               method: 'POST',
@@ -82,7 +94,7 @@ export default function Signup() {
             }
           }
         } else {
-          alert('회원가입 실패 - 2');
+          alert('회원가입 실패');
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -109,8 +121,8 @@ export default function Signup() {
         body: JSON.stringify(sendVerificationCodeRequest),
       });
       if (response.ok) {
-        alert('Verify successful');
-        window.location.replace('/');
+        alert('회원가입에 성공했습니다.');
+        router.push('/');
       } else {
         alert(`Verify failed: ${response.statusText}`);
       }
@@ -121,8 +133,6 @@ export default function Signup() {
     }
   };
 
-  // 로그인이 되어있는지 확인하는 useEffect
-  // 로그인이 되어있으면 alert을 띄우고 메인페이지로 이동
   useEffect(() => {
     const checkLogin = async () => {
       try {
@@ -131,14 +141,14 @@ export default function Signup() {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // 쿠키를 포함시키기 위해 필요
+          credentials: 'include',
         });
 
         if (response.ok) {
           const data = await response.json();
           if (data.message === 'access token validation check successfull') {
             alert('이미 로그인 되어있습니다.');
-            window.location.replace('/');
+            router.push('/');
           }
         }
       } catch (error) {
@@ -146,63 +156,102 @@ export default function Signup() {
       }
     };
     checkLogin();
-  }, []);
+  }, [router]);
 
   return (
-    <>
-      <div className="w-32 h-10">
-        <Link href={'/'}>
-          <DefaultButton placeholder="랜딩화면으로" />
-        </Link>
-      </div>
-      <div>회원가입 페이지</div>
-      <div className="w-80 h-8">
-        <Input placeholder="email" value={userEmailInput} onChange={(e) => setEmailInput(e)} />
-        <p>Current Content: {userEmailInput}</p>
-      </div>
-      <div className="w-40 h-10">
-        <PwInput
-          placeholder="password"
-          value={userPwInput}
-          onChange={(e) => {
-            setUserPwInput(e);
-          }}
-        />
-      </div>
-      <div className="w-40 h-10">
-        <Input
-          placeholder="concern"
-          value={userConcernInput}
-          onChange={(e) => {
-            setUserConcernInput(e);
-          }}
-        />
-      </div>
-      <div className="w-40 h-10">
-        <Input placeholder="nickname" value={userNicknameInput} onChange={(e) => setUserNicknameInput(e)} />
-      </div>
-      <div className="w-40 h-10">
-        <Input placeholder="username" value={usernameInput} onChange={(e) => setUsernameInput(e)} />
-      </div>
-      {showVerifyIntputBox && (
-        <div>
-          <div className="w-40 h-10">
+    <div
+      className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 transition-opacity duration-300 ${
+        isTransitioning ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
+      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md relative">
+        {/* Back Button */}
+        <button
+          onClick={handleBackNavigation}
+          className="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition-colors"
+          aria-label="Go back to main"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+
+        <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">Sign Up</h1>
+
+        {/* Email Input */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <Input placeholder="Enter your email" value={userEmailInput} onChange={(e) => setEmailInput(e)} />
+        </div>
+
+        {/* Password Input */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Password <span className="text-red-500">*</span>
+          </label>
+          <PwInput placeholder="Enter your password" value={userPwInput} onChange={(e) => setUserPwInput(e)} />
+        </div>
+
+        {/* Concern Input */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">Concerns</label>
+          <Input
+            placeholder="Enter your concerns (comma-separated)"
+            value={userConcernInput}
+            onChange={(e) => setUserConcernInput(e)}
+          />
+        </div>
+
+        {/* Nickname Input */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Nickname <span className="text-red-500">*</span>
+          </label>
+          <Input
+            placeholder="Enter your nickname"
+            value={userNicknameInput}
+            onChange={(e) => setUserNicknameInput(e)}
+          />
+        </div>
+
+        {/* Username Input */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-1">
+            Username <span className="text-red-500">*</span>
+          </label>
+          <Input placeholder="Enter your username" value={usernameInput} onChange={(e) => setUsernameInput(e)} />
+        </div>
+
+        {/* Verification Code Input */}
+        {showVerifyIntputBox && (
+          <div className="mb-4">
             <VerifyInput
-              placeholder="인증번호"
+              placeholder="Enter verification code"
               value={userVerificationCodeInput}
-              onChange={(e) => {
-                setUserVerificationCodeInput(e);
-              }}
+              onChange={(e) => setUserVerificationCodeInput(e)}
               onClick={() => onVerifyClickHandler()}
             />
           </div>
-        </div>
-      )}
-      {!showVerifyIntputBox && (
-        <div className="w-40 h-10">
-          <DefaultButton placeholder="회원가입!" onClick={() => onSignupClickHandler()} />
-        </div>
-      )}
-    </>
+        )}
+
+        {!showVerifyIntputBox && (
+          <button
+            onClick={onSignupClickHandler}
+            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
+          >
+            Sign Up
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

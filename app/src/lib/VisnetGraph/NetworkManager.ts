@@ -1,4 +1,4 @@
-//NetworkManager.ts
+// NetworkManager.ts ../lib/VisnetGraph/NetworkManager
 import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
 import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
@@ -32,6 +32,7 @@ export class NetworkManager {
   private nodesDataSet: DataSet<Node> = new DataSet<Node>();
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
   private interactedNodeId: string | null = null;
+  private resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   private observer?: (event: NetworkEvent) => void;
   private lock: number = 0;
@@ -67,6 +68,7 @@ export class NetworkManager {
       },
       visnet_options,
     );
+    this.network.fit({ animation: true });
 
     this.bind();
 
@@ -74,7 +76,10 @@ export class NetworkManager {
       const { nodes: clickedNodes } = event;
       if (clickedNodes.length > 0) {
         const clickedNodeId = clickedNodes[0];
-
+        this.observer?.({
+          event: 'doubleClick',
+          data: { nodeId: clickedNodeId },
+        });
         this.network.focus(clickedNodeId, {
           scale: 100,
           animation: {
@@ -82,10 +87,7 @@ export class NetworkManager {
             easingFunction: 'easeInOutQuad',
           },
         });
-
-        setTimeout(() => {
-          callbacks.onNodeDoubleClick(clickedNodeId);
-        }, 800);
+        setTimeout(() => callbacks.onNodeDoubleClick(clickedNodeId), 800);
       }
     });
 
@@ -127,12 +129,18 @@ export class NetworkManager {
       }, 200);
     });
     this.network.on('resize', () => {
-      this.startObservation(); // 첫 번째 메서드 즉시 실행
+      this.startObservation();
 
-      // 500ms(0.5초) 후 두 번째 메서드 실행
-      setTimeout(() => {
+      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => {
+        this.network.fit({
+          animation: {
+            duration: 500,
+            easingFunction: 'easeInOutQuad',
+          },
+        });
         this.stopObservation();
-      }, 200); // 텀 조절 (밀리초 단위)
+      }, 300);
     });
   }
 
@@ -209,12 +217,25 @@ export class NetworkManager {
   public getNeighborsData(): Map<string, User> {
     return this.neighborsData;
   }
+  public getNeighborsBreifData() {
+    return Array.from(this.neighborsData.values()).map((n) => ({
+      nickname: n.nickname,
+      node_id: n.node_id,
+    }));
+  }
 
   public getRoommatesWithNeighbors(): Map<string, RoommateWithNeighbors> {
     return this.roommatesWithNeighbors;
   }
 
-  public getNodesDataSet(): DataSet<Node> {
+  public getRoommatesBreifData(): { nickname: string; node_id: string }[] {
+    return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
+      nickname: r.roommate.nickname,
+      node_id: r.roommate.node_id,
+    }));
+  }
+
+  public getNodesDataSet() {
     return this.nodesDataSet;
   }
 

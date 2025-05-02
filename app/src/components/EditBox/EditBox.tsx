@@ -1,14 +1,12 @@
 import { API_URL } from '@/src/lib/config';
-import { decrypt } from '@/src/utils/crypto';
 import { useState, useEffect, useRef } from 'react';
 import { FaPencilAlt, FaCheck } from 'react-icons/fa';
 
-export const EditBox = ({ currentMemo, setRoommateMemo }) => {
+export const EditBox = ({ currentMemo, setRoommateMemo, selectedUserId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newMemo, setNewMemo] = useState(currentMemo);
   const [isHovered, setIsHovered] = useState(false);
   const [isMemoChanged, setIsMemoChanged] = useState(false);
-  // const selectedUserId = localStorage.getItem('selectedUserId');
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -51,7 +49,7 @@ export const EditBox = ({ currentMemo, setRoommateMemo }) => {
       }
     } catch (error) {
       console.error('Error saving memo:', error);
-      alert('Failed to save memo. Please try again.');
+      alert('메모 저장에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
