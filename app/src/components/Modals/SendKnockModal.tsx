@@ -41,6 +41,15 @@ const SendKnockModal: React.FC<SendKnockModalProps> = ({ isOpen, onClose, nodeId
     }
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (!loading && !((isCustom || userGroups.length === 0) && !customGroup.trim())) {
+        handleSubmit();
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -72,6 +81,7 @@ const SendKnockModal: React.FC<SendKnockModalProps> = ({ isOpen, onClose, nodeId
                 }
               }}
               disabled={loading}
+              onKeyDown={handleKeyDown}
             >
               {userGroups.map((group) => (
                 <option key={group} value={group}>
@@ -97,6 +107,7 @@ const SendKnockModal: React.FC<SendKnockModalProps> = ({ isOpen, onClose, nodeId
               placeholder="새 그룹 이름을 입력하세요"
               value={customGroup}
               onChange={(e) => setCustomGroup(e.target.value)}
+              onKeyDown={handleKeyDown}
               disabled={loading}
               autoFocus={userGroups.length === 0}
             />
