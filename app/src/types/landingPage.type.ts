@@ -15,6 +15,7 @@ export interface User {
   node_id: string;
   tags: string[];
   username: string;
+  groups: string[];
 }
 
 export interface RoommateWithNeighbors {

@@ -7,7 +7,7 @@ import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
 import { getKnocks } from '../lib/api/knock.api';
-import { BlockMuteList, KnockEdge } from '../types/landingPage.type';
+import { BlockMuteList, KnockEdge, User } from '../types/landingPage.type';
 import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMuteListModal';
 import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
@@ -19,6 +19,7 @@ import { clearStore } from '../utils/indexedDB';
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [loggedInUserId, setLoggedInUserId] = useState<User>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
@@ -65,10 +66,11 @@ export default function Landing() {
   });
 
   useEffect(() => {
+    setLoggedInUserId(networkManager?.getLoggedInUser());
     if (selectedUserId === '') {
       return;
     }
-    if (selectedUserId === networkManager.getLoggeInUser().node_id) {
+    if (selectedUserId === networkManager.getLoggedInUser().node_id) {
       router.push('/myprofile');
     } else if (
       networkManager
@@ -156,6 +158,7 @@ export default function Landing() {
           onClose={() => setIsSidebarOpen(false)}
           width={width}
           handleMouseDown={handleMouseDown}
+          loggedInUserInfo={loggedInUserId}
         />
       </div>
       {/* Magnify Buttons */}

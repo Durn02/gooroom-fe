@@ -48,10 +48,11 @@ export const rejectKnock = async (knockId: string) => {
   }
 };
 
-export const sendKnock = async (nodeId: string) => {
+export const sendKnock = async (nodeId: string, group: string) => {
   try {
     const response = await apiClient.post('/domain/friend/knock/send', {
       to_user_node_id: nodeId,
+      group: group,
     });
     return response.data;
   } catch (error) {

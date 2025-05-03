@@ -89,7 +89,7 @@ export class NetworkManager {
       const { nodes: clickedNodes, pointer } = event;
       if (clickedNodes.length > 0) {
         const nodeId = clickedNodes[0];
-        if (nodeId === this.getLoggeInUser().node_id) {
+        if (nodeId === this.getLoggedInUser().node_id) {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
@@ -204,7 +204,7 @@ export class NetworkManager {
     return this.network;
   }
 
-  public getLoggeInUser() {
+  public getLoggedInUser() {
     return this.loggedInUser;
   }
 

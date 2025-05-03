@@ -131,7 +131,7 @@ export function addRoommate(this: NetworkManager, newRoommate: User, newNeighbor
   });
 
   // 6. loggedInUser와 newRoommate 연결
-  const loggedInUserId = this.getLoggeInUser().node_id;
+  const loggedInUserId = this.getLoggedInUser().node_id;
   newEdges.push({
     id: `${loggedInUserId}-${newRoommate.node_id}`,
     from: loggedInUserId,
