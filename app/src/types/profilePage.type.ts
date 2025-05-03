@@ -15,6 +15,7 @@ export interface FriendInfo {
   node_id: string;
   tags: string[];
   profile_image_url: string;
+  group: string;
 }
 
 export interface Sticker {

@@ -28,11 +28,13 @@ export default function RoommateProfile({ params }: Props) {
     minWidth: 10,
     maxWidth: 80,
     initialWidth: 30,
+    sectionSide: 'left',
   });
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [roommateGroup, setRoommateGroup] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function RoommateProfile({ params }: Props) {
       setStickers(data.stickers);
       setPosts(data.posts);
       setRoommateMemo(data.roommate_edge.memo);
+      setRoommateGroup(data.roommate_edge.group);
     });
   }, [selectedUserId]);
 
@@ -76,6 +79,14 @@ export default function RoommateProfile({ params }: Props) {
                 <div className="flex justify-between items-center mb-2">
                   <h1 className="text-3xl font-bold">@{friendInfo.nickname}</h1>
                 </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-gray-600 font-bold">{friendInfo.username}</p>
+                  {roommateGroup && (
+                    <span className="inline-block bg-yellow-100 text-yellow-800 rounded-full px-3 py-1 text-sm font-semibold">
+                      {roommateGroup}
+                    </span>
+                  )}
+                </div>
                 <Image
                   src={typeof friendInfo.profile_image_url === 'string' ? friendInfo.profile_image_url : userImage}
                   alt="User profile"
@@ -84,7 +95,7 @@ export default function RoommateProfile({ params }: Props) {
                   className="rounded-full object-cover"
                   style={{ width: '100px', height: '100px' }}
                 />
-                <p className="text-gray-600 mb-2 font-bold">{friendInfo.username}</p>
+
                 {friendInfo.my_memo && (
                   <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
                     {friendInfo.my_memo}
