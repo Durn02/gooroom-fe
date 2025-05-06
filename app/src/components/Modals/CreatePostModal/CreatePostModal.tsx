@@ -18,7 +18,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
     title: '',
     content: '',
     tags: [],
-    image_url: [],
+    imageUrl: [],
   });
   const [tagInput, setTagInput] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -99,7 +99,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
       }
 
       alert('게시물이 작성되었습니다.');
-      setPostData({ title: '', content: '', tags: [], image_url: [] });
+      setPostData({ title: '', content: '', tags: [], imageUrl: [] });
       setImages([]);
       onClose();
     } catch (error) {

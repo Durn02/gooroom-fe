@@ -1,6 +1,6 @@
 interface Reply {
   content: string;
-  created_at: string;
+  createdAt: string;
   type: string;
   nodeId: string;
 }

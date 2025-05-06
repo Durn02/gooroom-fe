@@ -9,7 +9,7 @@ const getPosition = (node_id: IdType, network: Network): Position => {
 };
 
 export const getLoggedInUserPosition = function (this: NetworkManager): Position {
-  const loggedInUser = this.getLoggeInUser();
+  const loggedInUser = this.getLoggedInUser();
   const network = this.getNetwork();
   return getPosition(loggedInUser.node_id as IdType, network);
 };

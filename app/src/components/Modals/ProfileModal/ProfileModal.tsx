@@ -18,18 +18,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
   const [isVisible, setIsVisible] = useState(false);
   const [profileData, setProfileData] = useState<UserInfo>(
     myProfile || {
-      my_memo: '',
+      myMemo: '',
       nickname: '',
       username: '',
-      node_id: '',
+      nodeId: '',
       tags: [],
-      profile_image_url: null,
-      remove_profile_image: false,
+      profileImageUrl: null,
+      removeProfileImage: false,
     },
   );
   const [newTags, setNewTags] = useState<string>('');
   const [previewImage, setPreviewImage] = useState<string>(
-    typeof myProfile?.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src,
+    typeof myProfile?.profileImageUrl === 'string' ? myProfile.profileImageUrl : userImage.src,
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeProfileImage, setRemoveProfileImage] = useState<boolean>(false);
@@ -61,13 +61,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       setProfileData({
         nickname: myProfile.nickname || '',
         username: myProfile.username || '',
-        my_memo: myProfile.my_memo || '',
-        node_id: myProfile.node_id || '',
+        myMemo: myProfile.myMemo || '',
+        nodeId: myProfile.nodeId || '',
         tags: myProfile.tags || [],
-        profile_image_url: myProfile.profile_image_url || null,
-        remove_profile_image: myProfile.remove_profile_image || false,
+        profileImageUrl: myProfile.profileImageUrl || null,
+        removeProfileImage: myProfile.removeProfileImage || false,
       });
-      setPreviewImage(typeof myProfile.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src);
+      setPreviewImage(typeof myProfile.profileImageUrl === 'string' ? myProfile.profileImageUrl : userImage.src);
     }
   }, [myProfile]);
 
@@ -110,7 +110,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       const formData = new FormData();
       formData.append('nickname', profileData.nickname);
       formData.append('username', profileData.username);
-      formData.append('my_memo', profileData.my_memo);
+      formData.append('my_memo', profileData.myMemo);
       formData.append('tags', JSON.stringify(profileData.tags));
       if (removeProfileImage) {
         formData.append('remove_profile_image', 'True');
@@ -264,7 +264,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
 
         <textarea
           name="my_memo"
-          value={profileData.my_memo}
+          value={profileData.myMemo}
           onChange={handleChange}
           className="w-full h-[6rem] px-4 py-3 border border-gray-300 rounded-lg resize-vertical mb-5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="메모를 입력하세요"

@@ -50,10 +50,10 @@ export class NetworkManager {
     callbacks: { [key: string]: (node_id: string) => void },
   ) {
     this.loggedInUser = loggedInUser;
-    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.node_id, neighbor]));
+    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.nodeId, neighbor]));
     this.roommatesWithNeighbors = new Map(
       roommatesWithNeighbors.map((roommateWithNeighbors) => [
-        roommateWithNeighbors.roommate.node_id,
+        roommateWithNeighbors.roommate.nodeId,
         roommateWithNeighbors,
       ]),
     );
@@ -96,7 +96,7 @@ export class NetworkManager {
       const { nodes: clickedNodes, pointer } = event;
       if (clickedNodes.length > 0) {
         const nodeId = clickedNodes[0];
-        if (nodeId === this.getLoggeInUser().node_id) {
+        if (nodeId === this.getLoggedInUser().nodeId) {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
@@ -211,7 +211,7 @@ export class NetworkManager {
     return this.network;
   }
 
-  public getLoggeInUser(): User {
+  public getLoggedInUser(): User {
     return this.loggedInUser;
   }
 
@@ -221,7 +221,7 @@ export class NetworkManager {
   public getNeighborsBreifData() {
     return Array.from(this.neighborsData.values()).map((n) => ({
       nickname: n.nickname,
-      node_id: n.node_id,
+      node_id: n.nodeId,
     }));
   }
 
@@ -232,7 +232,7 @@ export class NetworkManager {
   public getRoommatesBreifData(): { nickname: string; node_id: string }[] {
     return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
       nickname: r.roommate.nickname,
-      node_id: r.roommate.node_id,
+      node_id: r.roommate.nodeId,
     }));
   }
 

@@ -105,7 +105,7 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
                 <p className="text-lg mb-1">{knock.nickname}</p>
                 <div>
                   <button
-                    onClick={() => accept_knock(knock.edge_id)}
+                    onClick={() => accept_knock(knock.edgeId)}
                     className="text-green-500 hover:text-green-700 mr-2"
                   >
                     <svg
@@ -118,7 +118,7 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </button>
-                  <button onClick={() => reject_knock(knock.edge_id)} className="text-red-500 hover:text-red-700">
+                  <button onClick={() => reject_knock(knock.edgeId)} className="text-red-500 hover:text-red-700">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-6 w-6"

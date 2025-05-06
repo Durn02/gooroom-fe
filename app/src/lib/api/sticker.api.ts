@@ -23,3 +23,19 @@ export const fetchStickers = async (userNodeId: string) => {
     throw error;
   }
 };
+
+export const deleteStickers = async (stickerNodeId: string, stickerImageUrls: string[]) => {
+  try {
+    const stringImageUrl = stickerImageUrls.toString();
+    const { data } = await apiClient.delete('domain/content/sticker/delete', {
+      data: {
+        sticker_node_id: stickerNodeId,
+        sticker_image_url: stringImageUrl,
+      },
+    });
+    return data;
+  } catch (error) {
+    console.error('스티커 삭제 실패', error);
+    throw error;
+  }
+};

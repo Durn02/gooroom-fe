@@ -1,34 +1,35 @@
 export interface UserInfo {
-  my_memo: string;
+  myMemo: string;
   nickname: string;
   username: string;
-  node_id: string;
+  nodeId: string;
   tags: string[];
-  remove_profile_image: boolean;
-  profile_image_url: File;
+  removeProfileImage: boolean;
+  profileImageUrl: File;
 }
 
 export interface FriendInfo {
-  my_memo: string;
+  myMemo: string;
   nickname: string;
   username: string;
-  node_id: string;
+  nodeId: string;
   tags: string[];
-  profile_image_url: string;
+  profileImageUrl: string;
+  group: string;
 }
 
 export interface Sticker {
-  sticker_node_id: string;
+  stickerNodeId: string;
   content: string;
-  image_url: string[];
-  created_at: string;
+  imageUrl: string[];
+  createdAt: string;
 }
 
 export interface Post {
-  post_node_id: string;
+  postNodeId: string;
   content: string;
-  image_url: string[];
-  created_at: string;
+  imageUrl: string[];
+  createdAt: string;
   tags: string[];
   title: string;
 }

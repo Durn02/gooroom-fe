@@ -5,24 +5,36 @@ import Image from 'next/image';
 import { API_URL } from '@/src/lib/config';
 import DefaultButton from '../Button/DefaultButton';
 import { knockApi, userApi } from '@/src/lib/api';
-import { SearchedUser } from '@/src/types/landingPage.type';
+import { SearchedUser, User } from '@/src/types/landingPage.type';
+import SendKnockModal from '../Modals/SendKnockModal';
 
 interface LandingPageSideBarProps {
   onClose: () => void;
   width: number;
   handleMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
   isOpen: boolean;
+  loggedInUserInfo?: User;
 }
 
-export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose, width, handleMouseDown, isOpen }) => {
+export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({
+  onClose,
+  width,
+  handleMouseDown,
+  isOpen,
+  loggedInUserInfo,
+}) => {
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState<SearchedUser[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isSendKnockModalOpen, setIsSendKnockModalOpen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('');
+  const [userGroups, setUserGroups] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
+      setUserGroups(loggedInUserInfo?.groups || []);
     }
   }, [isOpen]);
 
@@ -59,17 +71,21 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
     };
   }, [inputValue]);
 
+  const openSendKnockModal = (nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    setIsSendKnockModalOpen(true);
+  };
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
   };
 
-  const handleSendKnock = async (nodeId: string) => {
+  const handleSendKnock = async (nodeId: string, group: string) => {
     const sendKnock = window.confirm('노크를 하시겠습니까?');
     if (!sendKnock) {
       return;
     }
     try {
-      const data = await knockApi.sendKnock(nodeId);
+      const data = await knockApi.sendKnock(nodeId, group);
       if (data.message === 'send knock successfully') {
         alert('노크를 성공적으로 보냈습니다.');
         onClose();
@@ -144,13 +160,13 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
         {searchResults.length > 0 ? (
           searchResults.map((user) => (
             <div
-              key={user.node_id}
+              key={user.nodeId}
               className="flex items-center p-3 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100"
             >
               {/* 프로필 이미지 */}
               <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 mr-3">
                 <Image
-                  src={user.profile_image_url || userImage}
+                  src={user.profileImageUrl || userImage}
                   alt="프로필"
                   className="w-full h-full object-cover"
                   width={100}
@@ -167,18 +183,19 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
               {/* 친구 추가 버튼 */}
               <button
                 onClick={() => {
-                  if (!user.is_roommate && !user.sent_knock) {
-                    handleSendKnock(user.node_id);
+                  if (!user.isRoommate && !user.sentKnock) {
+                    // 직접 호출 대신 모달 열기
+                    openSendKnockModal(user.nodeId);
                   }
                 }}
-                disabled={user.is_roommate || user.sent_knock}
+                disabled={user.isRoommate || user.sentKnock}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  user.is_roommate || user.sent_knock
+                  user.isRoommate || user.sentKnock
                     ? 'bg-gray-300 cursor-not-allowed text-gray-500'
                     : 'bg-blue-500 hover:bg-blue-600 text-white'
                 }`}
               >
-                {user.is_roommate ? '이미 친구' : user.sent_knock ? '노크 보냄' : '친구 추가'}
+                {user.isRoommate ? '이미 친구' : user.sentKnock ? '노크 보냄' : '친구 추가'}
               </button>
             </div>
           ))
@@ -199,6 +216,14 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({ onClose,
         className="absolute top-0 left-0 w-1 h-full bg-transparent hover:bg-gray-300 cursor-ew-resize z-10"
         onMouseDown={handleMouseDown}
       ></div>
+
+      <SendKnockModal
+        isOpen={isSendKnockModalOpen}
+        onClose={() => setIsSendKnockModalOpen(false)}
+        nodeId={selectedNodeId}
+        userGroups={userGroups}
+        onSendKnock={handleSendKnock}
+      />
     </div>
   );
 };

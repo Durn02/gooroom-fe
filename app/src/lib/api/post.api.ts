@@ -11,3 +11,15 @@ export const fetchPosts = async () => {
     throw error;
   }
 };
+
+export const deletePost = async (postNodeId: string, postImageUrls: string[]) => {
+  try {
+    const stringImageUrl = postImageUrls.toString();
+    const {data} = await apiClient.delete('/domain/content/post/delete-my-content',{
+        data: {
+          post_node_id: postNodeId,
+          post_image_urls: stringImageUrl
+        },}
+    )
+  }
+}

@@ -13,12 +13,12 @@ export const fetchFriends = async (): Promise<{
 }> => {
   try {
     const response = await apiClient.get('/domain/friend/get-members');
-
+    console.log('response in fetchFriends : ', response);
     if (response?.data?.length > 0) {
       const friendsData = response.data[0];
       return {
         loggedInUser: friendsData.me,
-        neighborsData: friendsData.pure_neighbors,
+        neighborsData: friendsData.pureNeighbors,
         roommatesWithNeighbors: friendsData.roommatesWithNeighbors,
       };
     }

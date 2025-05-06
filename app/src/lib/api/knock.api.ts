@@ -27,8 +27,8 @@ export const acceptKnock = async (
     });
 
     return {
-      newRoommate: response.data?.new_roommate,
-      newNeighbors: response.data?.new_neighbors,
+      newRoommate: response.data?.newRoommate,
+      newNeighbors: response.data?.newNeighbors,
     };
   } catch (error) {
     console.error('Failed to accept knock:', error);
@@ -48,10 +48,11 @@ export const rejectKnock = async (knockId: string) => {
   }
 };
 
-export const sendKnock = async (nodeId: string) => {
+export const sendKnock = async (nodeId: string, group: string) => {
   try {
     const response = await apiClient.post('/domain/friend/knock/send', {
       to_user_node_id: nodeId,
+      group: group,
     });
     return response.data;
   } catch (error) {

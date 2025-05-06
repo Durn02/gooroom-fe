@@ -39,12 +39,12 @@ export default function MyProfile() {
     postApi.fetchPosts().then((data) => setPosts(data));
   }, []);
 
-  const handleStickerDoubleClick = (selected_sticker: Sticker) => {
-    setSelectedSticker(selected_sticker);
+  const handleStickerDoubleClick = (selectedSticker: Sticker) => {
+    setSelectedSticker(selectedSticker);
     setIsStickerModalOpen(true);
   };
-  const handlePostDoubleClick = (selected_post: Post) => {
-    setSelectedPost(selected_post);
+  const handlePostDoubleClick = (selectedPost: Post) => {
+    setSelectedPost(selectedPost);
     setIsPostModalOpen(true);
   };
 
@@ -67,15 +67,8 @@ export default function MyProfile() {
     //   return;
     // }
 
-    const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id, sticker_image_urls: sticker.image_url }),
-    });
-    if (!result.ok) {
+    const result = stickerApi.deleteStickers(sticker.stickerNodeId, sticker.imageUrl);
+    if (!result) {
       alert('스티커 삭제에 실패했습니다.');
       return;
     } else {
@@ -97,10 +90,10 @@ export default function MyProfile() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ post_node_id: posts.post_node_id, post_image_urls: posts.image_url }),
+        body: JSON.stringify({ post_node_id: posts.postNodeId, post_image_urls: posts.imageUrl }),
       });
       if (response.ok) {
-        setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
+        setPosts((prevPosts) => prevPosts.filter((post) => post.postNodeId !== posts.postNodeId));
         alert('게시글이 삭제되었습니다.');
       } else {
         alert('게시글 삭제에 실패했습니다.');
@@ -136,7 +129,7 @@ export default function MyProfile() {
                   </button>
                 </div>
                 <Image
-                  src={typeof userInfo.profile_image_url === 'string' ? userInfo.profile_image_url : userImage}
+                  src={typeof userInfo.profileImageUrl === 'string' ? userInfo.profileImageUrl : userImage}
                   alt="User profile"
                   width={100}
                   height={100}
@@ -146,7 +139,7 @@ export default function MyProfile() {
 
                 <p className="text-gray-600 mb-2 font-bold">{userInfo.username}</p>
                 <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
-                  {userInfo.my_memo}
+                  {userInfo.myMemo}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {userInfo.tags.map((tag, index) => (
@@ -182,7 +175,7 @@ export default function MyProfile() {
             <div className="inline-flex space-x-4">
               {stickers.map((sticker) => (
                 <div
-                  key={sticker.sticker_node_id}
+                  key={sticker.stickerNodeId}
                   className="inline-block bg-white border rounded-lg p-4 w-64 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group"
                   onDoubleClick={() => {
                     handleStickerDoubleClick(sticker);
@@ -203,7 +196,7 @@ export default function MyProfile() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {sticker.image_url.slice(0, 1).map((url, index) => (
+                      {sticker.imageUrl.slice(0, 1).map((url, index) => (
                         <Image
                           key={index}
                           alt={`Sticker ${index + 1}`}
@@ -213,13 +206,13 @@ export default function MyProfile() {
                           height={100}
                         />
                       ))}
-                      {sticker.image_url.length > 1 && (
+                      {sticker.imageUrl.length > 1 && (
                         <div className="w-[50px] h-[50px] flex items-center justify-center bg-gray-200 rounded shadow">
-                          +{sticker.image_url.length - 1}
+                          +{sticker.imageUrl.length - 1}
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">{new Date(sticker.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500 mt-2">{new Date(sticker.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))}
@@ -242,7 +235,7 @@ export default function MyProfile() {
             {posts.map((post) => {
               return (
                 <div
-                  key={post.post_node_id}
+                  key={post.postNodeId}
                   className="bg-white border rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group relative"
                   onDoubleClick={() => {
                     handlePostDoubleClick(post);
@@ -257,7 +250,7 @@ export default function MyProfile() {
                   <div className="p-6">
                     <h3 className="text-xl font-semibold mb-2 text-gray-800 pr-8">{post.title}</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {post.image_url.map((url, index) => (
+                      {post.imageUrl.map((url, index) => (
                         <Image
                           key={index}
                           src={url}
@@ -279,7 +272,7 @@ export default function MyProfile() {
                         : null}
                     </div>
                     <p className="text-sm text-gray-500">
-                      {new Date(post.created_at).toLocaleDateString('ko-KR', {
+                      {new Date(post.createdAt).toLocaleDateString('ko-KR', {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: true,
@@ -315,7 +308,7 @@ export default function MyProfile() {
             setIsCreateStickerModalOpen(false);
             stickerApi.fetchMyStickers().then((data) => setStickers(data));
           }}
-          userId={userInfo.node_id}
+          userId={userInfo.nodeId}
         />
       )}
       <PostModal
@@ -333,7 +326,7 @@ export default function MyProfile() {
             setIsCreatePostModalOpen(false);
             postApi.fetchPosts().then((data) => setPosts(data));
           }}
-          userId={userInfo.node_id}
+          userId={userInfo.nodeId}
         />
       )}
     </div>

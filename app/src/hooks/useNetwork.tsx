@@ -107,9 +107,6 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
   useLayoutEffect(() => {
     if (!networkManager) return;
     let isMounted = true;
-    if (castData) {
-      return;
-    }
 
     const pollNewCasts = async () => {
       while (isMounted) {

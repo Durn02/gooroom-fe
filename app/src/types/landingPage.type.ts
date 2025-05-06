@@ -15,24 +15,25 @@ export interface User {
   nodeId: string;
   tags: string[];
   username: string;
+  groups: string[];
 }
 
 export interface RoommateWithNeighbors {
   roommate: User;
-  roommateedge: RoomMateEdge;
+  roommateEdge: RoomMateEdge;
   neighbors: string[];
 }
 
 interface BlockList {
-  blockEdgeId: string;
-  userId: string;
-  userNickname: string;
+  block_edge_id: string;
+  user_id: string;
+  user_nick_name: string;
 }
 
 interface MuteList {
   muteEdgeId: string;
   userId: string;
-  userNickname: string;
+  userNickName: string;
 }
 
 export interface BlockMuteList {
