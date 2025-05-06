@@ -2,16 +2,16 @@ interface Reply {
   content: string;
   created_at: string;
   type: string;
-  node_id: string;
+  nodeId: string;
 }
 
 interface Replier {
   nickname: string;
-  node_id: string;
+  nodeId: string;
 }
 
 export interface GetCastRepliesRequest {
-  cast_node_id: string;
+  castNodeId: string;
 }
 
 export interface GetCastRepliesResponse {

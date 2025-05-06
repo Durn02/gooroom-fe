@@ -6,7 +6,6 @@ import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS 
 import { CastsByUser } from '../types/cast.type';
 import { ContextMenuState } from '../types/networkTypes';
 
-
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
   const [networkManager, setNetworkManager] = useState<NetworkManager | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -119,35 +118,33 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
           const newContents = await landingApi.fetchNewContents();
 
           //newRoommate가 최우선
-          if (newContents.new_roommates.length > 0) {
-            newContents.new_roommates.forEach((newRoommate) => {
+          if (newContents.newRoommates.length > 0) {
+            newContents.newRoommates.forEach((newRoommate) => {
               console.log('newRoommate : ', newRoommate);
-              networkManager.addRoommate(newRoommate.new_roommate, newRoommate.neighbors);
+              networkManager.addRoommate(newRoommate.newRoommate, newRoommate.neighbors);
             });
           }
 
-          if (newContents.casts_received.length > 0) {
+          if (newContents.castsReceived.length > 0) {
             setCastData((prevCastData) => {
               const updatedCastData = { ...prevCastData };
 
-              newContents.casts_received.forEach((cast) => {
+              newContents.castsReceived.forEach((cast) => {
                 if (updatedCastData[cast.creator]) {
                   // 기존 userId가 있으면 content 추가
                   updatedCastData[cast.creator].content.push({
-                    node_id: cast.node_id,
                     message: cast.message,
                     duration: cast.duration,
-                    created_at: cast.created_at,
+                    createdAt: cast.createdAt,
                   });
                 } else {
                   // 새로운 userId면 새 객체 생성
                   updatedCastData[cast.creator] = {
                     content: [
                       {
-                        node_id: cast.node_id,
                         message: cast.message,
                         duration: cast.duration,
-                        created_at: cast.created_at,
+                        createdAt: cast.createdAt,
                       },
                     ],
                   };

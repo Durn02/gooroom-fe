@@ -22,7 +22,8 @@ type NetworkEvent =
   | { event: 'neighborNodeClicked'; data: { x: number; y: number; userId: string } }
   | { event: 'backgroundClicked'; data: null }
   | { event: 'startObservation'; data: null }
-  | { event: 'finishObservation'; data: Record<string, { x: number; y: number }> };
+  | { event: 'finishObservation'; data: Record<string, { x: number; y: number }> }
+  | { event: 'doubleClick'; data: { nodeId: string } };
 
 export class NetworkManager {
   private network: Network;

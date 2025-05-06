@@ -1,38 +1,38 @@
 export interface RoomMateEdge {
   memo: string;
-  edge_id: string;
+  edgeId: string;
   group: string;
 }
 
 export interface KnockEdge {
-  edge_id: string;
+  edgeId: string;
   nickname: string;
 }
 
 export interface User {
-  my_memo: string;
+  myMemo: string;
   nickname: string;
-  node_id: string;
+  nodeId: string;
   tags: string[];
   username: string;
 }
 
 export interface RoommateWithNeighbors {
   roommate: User;
-  roommate_edge: RoomMateEdge;
+  roommateedge: RoomMateEdge;
   neighbors: string[];
 }
 
 interface BlockList {
-  block_edge_id: string;
-  user_id: string;
-  user_nickname: string;
+  blockEdgeId: string;
+  userId: string;
+  userNickname: string;
 }
 
 interface MuteList {
-  mute_edge_id: string;
-  user_id: string;
-  user_nickname: string;
+  muteEdgeId: string;
+  userId: string;
+  userNickname: string;
 }
 
 export interface BlockMuteList {
@@ -43,8 +43,8 @@ export interface BlockMuteList {
 export interface SearchedUser {
   nickname: string;
   username: string;
-  profile_image_url: string | null;
-  node_id: string;
-  is_roommate: boolean;
-  sent_knock: boolean;
+  profileImageUrl: string | null;
+  nodeId: string;
+  isRoommate: boolean;
+  sentKnock: boolean;
 }

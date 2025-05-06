@@ -2,15 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
-import DefaultButton from '@/src/components/Button/DefaultButton';
-import CastPostStickerDropdownButton from '@/src/components/Button/DropdownButton/CastPostStickerDropdownButton/CastPostStickerDropdownButton';
-import style from './LandingPage.module.css';
 import useNetwork from '@/src/hooks/useNetwork';
-import { userApi } from '../lib/api';
-=======
-import useNetwork from '@/src/hooks/useNetwork';
->>>>>>> develop
 import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
@@ -20,34 +12,22 @@ import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMut
 import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
 import CastModal from '../components/Modals/CastModal/CastModal';
-<<<<<<< HEAD
-=======
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { LandingPageSideBar } from '../components/SideBar/LandingPageSideBar';
 import { clearStore } from '../utils/indexedDB';
->>>>>>> develop
 
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-<<<<<<< HEAD
-=======
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
->>>>>>> develop
 
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
   const [knocks, setKnocks] = useState<KnockEdge[]>([]);
 
   const [isBlockMuteListModalOpen, setIsBlockMuteListModalOpen] = useState(false);
   const [blockMuteList, setBlockMuteList] = useState<BlockMuteList>({ blockList: [], muteList: [] });
-<<<<<<< HEAD
-  
-  const [isCreateCastModalOpen, setIsCreateCastModalOpen] = useState(false);
-
-=======
 
   const [isCreateCastModalOpen, setIsCreateCastModalOpen] = useState(false);
->>>>>>> develop
 
   const handleViewKnockList = async () => {
     const data = await getKnocks();
@@ -67,10 +47,7 @@ export default function Landing() {
 
   const callbacks = {
     onNodeDoubleClick: (userId: string) => {
-<<<<<<< HEAD
-=======
       setContextMenu({ position: null, items: [], userId: null });
->>>>>>> develop
       setSelectedUserId(userId);
     },
     onNodeClick: (userId: string) => {
@@ -80,8 +57,6 @@ export default function Landing() {
 
   const { networkManager, networkContainer, castData, contextMenu, setContextMenu, observing } = useNetwork(callbacks);
 
-<<<<<<< HEAD
-=======
   const { width, handleMouseDown } = useResizeSection({
     minWidth: 20,
     maxWidth: 50,
@@ -89,7 +64,6 @@ export default function Landing() {
     sectionSide: 'right',
   });
 
->>>>>>> develop
   useEffect(() => {
     if (selectedUserId === '') {
       return;
@@ -110,85 +84,6 @@ export default function Landing() {
     }
   }, [selectedUserId, networkManager, router]);
 
-<<<<<<< HEAD
-  const cast_function = () => {
-    console.log('cast function');
-  };
-
-  return (
-    <>
-      {/* {isLoading && <div>isLoading</div>} */}
-
-      {true && (
-        <>
-          <div>
-            <div className={style.castPostStickerDropdownButton}>
-              <CastPostStickerDropdownButton cast_fuction={cast_function} />
-            </div>
-            <div className={style.magnifyButtonContainer}>
-              <DefaultButton placeholder="+" onClick={() => networkManager.zoomIn()} />
-              <DefaultButton placeholder="O" onClick={() => networkManager.resetPosition()} />
-              <DefaultButton placeholder="-" onClick={() => networkManager.zoomOut()} />
-            </div>
-            <div className={style.signoutButtonContainer}>
-              <DefaultButton placeholder="회원탈퇴" onClick={() => userApi.onSignoutButtonClickHandler()} />
-            </div>
-            <div className={style.visNetContainer} id="NetworkContainer">
-              <div ref={networkContainer} style={{ height: '100vh', width: '100vw' }} />
-              <ContextMenu
-                items={contextMenu.items}
-                position={contextMenu.position}
-                onClose={() => setContextMenu({ position: null, items: [], userId: null })}
-                userId={contextMenu.userId}
-                onViewKnockList={handleViewKnockList}
-                onViewBlockMuteList={handleBlockMuteList}
-                onCreateCast={handleCreateCast}
-              />
-
-              {!observing &&
-                Object.keys(castData).length > 0 &&
-                Object.values(castData).map(({ userId, content }) => {
-                  const position = networkManager?.getPosition(userId);
-                  if (!position) return null;
-                  return (
-                    <CastUI
-                      key={userId}
-                      content={content}
-                      userId={userId}
-                      scale={networkManager?.getScale() || 1}
-                      size={networkManager?.getSize(userId) || 1}
-                      position={{ x: position.x, y: position.y }}
-                      contentCount={content.length} // content 개수 전달
-                    />
-                  );
-                })}
-            </div>
-            {isKnockListModalOpen && (
-              <KnockListModal
-                knocks={knocks}
-                onClose={() => setIsKnockListModalOpen(false)}
-                isOpen={isKnockListModalOpen}
-                addRoommate={networkManager.addRoommate}
-              />
-            )}
-            {isBlockMuteListModalOpen && (
-              <BlockMuteListModal
-                blockMuteList={blockMuteList}
-                onClose={() => setIsBlockMuteListModalOpen(false)}
-                isOpen={isBlockMuteListModalOpen}
-              />
-            )}
-            {isCreateCastModalOpen && (
-              <CastModal
-                isOpen={isCreateCastModalOpen}
-                onClose={() => setIsCreateCastModalOpen(false)}
-              />
-            )}
-          </div>
-        </>
-      )}
-    </>
-=======
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* Header */}
@@ -315,6 +210,5 @@ export default function Landing() {
         />
       )}
     </div>
->>>>>>> develop
   );
 }

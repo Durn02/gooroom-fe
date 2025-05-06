@@ -1,4 +1,4 @@
-import { GetContentsResponse } from "./response/landing.type";
+import { GetContentsResponse } from './response/landing.type';
 
 export type CastsByUser = {
   [userId: string]: {
@@ -6,7 +6,6 @@ export type CastsByUser = {
       message: string;
       duration: number;
       createdAt: string;
-      nodeId: string;
     }[];
   };
 };
@@ -17,24 +16,22 @@ export interface DomainContentData {
   stickeredNeighbors: string[];
 }
 
-export const mapGetContentsResponseToDomain = (
-  response: GetContentsResponse
-): DomainContentData => {
+export const mapGetContentsResponseToDomain = (response: GetContentsResponse): DomainContentData => {
   const castData: CastsByUser = {};
 
   response.casts.forEach((cast) => {
-    const { creator, message, duration, created_at, node_id } = cast;
+    const { creator, message, duration, createdAt } = cast;
 
     if (!castData[creator]) {
       castData[creator] = { content: [] };
     }
 
-    castData[creator].content.push({ message, duration, createdAt, nodeId });
+    castData[creator].content.push({ message, duration, createdAt });
   });
 
   return {
     castData,
-    stickeredRoommates: response.stickered_roommates,
-    stickeredNeighbors: response.stickered_neighbors,
+    stickeredRoommates: response.stickeredRoommates,
+    stickeredNeighbors: response.stickeredNeighbors,
   };
 };
