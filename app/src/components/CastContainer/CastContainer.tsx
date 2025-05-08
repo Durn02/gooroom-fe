@@ -1,6 +1,5 @@
 import React from 'react';
 import CastUI from '../UI/CastUI';
-import { useState } from 'react';
 
 interface CastData {
   userId: string;

@@ -1,5 +1,6 @@
 // the word 'post' means '게시글' in gooroom, not method 'POST'
 import apiClient from './axiosApiClient';
+import { DeleteMyPostRequest } from '@/src/types/request/post';
 
 export const fetchPosts = async () => {
   try {
@@ -12,14 +13,34 @@ export const fetchPosts = async () => {
   }
 };
 
-export const deletePost = async (postNodeId: string, postImageUrls: string[]) => {
+export const createPost = async (formData: FormData) => {
   try {
-    const stringImageUrl = postImageUrls.toString();
-    const {data} = await apiClient.delete('/domain/content/post/delete-my-content',{
-        data: {
-          post_node_id: postNodeId,
-          post_image_urls: stringImageUrl
-        },}
-    )
+    const response = await apiClient.post('/domain/content/post/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('게시글 생성 실패:', error);
+    throw error;
   }
-}
+};
+
+export const deletePost = async (payload: DeleteMyPostRequest) => {
+  try {
+    const { postNodeId, postImageUrls } = payload;
+
+    const response = await apiClient.delete('/domain/content/post/delete-my-content', {
+      data: {
+        postNodeId,
+        postImageUrls: postImageUrls.toString(), // string[] → comma-separated string
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('포스트 삭제 실패', error);
+    throw error;
+  }
+};

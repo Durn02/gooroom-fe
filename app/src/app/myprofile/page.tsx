@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
 import ProfileModal from '@/src/components/Modals/ProfileModal/ProfileModal';
@@ -84,13 +83,9 @@ export default function MyProfile() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ post_node_id: posts.postNodeId, post_image_urls: posts.imageUrl }),
+      const response = await postApi.deletePost({
+        postNodeId: posts.postNodeId,
+        postImageUrls: posts.imageUrl,
       });
       if (response.ok) {
         setPosts((prevPosts) => prevPosts.filter((post) => post.postNodeId !== posts.postNodeId));

@@ -38,7 +38,7 @@ export default function RoommateProfile({ params }: Props) {
   const router = useRouter();
 
   useEffect(() => {
-    friendApi.fetchFriendInfo(selectedUserId).then((data) => {
+    friendApi.fetchFriendInfo({ userNodeId: selectedUserId }).then((data) => {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);
