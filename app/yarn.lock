@@ -715,7 +715,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.27.1":
+"@babel/runtime@npm:^7.26.10":
   version: 7.27.1
   resolution: "@babel/runtime@npm:7.27.1"
   checksum: 10c0/530a7332f86ac5a7442250456823a930906911d895c0b743bf1852efc88a20a016ed4cd26d442d0ca40ae6d5448111e02a08dd638a4f1064b47d080e2875dc05
@@ -3658,7 +3658,7 @@ __metadata:
   resolution: "gooroom-fe-yarn@workspace:."
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.726.1"
-    "@babel/runtime": "npm:^7.27.1"
+    "@babel/runtime": "npm:^7.26.10"
     "@types/crypto-js": "npm:^4"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
