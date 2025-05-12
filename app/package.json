@@ -12,7 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.1",
     "@types/react-transition-group": "^4.4.11",
-    "axios": "^1.7.9",
+    "axios": "^1.9.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "gsap": "^3.12.5",
