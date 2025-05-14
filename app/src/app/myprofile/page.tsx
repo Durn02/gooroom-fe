@@ -13,7 +13,7 @@ import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostM
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
-import { getGroupsNameAndNumber } from '@/src/lib/api/friend/friend.api';
+import { getGroupsNameAndNumber, modifyMyGroups } from '@/src/lib/api/friend/friend.api';
 
 export default function MyProfile() {
   const router = useRouter();
@@ -37,24 +37,22 @@ export default function MyProfile() {
   const [selectedGroup, setSelectedGroup] = useState(groups[0]?.name || '');
   const [newGroupName, setNewGroupName] = useState('');
 
-  const handleAddGroup = () => {
+  const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
     if (groups.some((g) => g.name === newGroupName.trim())) {
       alert('이미 존재하는 그룹입니다.');
       return;
     }
-    setGroups([...groups, { name: newGroupName.trim(), memberCount: 0 }]);
-    setNewGroupName('');
+    try {
+      await modifyMyGroups(groups.map((group) => group.name).concat(newGroupName.trim()));
+      alert('그룹이 추가되었습니다.');
+      setGroups([...groups, { name: newGroupName.trim(), memberCount: 0 }]);
+      setNewGroupName('');
+    } catch (error) {
+      console.error('그룹 추가 실패:', error);
+      alert('그룹 추가에 실패했습니다.');
+    }
   };
-
-  // const handleDeleteGroup = (groupName) => {
-  //   if (!window.confirm(`'${groupName}' 그룹을 삭제할까요?`)) return;
-  //   setGroups(groups.filter((g) => g.name !== groupName));
-  //   // 선택 중인 그룹이 삭제되면 첫 번째 그룹으로 선택 변경
-  //   if (selectedGroup === groupName) {
-  //     setSelectedGroup(groups[0]?.name || '');
-  //   }
-  // };
 
   useEffect(() => {
     userApi.fetchMyInfo().then(async (data) => {
@@ -62,12 +60,11 @@ export default function MyProfile() {
 
       const groupsNameAndNumber = await getGroupsNameAndNumber();
 
-      // 그룹 데이터 처리 부분 수정
       if (groupsNameAndNumber) {
         setGroups(
           groupsNameAndNumber.group_members.map((group) => ({
             name: group.name,
-            memberCount: group.count || 0, // 백엔드에서 받은 count 사용
+            memberCount: group.count || 0,
           })),
         );
         setSelectedGroup(groups[0]?.name || '');

@@ -78,10 +78,22 @@ export const unmuteFriend = async (muteEdgeId: string) => {
 
 export const getGroupsNameAndNumber = async () => {
   try {
-    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-members`);
+    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-groups-name-and-number`);
     return data;
   } catch (error) {
     console.error('그룹 멤버 수를 불러오는데 실패했습니다.', error);
+    throw error;
+  }
+};
+
+export const modifyMyGroups = async (groups) => {
+  try {
+    const { data } = await apiClient.put(`${API_URL}/domain/user/my/groups/change`, {
+      groups,
+    });
+    return data;
+  } catch (error) {
+    console.error('그룹에 사용자를 추가하는데 실패했습니다.', error);
     throw error;
   }
 };
