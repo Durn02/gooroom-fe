@@ -26,14 +26,14 @@ export default function Signin() {
   const [userEmailInput, setUserEmailInput] = useState('');
   const [userPwInput, setUserPwInput] = useState('');
   const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  const [isTransitioning, setIsTransitioning] = useState(false); // 애니메이션 상태 추가
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
 
   const handleBackNavigation = () => {
-    setIsTransitioning(true); // 페이드아웃 시작
+    setIsTransitioning(true);
     setTimeout(() => {
-      router.push('/main'); // 페이지 이동
-    }, 300); // 애니메이션 지속 시간 (300ms)
+      router.push('/main');
+    }, 300);
   };
 
   const onSignInButtonClickHandler = () => {
@@ -199,13 +199,13 @@ export default function Signin() {
                 onClick={onResendVerifyButtonClickHandler}
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors w-1/2"
               >
-                Resend Code
+                코드 재전송
               </button>
               <button
                 onClick={onVerifyButtonClickHandler}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors w-1/2"
               >
-                Verify
+                확인
               </button>
             </div>
           </>
