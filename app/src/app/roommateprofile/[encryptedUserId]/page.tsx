@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
 import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
@@ -13,13 +13,12 @@ import { decrypt } from '@/src/utils/crypto';
 import { useRouter } from 'next/navigation';
 
 type Props = {
-  params: {
-    encryptedUserId: string;
-  };
+  params: Promise<{ encryptedUserId: string }>;
 };
 
 export default function RoommateProfile({ params }: Props) {
-  const selectedUserId = decrypt(decodeURIComponent(params.encryptedUserId));
+  const { encryptedUserId } = use(params);
+  const selectedUserId = decrypt(decodeURIComponent(encryptedUserId));
   const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
   const [roommateMemo, setRoommateMemo] = useState<string>('');
   const [stickers, setStickers] = useState<Sticker[]>([]);

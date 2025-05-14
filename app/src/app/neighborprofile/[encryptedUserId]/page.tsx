@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
 import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
@@ -11,13 +11,12 @@ import { friendApi } from '@/src/lib/api';
 import { decrypt } from '@/src/utils/crypto';
 
 type Props = {
-  params: {
-    encryptedUserId: string;
-  };
+  params: Promise<{ encryptedUserId: string }>;
 };
 
-export default function NeighborProfile({ params }: Props) {
-  const selectedUserId = decrypt(decodeURIComponent(params.encryptedUserId));
+export default function RoommateProfile({ params }: Props) {
+  const { encryptedUserId } = use(params);
+  const selectedUserId = decrypt(decodeURIComponent(encryptedUserId));
   const [friendInfo, setFriendInfo] = useState<FriendInfo | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
