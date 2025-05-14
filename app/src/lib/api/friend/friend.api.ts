@@ -1,3 +1,4 @@
+import { API_URL } from '../../config';
 import apiClient from '../axiosApiClient';
 
 export const fetchFriendInfo = async (userNodeId: string) => {
@@ -71,6 +72,16 @@ export const unmuteFriend = async (muteEdgeId: string) => {
     }
   } catch (error) {
     console.error('사용자 음소거 해제에 실패했습니다.', error);
+    throw error;
+  }
+};
+
+export const getGroupsNameAndNumber = async () => {
+  try {
+    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-members`);
+    return data;
+  } catch (error) {
+    console.error('그룹 멤버 수를 불러오는데 실패했습니다.', error);
     throw error;
   }
 };

@@ -25,6 +25,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       tags: [],
       profile_image_url: null,
       remove_profile_image: false,
+      groups: [],
     },
   );
   const [newTags, setNewTags] = useState<string>('');
@@ -66,6 +67,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         tags: myProfile.tags || [],
         profile_image_url: myProfile.profile_image_url || null,
         remove_profile_image: myProfile.remove_profile_image || false,
+        groups: myProfile.groups || [],
       });
       setPreviewImage(typeof myProfile.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src);
     }
@@ -152,22 +154,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
     }
   };
 
-  // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (event.target.files && event.target.files[0]) {
-  //     const file = event.target.files[0];
-  //     const reader = new FileReader();
-
-  //     reader.onloadend = () => {
-  //       setPreviewImage(reader.result as string);
-  //       setProfileData((prevData) => ({
-  //         ...prevData,
-  //         profile_image_url: file,
-  //       }));
-  //     };
-
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       const file = event.target.files[0];
