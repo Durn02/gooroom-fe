@@ -10,7 +10,7 @@ import { API_URL } from '@/src/lib/config';
 type SignupRequestData = {
   email: string;
   password: string;
-  concern: string[];
+  tags: string[];
   nickname: string;
   username: string;
 };
@@ -27,7 +27,7 @@ const APIURL = API_URL;
 export default function Signup() {
   const [userEmailInput, setEmailInput] = useState<string>('');
   const [userPwInput, setUserPwInput] = useState<string>('');
-  const [userConcernInput, setUserConcernInput] = useState<string>('');
+  const [userTagsInput, setUserTagsInput] = useState<string>('');
   const [userNicknameInput, setUserNicknameInput] = useState<string>('');
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [userVerificationCodeInput, setUserVerificationCodeInput] = useState<string>('');
@@ -47,7 +47,7 @@ export default function Signup() {
     const signupRequestData: SignupRequestData = {
       email: userEmailInput,
       password: userPwInput,
-      concern: userConcernInput.split(',').map((item) => item.trim()),
+      tags: userTagsInput.split(',').map((item) => item.trim()),
       nickname: userNicknameInput,
       username: usernameInput,
     };
@@ -201,13 +201,13 @@ export default function Signup() {
           <PwInput placeholder="Enter your password" value={userPwInput} onChange={(e) => setUserPwInput(e)} />
         </div>
 
-        {/* Concern Input */}
+        {/* Tag Input */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-semibold mb-1">Concerns</label>
+          <label className="block text-gray-700 font-semibold mb-1">Tags</label>
           <Input
-            placeholder="Enter your concerns (comma-separated)"
-            value={userConcernInput}
-            onChange={(e) => setUserConcernInput(e)}
+            placeholder="Enter your tags (comma-separated)"
+            value={userTagsInput}
+            onChange={(e) => setUserTagsInput(e)}
           />
         </div>
 

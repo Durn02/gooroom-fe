@@ -61,13 +61,19 @@ export default function MyProfile() {
       const groupsNameAndNumber = await getGroupsNameAndNumber();
 
       if (groupsNameAndNumber) {
-        setGroups(
-          groupsNameAndNumber.group_members.map((group) => ({
-            name: group.name,
-            memberCount: group.count || 0,
-          })),
-        );
-        setSelectedGroup(groups[0]?.name || '');
+        const validGroups = groupsNameAndNumber.group_members.filter((group) => group.name && group.name.trim() !== '');
+        if (validGroups.length > 0) {
+          setGroups(
+            validGroups.map((group) => ({
+              name: group.name,
+              memberCount: group.count || 0,
+            })),
+          );
+          setSelectedGroup(validGroups[0]?.name || '');
+        } else {
+          setGroups([]);
+          setSelectedGroup('');
+        }
       } else {
         setGroups([]);
         setSelectedGroup('');
@@ -183,16 +189,21 @@ export default function MyProfile() {
                 <div className="mb-8">
                   <label className="block text-lg font-semibold mb-2 text-gray-800">나의 그룹</label>
                   <div className="flex items-center gap-2 mb-2">
+                    {/* Select 컴포넌트 */}
                     <select
                       className="border border-gray-300 rounded px-3 py-2 flex-1 text-gray-800"
                       value={selectedGroup}
                       onChange={(e) => setSelectedGroup(e.target.value)}
                     >
-                      {groups.map((group) => (
-                        <option key={group.name} value={group.name}>
-                          {group.name} ({group.memberCount}명)
-                        </option>
-                      ))}
+                      {groups.length === 0 ? (
+                        <option value="">새로운 그룹을 추가하세요</option>
+                      ) : (
+                        groups.map((group) => (
+                          <option key={group.name} value={group.name}>
+                            {group.name} ({group.memberCount}명)
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                   <div className="flex gap-2">
