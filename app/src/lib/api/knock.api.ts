@@ -17,6 +17,7 @@ export const getKnocks = async (): Promise<{
 
 export const acceptKnock = async (
   knockId: string,
+  selectedGroup: string,
 ): Promise<{
   newRoommate: User;
   newNeighbors: User[];
@@ -24,6 +25,7 @@ export const acceptKnock = async (
   try {
     const response = await apiClient.post('/domain/friend/knock/accept', {
       knock_id: knockId,
+      group: selectedGroup,
     });
 
     return {

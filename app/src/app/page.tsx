@@ -19,7 +19,7 @@ import { clearStore } from '../utils/indexedDB';
 export default function Landing() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [loggedInUserId, setLoggedInUserId] = useState<User>(null);
+  const [loggedInUserInfo, setLoggedInUserInfo] = useState<User>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [isKnockListModalOpen, setIsKnockListModalOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function Landing() {
   });
 
   useEffect(() => {
-    setLoggedInUserId(networkManager?.getLoggedInUser());
+    setLoggedInUserInfo(networkManager?.getLoggedInUser());
     if (selectedUserId === '') {
       return;
     }
@@ -158,7 +158,7 @@ export default function Landing() {
           onClose={() => setIsSidebarOpen(false)}
           width={width}
           handleMouseDown={handleMouseDown}
-          loggedInUserInfo={loggedInUserId}
+          loggedInUserInfo={loggedInUserInfo}
         />
       </div>
       {/* Magnify Buttons */}
@@ -195,6 +195,7 @@ export default function Landing() {
           onClose={() => setIsKnockListModalOpen(false)}
           isOpen={isKnockListModalOpen}
           addRoommate={networkManager.addRoommate}
+          loggedInUserInfo={loggedInUserInfo}
         />
       )}
       {isBlockMuteListModalOpen && (
