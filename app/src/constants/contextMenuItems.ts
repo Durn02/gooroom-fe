@@ -29,10 +29,10 @@ const muteFriendFunc = (nodeId: string) => {
   muteFreind(nodeId);
 };
 
-const sendKnockFunc = async (nodeId: string) => {
+const sendKnockFunc = async (nodeId: string, selectedGroup: string) => {
   alert('send knock to ' + nodeId);
   try {
-    const data = await sendKnock(nodeId);
+    const data = await sendKnock(nodeId, selectedGroup);
     if (data.message === 'send knock successfully') {
       alert('노크를 성공적으로 보냈습니다.');
     } else if (data.message === 'knock already sent') {
@@ -68,7 +68,7 @@ export const ROOMMATE_NODE_MENU_ITEMS = [
 
 export const NEIGHBOR_NODE_MENU_ITEMS = [
   ['view neighbor profile', viewNeighborProfile],
-  ['send knock', sendKnockFunc],
+  // ['send knock', sendKnockFunc],
   ['block', blockFriendFunc],
   ['mute', muteFriendFunc],
 ];

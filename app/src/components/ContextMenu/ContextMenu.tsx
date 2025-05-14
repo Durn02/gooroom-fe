@@ -35,8 +35,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
       onViewBlockMuteList();
     } else if (itemName === MY_NODE_MENU_ITEMS[3][0]) {
       onCreateCast();
-    } 
-    else {
+    } else {
       itemFunction(userId, router_in_component);
     }
     onClose();
