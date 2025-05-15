@@ -3,8 +3,8 @@ import { NetworkManager } from '../lib/VisnetGraph/NetworkManager';
 import { initDB, getAllData, saveDatas, getAllRoommates, saveRoommates } from '../utils/indexedDB';
 import { landingApi, userApi } from '../lib/api';
 import { MY_NODE_MENU_ITEMS, NEIGHBOR_NODE_MENU_ITEMS, ROOMMATE_NODE_MENU_ITEMS } from '../constants/contextMenuItems';
-import { CastsByUser } from '../types/cast.type';
-import { ContextMenuState } from '../types/networkTypes';
+import { CastsByUser } from '../types/DomainObject/cast.type';
+import { ContextMenuState } from '../types/DomainObject/networkTypes';
 
 const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => {
   const [networkManager, setNetworkManager] = useState<NetworkManager | null>(null);
@@ -100,6 +100,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
     init();
 
     return () => {
+      console.log('destroy1 is called');
       networkManager?.destroy();
     };
   }, []);
@@ -123,8 +124,8 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
           }
 
           if (newContents.castsReceived.length > 0) {
-            setCastData((prevCastData) => {
-              const updatedCastData = { ...prevCastData };
+            setCastData((newCast) => {
+              const updatedCastData = { ...newCast };
 
               newContents.castsReceived.forEach((cast) => {
                 if (updatedCastData[cast.creator]) {
@@ -163,7 +164,7 @@ const useNetwork = (callbacks: { [key: string]: (node_id: string) => void }) => 
       isMounted = false;
       networkManager?.destroy();
     };
-  }, [networkManager, castData]);
+  }, [networkManager]);
 
   return {
     networkManager,

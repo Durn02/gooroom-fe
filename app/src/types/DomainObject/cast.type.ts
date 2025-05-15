@@ -1,4 +1,4 @@
-import { GetContentsResponse } from './response/landing.type';
+import { GetContentsResponse } from '../response/landing.type';
 
 export type CastsByUser = {
   [userId: string]: {
@@ -16,7 +16,7 @@ export interface DomainContentData {
   stickeredNeighbors: string[];
 }
 
-export const mapGetContentsResponseToDomain = (response: GetContentsResponse): DomainContentData => {
+export const toDomainContents = (response: GetContentsResponse): DomainContentData => {
   const castData: CastsByUser = {};
 
   response.casts.forEach((cast) => {

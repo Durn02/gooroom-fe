@@ -1,7 +1,7 @@
 'use client';
 
 import apiClient from '../api/axiosApiClient';
-import { KnockEdge, User } from '@/src/types/landingPage.type';
+import { KnockEdge, User } from '@/src/types/DomainObject/landingPage.type';
 
 export const getKnocks = async (): Promise<{
   knocks: KnockEdge[];
@@ -24,7 +24,7 @@ export const acceptKnock = async (
 }> => {
   try {
     const response = await apiClient.post('/domain/friend/knock/accept', {
-      knock_id: knockId,
+      knockId: knockId,
       group: selectedGroup,
     });
 
@@ -41,7 +41,7 @@ export const acceptKnock = async (
 export const rejectKnock = async (knockId: string) => {
   try {
     const response = await apiClient.post('/domain/friend/knock/reject', {
-      knock_id: knockId,
+      knockId: knockId,
     });
     return response;
   } catch (error) {
@@ -53,22 +53,12 @@ export const rejectKnock = async (knockId: string) => {
 export const sendKnock = async (nodeId: string, group: string) => {
   try {
     const response = await apiClient.post('/domain/friend/knock/send', {
-      to_user_node_id: nodeId,
+      toUserNodeId: nodeId,
       group: group,
     });
     return response.data;
   } catch (error) {
     console.error('Failed to send knock:', error);
-    throw error;
-  }
-};
-
-export const createKnockLink = async () => {
-  try {
-    const response = await apiClient.post('/domain/friend/knock/create-link');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to create knock link:', error);
     throw error;
   }
 };

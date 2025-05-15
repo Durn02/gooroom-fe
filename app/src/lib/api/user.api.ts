@@ -1,5 +1,5 @@
 import apiClient from './axiosApiClient';
-import { BlockMuteList } from '@/src/types/landingPage.type';
+import { BlockMuteList } from '@/src/types/DomainObject/landingPage.type';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -17,12 +17,12 @@ export const getBlockMuteList = async (): Promise<{
   blockMuteList: BlockMuteList;
 }> => {
   try {
-    const block_list_response = await apiClient.post('/domain/block/get-members');
-    const mute_list_response = await apiClient.post('/domain/mute/get-members');
+    const blockListResponse = await apiClient.post('/domain/block/get-members');
+    const muteListResponse = await apiClient.post('/domain/mute/get-members');
     const data = {
       blockMuteList: {
-        blockList: block_list_response.data || [],
-        muteList: mute_list_response.data || [],
+        blockList: blockListResponse.data || [],
+        muteList: muteListResponse.data || [],
       },
     };
     return data;

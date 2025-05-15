@@ -1,5 +1,5 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { RoommateWithNeighbors } from '../types/landingPage.type';
+import { RoommateWithNeighbors } from '../types/DomainObject/landingPage.type';
 
 export const initDB = async (): Promise<IDBPDatabase> => {
   return openDB('gooroomidb', 1, {

@@ -1,9 +1,9 @@
 // KnockListModal.tsx
 'use client';
-import { acceptKnock, rejectKnock } from '@/src/lib/api/knock.api';
-import { KnockEdge } from '@/src/types/landingPage.type';
+import { knockApi } from '@/src/lib/api';
+import { KnockEdge } from '@/src/types/DomainObject/landingPage.type';
 import React, { useEffect, useState, useCallback } from 'react';
-import { User } from '@/src/types/landingPage.type';
+import { User } from '@/src/types/DomainObject/landingPage.type';
 import { useRouter } from 'next/navigation';
 
 interface KnockListModalProps {
@@ -68,7 +68,7 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
     }
   };
 
-  const accept_knock = async (knockId: string) => {
+  const acceptKnock = async (knockId: string) => {
     const validGroups = parseUserGroups();
 
     if (validGroups.length === 0) {
@@ -90,7 +90,7 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
 
     const select = window.confirm('노크를 수락하시겠습니까?');
     if (!select) return;
-    const data = await acceptKnock(knockId, selectedGroup);
+    const data = await knockApi.acceptKnock(knockId, selectedGroup);
     console.log('knockData in acceptknock func : ', data);
     console.log('addRoommate in acceptknock func : ', addRoommate);
     addRoommate(data.newRoommate, data.newNeighbors);
@@ -103,10 +103,10 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
     onClose();
   };
 
-  const reject_knock = async (knockId: string) => {
+  const rejectKnock = async (knockId: string) => {
     const select = window.confirm('노크를 거절하시겠습니까?');
     if (!select) return;
-    const data = await rejectKnock(knockId);
+    const data = await knockApi.rejectKnock(knockId);
     if (!data) {
       console.error('Failed to reject knock');
       alert('노크 거절을 실패했습니다');
@@ -171,8 +171,8 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
                       </button>
                     )}
                     <div className="flex gap-1">
-                      <button onClick={() => accept_knock(knock.edgeId)}>✅</button>
-                      <button onClick={() => reject_knock(knock.edgeId)}>❌</button>
+                      <button onClick={() => acceptKnock(knock.edgeId)}>✅</button>
+                      <button onClick={() => rejectKnock(knock.edgeId)}>❌</button>
                     </div>
                   </div>
                 </div>

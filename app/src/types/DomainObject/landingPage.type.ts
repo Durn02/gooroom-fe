@@ -25,15 +25,15 @@ export interface RoommateWithNeighbors {
 }
 
 interface BlockList {
-  block_edge_id: string;
-  user_id: string;
-  user_nick_name: string;
+  blockEdgeId: string;
+  userId: string;
+  userNickname: string;
 }
 
 interface MuteList {
   muteEdgeId: string;
   userId: string;
-  userNickName: string;
+  userNickname: string;
 }
 
 export interface BlockMuteList {

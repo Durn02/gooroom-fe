@@ -1,4 +1,4 @@
-import { API_URL } from '../../config';
+import { toDomainGroups } from '@/src/types/DomainObject/friend/group.type';
 import apiClient from '../axiosApiClient';
 import {
   MemoModifyRequest,
@@ -8,6 +8,7 @@ import {
   UnblockRequest,
   UnmuteRequest,
 } from '@/src/types/request/friend';
+import { GetGroupsNameAndNumberResponse } from '@/src/types/response/friend';
 
 export const fetchFriendInfo = async (payload: GetUserRequest) => {
   try {
@@ -24,6 +25,9 @@ export const blockFreind = async (payload: BlockRequest) => {
   try {
     const response = await apiClient.post('/domain/block/add_member', payload);
     if (response.status === 200) {
+      console.log('blockFriend response : ', response);
+      console.log('blockFriend response.data: ', response.data);
+
       alert('사용자를 차단했습니다.');
       return response.data;
     }
@@ -89,8 +93,9 @@ export const modifyMemo = async (payload: MemoModifyRequest) => {
 
 export const getGroupsNameAndNumber = async () => {
   try {
-    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-groups-name-and-number`);
-    return data;
+    const response = await apiClient.get(`/domain/friend/group/get-groups-name-and-number`);
+    const data: GetGroupsNameAndNumberResponse = response?.data;
+    return toDomainGroups(data);
   } catch (error) {
     console.error('그룹 멤버 수를 불러오는데 실패했습니다.', error);
     throw error;
@@ -99,7 +104,7 @@ export const getGroupsNameAndNumber = async () => {
 
 export const modifyMyGroups = async (groups) => {
   try {
-    const { data } = await apiClient.put(`${API_URL}/domain/user/my/groups/change`, {
+    const { data } = await apiClient.put(`/domain/user/my/groups/change`, {
       groups,
     });
     return data;

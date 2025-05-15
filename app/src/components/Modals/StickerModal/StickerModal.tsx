@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Sticker } from '@/src/types/profilePage.type';
+import { Sticker } from '@/src/types/DomainObject/profilePage.type';
 
 interface StickerModalProps {
   isOpen: boolean;

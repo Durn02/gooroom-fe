@@ -2,8 +2,8 @@
 
 import { DEFAULT_CONTENTS, DEFAULT_NEW_CONTENTS } from '@/src/constants/landing/default';
 import apiClient from '@/src/lib/api/axiosApiClient';
-import { DomainContentData, mapGetContentsResponseToDomain } from '@/src/types/cast.type';
-import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
+import { DomainContentData, toDomainContents } from '@/src/types/DomainObject/cast.type';
+import { User, RoommateWithNeighbors } from '@/src/types/DomainObject/landingPage.type';
 import { GetContentsResponse, GetNewContentsResponse } from '@/src/types/response/landing.type';
 
 export const fetchFriends = async (): Promise<{
@@ -38,7 +38,7 @@ export const fetchContents = async (): Promise<DomainContentData> => {
   try {
     const response = await apiClient.get('/domain/content/get-contents');
     const data: GetContentsResponse = response?.data ?? DEFAULT_CONTENTS;
-    return mapGetContentsResponseToDomain(data);
+    return toDomainContents(data);
   } catch (error) {
     console.error('Failed to fetch contents:', error);
     throw error;

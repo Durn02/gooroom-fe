@@ -15,7 +15,7 @@ export interface MuteRequest {
 }
 
 export interface UnmuteRequest {
-  blockEdgeId: string;
+  muteEdgeId: string;
 }
 
 export interface MemoModifyRequest {

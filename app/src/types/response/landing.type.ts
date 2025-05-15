@@ -1,4 +1,4 @@
-import { User } from '../landingPage.type';
+import { User } from '../DomainObject/landingPage.type';
 
 interface Cast {
   message: string;

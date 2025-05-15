@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserInfo } from '@/src/types/profilePage.type';
+import { UserInfo } from '@/src/types/DomainObject/profilePage.type';
 import { userApi } from '@/src/lib/api';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -163,7 +163,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
             <div className="text-white text-lg mb-4">Loading...</div>
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
           </div>
         )}
 

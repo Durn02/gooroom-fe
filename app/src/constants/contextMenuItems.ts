@@ -1,10 +1,9 @@
 // constants/contextMenuItems.ts
-import { authApi, userApi } from '../lib/api';
+import { authApi } from '../lib/api';
 import { blockFreind, muteFreind } from '../lib/api/friend/friend.api';
 import { sendKnock } from '../lib/api/knock.api';
 import { encrypt } from '../utils/crypto';
 import { clearStore } from '../utils/indexedDB';
-import { createKnockLink } from '../lib/api/knock.api';
 import { logout } from '../lib/sign';
 
 const viewMyProfile = () => {
@@ -54,17 +53,7 @@ const sendKnockFunc = async (nodeId: string, selectedGroup: string) => {
   }
 };
 
-const createKnockLinkFunc = async () => {
-  try {
-    const data = await createKnockLink();
-    navigator.clipboard.writeText(`${window.location.origin}/knock/${data.link_id}`);
-    alert('노크 링크가 복사되었습니다.');
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const onLogoutButtonClickHandler = async () => {
+const onLogoutHandler = async () => {
   const isLogout = window.confirm('로그아웃을 진행하시겠습니까?');
   if (!isLogout) return;
 
@@ -83,8 +72,7 @@ export const MY_NODE_MENU_ITEMS = [
   ['view knock list', () => {}],
   ['view block/mute list', () => {}],
   ['create cast', () => {}],
-  ['create knock link', () => createKnockLinkFunc()],
-  ['logout', userApi.onLogoutButtonClickHandler],
+  ['logout', onLogoutHandler],
 ];
 
 export const ROOMMATE_NODE_MENU_ITEMS = [

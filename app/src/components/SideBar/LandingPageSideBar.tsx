@@ -4,9 +4,10 @@ import userImage from '@/src/assets/images/user.png';
 import Image from 'next/image';
 import { API_URL } from '@/src/lib/config';
 import DefaultButton from '../Button/DefaultButton';
-import { knockApi, userApi } from '@/src/lib/api';
-import { SearchedUser, User } from '@/src/types/landingPage.type';
+import { knockApi } from '@/src/lib/api';
+import { SearchedUser, User } from '@/src/types/DomainObject/landingPage.type';
 import SendKnockModal from '../Modals/SendKnockModal';
+import { logout } from '@/src/lib/sign';
 
 interface LandingPageSideBarProps {
   onClose: () => void;

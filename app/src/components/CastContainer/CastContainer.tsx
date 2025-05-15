@@ -15,7 +15,7 @@ interface CastContainerProps {
 
 const CastContainer: React.FC<CastContainerProps> = ({ castData, scale }) => {
   if (!castData || Object.keys(castData).length === 0) return null;
-  console.log(castData, "in Castcont");
+  console.log(castData, 'in Castcont');
 
   return (
     <div className="w-full h-full">

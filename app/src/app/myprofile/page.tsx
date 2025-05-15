@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
 import ProfileModal from '@/src/components/Modals/ProfileModal/ProfileModal';
-import { UserInfo, Sticker, Post } from '@/src/types/profilePage.type';
+import { UserInfo, Sticker, Post } from '@/src/types/DomainObject/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/src/components/Modals/CreateStickerModal/CreateStickerModal';
@@ -13,6 +13,7 @@ import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
 import { getGroupsNameAndNumber, modifyMyGroups } from '@/src/lib/api/friend/friend.api';
+import { GroupsInfo } from '@/src/types/DomainObject/friend/group.type';
 
 export default function MyProfile() {
   const router = useRouter();
@@ -32,20 +33,20 @@ export default function MyProfile() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.name || '');
+  const [groups, setGroups] = useState<GroupsInfo[]>([{ groupName: '', memberCount: 0 }]);
+  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.groupName || '');
   const [newGroupName, setNewGroupName] = useState('');
 
   const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
-    if (groups.some((g) => g.name === newGroupName.trim())) {
+    if (groups.some((g) => g.groupName === newGroupName.trim())) {
       alert('이미 존재하는 그룹입니다.');
       return;
     }
     try {
-      await modifyMyGroups(groups.map((group) => group.name).concat(newGroupName.trim()));
+      await modifyMyGroups(groups.map((group) => group.groupName).concat(newGroupName.trim()));
       alert('그룹이 추가되었습니다.');
-      setGroups([...groups, { name: newGroupName.trim(), memberCount: 0 }]);
+      setGroups([...groups, { groupName: newGroupName.trim(), memberCount: 0 }]);
       setNewGroupName('');
     } catch (error) {
       console.error('그룹 추가 실패:', error);
@@ -57,22 +58,10 @@ export default function MyProfile() {
     userApi.fetchMyInfo().then(async (data) => {
       setUserInfo(data);
 
-      const groupsNameAndNumber = await getGroupsNameAndNumber();
-
-      if (groupsNameAndNumber) {
-        const validGroups = groupsNameAndNumber.group_members.filter((group) => group.name && group.name.trim() !== '');
-        if (validGroups.length > 0) {
-          setGroups(
-            validGroups.map((group) => ({
-              name: group.name,
-              memberCount: group.count || 0,
-            })),
-          );
-          setSelectedGroup(validGroups[0]?.name || '');
-        } else {
-          setGroups([]);
-          setSelectedGroup('');
-        }
+      const groups = await getGroupsNameAndNumber();
+      if(groups.length>0){
+        setGroups(groups);
+        setSelectedGroup(groups[0].groupName);
       } else {
         setGroups([]);
         setSelectedGroup('');
@@ -186,8 +175,8 @@ export default function MyProfile() {
                         <option value="">새로운 그룹을 추가하세요</option>
                       ) : (
                         groups.map((group) => (
-                          <option key={group.name} value={group.name}>
-                            {group.name} ({group.memberCount}명)
+                          <option key={group.groupName} value={group.groupName}>
+                            {group.groupName} ({group.memberCount}명)
                           </option>
                         ))
                       )}

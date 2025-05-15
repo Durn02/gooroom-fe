@@ -33,7 +33,7 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
         nickname: data.friend.nickname,
         username: data.friend.username,
         tags: data.friend.tags,
-        memo: data.roommate_edge.memo,
+        memo: data.roommateEdge.memo,
       });
     } catch (error) {
       console.error('에러가 발생했습니다.', error);

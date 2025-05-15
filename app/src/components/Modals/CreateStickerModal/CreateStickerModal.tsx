@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 import { stickerApi } from '@/src/lib/api';
 interface CreateStickerModalProps {
   isOpen: boolean;
@@ -105,7 +105,7 @@ const CreateStickerModal: React.FC<CreateStickerModalProps> = ({ isOpen, onClose
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
             <div className="text-white text-lg mb-4">Loading...</div> {/* Added margin-bottom */}
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
           </div>
         )}
 

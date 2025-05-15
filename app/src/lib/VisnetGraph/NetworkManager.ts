@@ -1,9 +1,9 @@
 // NetworkManager.ts ../lib/VisnetGraph/NetworkManager
 import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
-import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
+import { User, RoommateWithNeighbors } from '@/src/types/DomainObject/landingPage.type';
 import { generateNodes, generateEdges } from './constructNetwork';
-import visnet_options from '@/src/assets/styles/visnetGraphOptions';
+import visnetOptions from '@/src/assets/styles/visnetGraphOptions';
 import {
   zoomIn,
   zoomOut,
@@ -47,7 +47,7 @@ export class NetworkManager {
     loggedInUser: User,
     neighborsData: User[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
-    callbacks: { [key: string]: (node_id: string) => void },
+    callbacks: { [key: string]: (nodeId: string) => void },
   ) {
     this.loggedInUser = loggedInUser;
     this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.nodeId, neighbor]));
@@ -67,7 +67,7 @@ export class NetworkManager {
         nodes: this.nodesDataSet,
         edges: this.edgesDataSet,
       },
-      visnet_options,
+      visnetOptions,
     );
     this.network.fit({ animation: true });
 
@@ -221,7 +221,7 @@ export class NetworkManager {
   public getNeighborsBreifData() {
     return Array.from(this.neighborsData.values()).map((n) => ({
       nickname: n.nickname,
-      node_id: n.nodeId,
+      nodeId: n.nodeId,
     }));
   }
 
@@ -229,10 +229,10 @@ export class NetworkManager {
     return this.roommatesWithNeighbors;
   }
 
-  public getRoommatesBreifData(): { nickname: string; node_id: string }[] {
+  public getRoommatesBreifData(): { nickname: string; nodeId: string }[] {
     return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
       nickname: r.roommate.nickname,
-      node_id: r.roommate.nodeId,
+      nodeId: r.roommate.nodeId,
     }));
   }
 

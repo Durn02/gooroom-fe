@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
-import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
+import { Sticker, Post, FriendInfo } from '@/src/types/DomainObject/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
@@ -41,17 +41,17 @@ export default function RoommateProfile({ params }: Props) {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);
-      setRoommateMemo(data.roommate_edge.memo);
-      setRoommateGroup(data.roommate_edge.group);
+      setRoommateMemo(data.roommateEdge.memo);
+      setRoommateGroup(data.roommateEdge.group);
     });
   }, [selectedUserId]);
 
-  const handleStickerDoubleClick = (selected_sticker: Sticker) => {
-    setSelectedSticker(selected_sticker);
+  const handleStickerDoubleClick = (selectedSticker: Sticker) => {
+    setSelectedSticker(selectedSticker);
     setIsStickerModalOpen(true);
   };
-  const handlePostDoubleClick = (selected_post: Post) => {
-    setSelectedPost(selected_post);
+  const handlePostDoubleClick = (selectedPost: Post) => {
+    setSelectedPost(selectedPost);
     setIsPostModalOpen(true);
   };
 

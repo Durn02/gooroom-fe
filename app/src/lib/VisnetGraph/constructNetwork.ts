@@ -1,6 +1,6 @@
 // constructNetwork.ts
 import { Node, Edge } from 'vis-network';
-import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
+import { User, RoommateWithNeighbors } from '@/src/types/DomainObject/landingPage.type';
 import { NetworkManager } from './NetworkManager';
 import { saveRoommates, saveDatas, deleteData } from '@/src/utils/indexedDB';
 

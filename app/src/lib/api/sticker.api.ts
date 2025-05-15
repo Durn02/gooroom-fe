@@ -14,7 +14,7 @@ export const fetchMyStickers = async () => {
 export const fetchStickers = async (userNodeId: string) => {
   try {
     const { data } = await apiClient.post('/domain/content/sticker/get-members', {
-      user_node_id: userNodeId,
+      userNodeId: userNodeId,
     });
     return data;
   } catch (error) {
@@ -43,8 +43,8 @@ export const deleteStickers = async (stickerNodeId: string, stickerImageUrls: st
     const stringImageUrl = stickerImageUrls.toString();
     const { data } = await apiClient.delete('domain/content/sticker/delete', {
       data: {
-        sticker_node_id: stickerNodeId,
-        sticker_image_url: stringImageUrl,
+        stickerNodeId: stickerNodeId,
+        stickerImageUrl: stringImageUrl,
       },
     });
     return data;

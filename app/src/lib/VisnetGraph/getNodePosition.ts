@@ -2,8 +2,8 @@
 import { IdType, Network, Position } from 'vis-network';
 import { NetworkManager } from './NetworkManager';
 
-const getPosition = (node_id: IdType, network: Network): Position => {
-  const canvasPosition = network.getPosition(node_id);
+const getPosition = (nodeId: IdType, network: Network): Position => {
+  const canvasPosition = network.getPosition(nodeId);
   const domPosition = network.canvasToDOM(canvasPosition);
   return domPosition;
 };
@@ -11,7 +11,7 @@ const getPosition = (node_id: IdType, network: Network): Position => {
 export const getLoggedInUserPosition = function (this: NetworkManager): Position {
   const loggedInUser = this.getLoggedInUser();
   const network = this.getNetwork();
-  return getPosition(loggedInUser.node_id as IdType, network);
+  return getPosition(loggedInUser.nodeId as IdType, network);
 };
 
 export const getRoommatesPosition = function (this: NetworkManager): Position[] {
