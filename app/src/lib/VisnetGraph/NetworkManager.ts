@@ -34,6 +34,7 @@ export class NetworkManager {
   private edgesDataSet: DataSet<Edge> = new DataSet<Edge>();
   private interactedNodeId: string | null = null;
   private resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  private existTimer: boolean = false;
 
   private observer?: (event: NetworkEvent) => void;
   private lock: number = 0;
@@ -119,28 +120,51 @@ export class NetworkManager {
         });
       }
     });
-    this.network.on('dragStart', () => this.startObservation());
-    this.network.on('dragEnd', () => this.stopObservation());
-    this.network.on('startStabilizing', () => this.startObservation());
-    this.network.on('stabilized', () => this.stopObservation());
+    this.network.on('dragStart', () => {
+      console.log('dragStart');
+      this.startObservation();
+    });
+    this.network.on('dragEnd', () => {
+      console.log('dragEnd');
+      this.stopObservation();
+    });
+    this.network.on('startStabilizing', () => {
+      console.log('startStabilizing');
+      this.startObservation();
+    });
+    this.network.on('stabilized', () => {
+      console.log('stablized');
+      this.stopObservation();
+    });
+
     this.network.on('zoom', () => {
+      console.log('zoomed');
+
       this.startObservation();
       setTimeout(() => {
         this.stopObservation();
       }, 200);
     });
-    this.network.on('resize', () => {
-      this.startObservation();
 
-      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+    this.network.on('resize', () => {
+      const easeOutDuration = 500;
+      if (this.resizeTimer !== null) {
+        clearTimeout(this.resizeTimer);
+      } else {
+        this.startObservation();
+      }
+
       this.resizeTimer = setTimeout(() => {
         this.network.fit({
           animation: {
-            duration: 500,
+            duration: easeOutDuration,
             easingFunction: 'easeInOutQuad',
           },
         });
-        this.stopObservation();
+        setTimeout(() => {
+          this.stopObservation();
+        }, easeOutDuration);
+        this.resizeTimer = null;
       }, 300);
     });
   }

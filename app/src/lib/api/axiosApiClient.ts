@@ -25,10 +25,8 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('response in interceptor : ', response);
     if (response?.data) {
       response = axiosResponseToCamel(response);
-      console.log('camelResponse in interceptor : ', response);
     }
     return response;
   },
