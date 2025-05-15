@@ -22,7 +22,7 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
   const parseUserGroups = () => {
     try {
       if (!loggedInUserInfo?.groups) return [];
-      const rawGroups = loggedInUserInfo.groups;
+      const rawGroups = loggedInUserInfo.groups as unknown as string;
 
       if (Array.isArray(rawGroups)) {
         return rawGroups.filter((g) => g && g.trim() !== '');
