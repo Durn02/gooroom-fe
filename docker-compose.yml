@@ -1,15 +1,14 @@
-version: '3.8'
-
+version: "3.8"
 services:
   react-app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"          # React 개발 서버 포트
+      - "3000:3000" # React 개발 서버 포트
     volumes:
-      - .:/app              # 호스트의 현재 디렉토리를 /app에 마운트
-      - /app/node_modules   # node_modules는 컨테이너 내부에 유지
+      - .:/app # 호스트의 현재 디렉토리를 /app에 마운트
+      - /app/node_modules # node_modules는 컨테이너 내부에 유지
     environment:
       - NODE_ENV=development
-    command: ["npm", "start"]  # 기본 CMD 오버라이드 (필요 시)
+    command: ["npm", "start"] # 기본 CMD 오버라이드 (필요 시)

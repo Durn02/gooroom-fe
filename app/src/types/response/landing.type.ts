@@ -1,18 +1,26 @@
-import { Cast, User } from '../landingPage.type';
+import { User } from '../DomainObject/landingPage.type';
+
+interface Cast {
+  message: string;
+  duration: number;
+  createdAt: string;
+  nodeId: string;
+  creator: string;
+}
 
 export interface GetContentsResponse {
   casts: Cast[];
-  stickered_roommates: string[];
-  stickered_neighbors: string[];
+  stickeredRoommates: string[];
+  stickeredNeighbors: string[];
 }
 
 interface NewRoommate {
-  new_roommate: User;
+  newRoommate: User;
   neighbors: User[];
 }
 
 export interface GetNewContentsResponse {
-  new_roommates: NewRoommate[];
-  casts_received: Cast[];
-  stickers_from: string[];
+  newRoommates: NewRoommate[];
+  castsReceived: Cast[];
+  stickersFrom: string[];
 }

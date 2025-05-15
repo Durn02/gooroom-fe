@@ -8,8 +8,7 @@ interface CastProps {
   duration: number;
 }
 
-
-export const createCast = async ({message, friends, duration}: CastProps) => {
+export const createCast = async ({ message, friends, duration }: CastProps) => {
   try {
     const response = await apiClient.post('/domain/content/cast/create', {
       friends: friends,

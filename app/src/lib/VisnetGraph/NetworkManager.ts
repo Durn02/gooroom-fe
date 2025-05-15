@@ -1,9 +1,9 @@
 // NetworkManager.ts ../lib/VisnetGraph/NetworkManager
 import { Network, Node, Edge, Position } from 'vis-network';
 import { DataSet } from 'vis-data';
-import { User, RoommateWithNeighbors } from '@/src/types/landingPage.type';
+import { User, RoommateWithNeighbors } from '@/src/types/DomainObject/landingPage.type';
 import { generateNodes, generateEdges } from './constructNetwork';
-import visnet_options from '@/src/assets/styles/visnetGraphOptions';
+import visnetOptions from '@/src/assets/styles/visnetGraphOptions';
 import {
   zoomIn,
   zoomOut,
@@ -16,7 +16,14 @@ import {
 import { getLoggedInUserPosition, getRoommatesPosition, getRoommatesByNeighborsPositions } from './getNodePosition';
 import { addRoommate } from './constructNetwork';
 
-type NetworkEvent = { event: string; data?: unknown };
+type NetworkEvent =
+  | { event: 'loggedInUserClicked'; data: { x: number; y: number } }
+  | { event: 'roommateNodeClicked'; data: { x: number; y: number; userId: string } }
+  | { event: 'neighborNodeClicked'; data: { x: number; y: number; userId: string } }
+  | { event: 'backgroundClicked'; data: null }
+  | { event: 'startObservation'; data: null }
+  | { event: 'finishObservation'; data: Record<string, { x: number; y: number }> }
+  | { event: 'doubleClick'; data: { nodeId: string } };
 
 export class NetworkManager {
   private network: Network;
@@ -40,13 +47,13 @@ export class NetworkManager {
     loggedInUser: User,
     neighborsData: User[],
     roommatesWithNeighbors: RoommateWithNeighbors[],
-    callbacks: { [key: string]: (node_id: string) => void },
+    callbacks: { [key: string]: (nodeId: string) => void },
   ) {
     this.loggedInUser = loggedInUser;
-    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.node_id, neighbor]));
+    this.neighborsData = new Map(neighborsData.map((neighbor) => [neighbor.nodeId, neighbor]));
     this.roommatesWithNeighbors = new Map(
       roommatesWithNeighbors.map((roommateWithNeighbors) => [
-        roommateWithNeighbors.roommate.node_id,
+        roommateWithNeighbors.roommate.nodeId,
         roommateWithNeighbors,
       ]),
     );
@@ -60,7 +67,7 @@ export class NetworkManager {
         nodes: this.nodesDataSet,
         edges: this.edgesDataSet,
       },
-      visnet_options,
+      visnetOptions,
     );
     this.network.fit({ animation: true });
 
@@ -89,7 +96,7 @@ export class NetworkManager {
       const { nodes: clickedNodes, pointer } = event;
       if (clickedNodes.length > 0) {
         const nodeId = clickedNodes[0];
-        if (nodeId === this.getLoggedInUser().node_id) {
+        if (nodeId === this.getLoggedInUser().nodeId) {
           this.observer?.({
             event: 'loggedInUserClicked',
             data: { x: pointer.DOM.x, y: pointer.DOM.y },
@@ -204,28 +211,28 @@ export class NetworkManager {
     return this.network;
   }
 
-  public getLoggedInUser() {
+  public getLoggedInUser(): User {
     return this.loggedInUser;
   }
 
-  public getNeighborsData() {
+  public getNeighborsData(): Map<string, User> {
     return this.neighborsData;
   }
   public getNeighborsBreifData() {
     return Array.from(this.neighborsData.values()).map((n) => ({
       nickname: n.nickname,
-      node_id: n.node_id,
+      nodeId: n.nodeId,
     }));
   }
 
-  public getRoommatesWithNeighbors() {
+  public getRoommatesWithNeighbors(): Map<string, RoommateWithNeighbors> {
     return this.roommatesWithNeighbors;
   }
 
-  public getRoommatesBreifData(): { nickname: string; node_id: string }[] {
+  public getRoommatesBreifData(): { nickname: string; nodeId: string }[] {
     return Array.from(this.roommatesWithNeighbors.values()).map((r) => ({
       nickname: r.roommate.nickname,
-      node_id: r.roommate.node_id,
+      nodeId: r.roommate.nodeId,
     }));
   }
 
@@ -233,11 +240,11 @@ export class NetworkManager {
     return this.nodesDataSet;
   }
 
-  public getEdgesDataSet() {
+  public getEdgesDataSet(): DataSet<Edge> {
     return this.edgesDataSet;
   }
 
-  public getAddRoommate() {
+  public getAddRoommate(): (newRoommate: User, newNeighbors: User[]) => void {
     return this.addRoommate;
   }
 

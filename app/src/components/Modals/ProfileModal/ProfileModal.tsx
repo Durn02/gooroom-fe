@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { API_URL } from '@/src/lib/config';
-import { UserInfo } from '@/src/types/profilePage.type';
+import { UserInfo } from '@/src/types/DomainObject/profilePage.type';
 import { userApi } from '@/src/lib/api';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -18,19 +17,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
   const [isVisible, setIsVisible] = useState(false);
   const [profileData, setProfileData] = useState<UserInfo>(
     myProfile || {
-      my_memo: '',
+      myMemo: '',
       nickname: '',
       username: '',
-      node_id: '',
+      nodeId: '',
       tags: [],
-      profile_image_url: null,
-      remove_profile_image: false,
+      profileImageUrl: null,
+      removeProfileImage: false,
       groups: [],
     },
   );
   const [newTags, setNewTags] = useState<string>('');
   const [previewImage, setPreviewImage] = useState<string>(
-    typeof myProfile?.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src,
+    typeof myProfile?.profileImageUrl === 'string' ? myProfile.profileImageUrl : userImage.src,
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeProfileImage, setRemoveProfileImage] = useState<boolean>(false);
@@ -62,14 +61,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       setProfileData({
         nickname: myProfile.nickname || '',
         username: myProfile.username || '',
-        my_memo: myProfile.my_memo || '',
-        node_id: myProfile.node_id || '',
+        myMemo: myProfile.myMemo || '',
+        nodeId: myProfile.nodeId || '',
         tags: myProfile.tags || [],
-        profile_image_url: myProfile.profile_image_url || null,
-        remove_profile_image: myProfile.remove_profile_image || false,
+        profileImageUrl: myProfile.profileImageUrl || null,
+        removeProfileImage: myProfile.removeProfileImage || false,
         groups: myProfile.groups || [],
       });
-      setPreviewImage(typeof myProfile.profile_image_url === 'string' ? myProfile.profile_image_url : userImage.src);
+      setPreviewImage(typeof myProfile.profileImageUrl === 'string' ? myProfile.profileImageUrl : userImage.src);
     }
   }, [myProfile]);
 
@@ -108,36 +107,25 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
     try {
       setLoading(true);
 
-      // Save logic here
       const formData = new FormData();
       formData.append('nickname', profileData.nickname);
       formData.append('username', profileData.username);
-      formData.append('my_memo', profileData.my_memo);
+      formData.append('my_memo', profileData.myMemo);
       formData.append('tags', JSON.stringify(profileData.tags));
+
       if (removeProfileImage) {
         formData.append('remove_profile_image', 'True');
       }
       if (imageFile) {
         formData.append('profile_image', imageFile);
       }
-      const response = await fetch(`${API_URL}/domain/user/my/info/change`, {
-        method: 'PUT',
-        credentials: 'include',
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error('Failed to save profile');
-      }
 
-      if (response.ok) {
-        await response.json();
-        const data = await userApi.fetchMyInfo();
-        setProfileData(data);
-        alert('프로필이 성공적으로 저장되었습니다.');
-        onClose();
-      } else {
-        console.error('Failed to update profile.');
-      }
+      await userApi.updateMyInfo(formData);
+
+      const data = await userApi.fetchMyInfo();
+      setProfileData(data);
+      alert('프로필이 성공적으로 저장되었습니다.');
+      onClose();
     } catch (error) {
       alert('프로필 저장 중 오류가 발생했습니다.');
       console.error('An error occurred while saving profile.', error);
@@ -145,7 +133,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       setLoading(false);
     }
   };
-
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (loading) return;
 
@@ -176,7 +163,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
             <div className="text-white text-lg mb-4">Loading...</div>
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
           </div>
         )}
 
@@ -250,7 +237,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
 
         <textarea
           name="my_memo"
-          value={profileData.my_memo}
+          value={profileData.myMemo}
           onChange={handleChange}
           className="w-full h-[6rem] px-4 py-3 border border-gray-300 rounded-lg resize-vertical mb-5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="메모를 입력하세요"

@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
 import ProfileModal from '@/src/components/Modals/ProfileModal/ProfileModal';
-import { UserInfo, Sticker, Post } from '@/src/types/profilePage.type';
+import { UserInfo, Sticker, Post } from '@/src/types/DomainObject/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import CreateStickerModal from '@/src/components/Modals/CreateStickerModal/CreateStickerModal';
@@ -14,6 +13,7 @@ import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
 import { getGroupsNameAndNumber, modifyMyGroups } from '@/src/lib/api/friend/friend.api';
+import { GroupsInfo } from '@/src/types/DomainObject/friend/group.type';
 
 export default function MyProfile() {
   const router = useRouter();
@@ -33,20 +33,20 @@ export default function MyProfile() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.name || '');
+  const [groups, setGroups] = useState<GroupsInfo[]>([{ groupName: '', memberCount: 0 }]);
+  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.groupName || '');
   const [newGroupName, setNewGroupName] = useState('');
 
   const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
-    if (groups.some((g) => g.name === newGroupName.trim())) {
+    if (groups.some((g) => g.groupName === newGroupName.trim())) {
       alert('이미 존재하는 그룹입니다.');
       return;
     }
     try {
-      await modifyMyGroups(groups.map((group) => group.name).concat(newGroupName.trim()));
+      await modifyMyGroups(groups.map((group) => group.groupName).concat(newGroupName.trim()));
       alert('그룹이 추가되었습니다.');
-      setGroups([...groups, { name: newGroupName.trim(), memberCount: 0 }]);
+      setGroups([...groups, { groupName: newGroupName.trim(), memberCount: 0 }]);
       setNewGroupName('');
     } catch (error) {
       console.error('그룹 추가 실패:', error);
@@ -58,22 +58,10 @@ export default function MyProfile() {
     userApi.fetchMyInfo().then(async (data) => {
       setUserInfo(data);
 
-      const groupsNameAndNumber = await getGroupsNameAndNumber();
-
-      if (groupsNameAndNumber) {
-        const validGroups = groupsNameAndNumber.group_members.filter((group) => group.name && group.name.trim() !== '');
-        if (validGroups.length > 0) {
-          setGroups(
-            validGroups.map((group) => ({
-              name: group.name,
-              memberCount: group.count || 0,
-            })),
-          );
-          setSelectedGroup(validGroups[0]?.name || '');
-        } else {
-          setGroups([]);
-          setSelectedGroup('');
-        }
+      const groups = await getGroupsNameAndNumber();
+      if(groups.length>0){
+        setGroups(groups);
+        setSelectedGroup(groups[0].groupName);
       } else {
         setGroups([]);
         setSelectedGroup('');
@@ -84,12 +72,12 @@ export default function MyProfile() {
     postApi.fetchPosts().then((data) => setPosts(data));
   }, []);
 
-  const handleStickerDoubleClick = (selected_sticker: Sticker) => {
-    setSelectedSticker(selected_sticker);
+  const handleStickerDoubleClick = (selectedSticker: Sticker) => {
+    setSelectedSticker(selectedSticker);
     setIsStickerModalOpen(true);
   };
-  const handlePostDoubleClick = (selected_post: Post) => {
-    setSelectedPost(selected_post);
+  const handlePostDoubleClick = (selectedPost: Post) => {
+    setSelectedPost(selectedPost);
     setIsPostModalOpen(true);
   };
 
@@ -103,15 +91,8 @@ export default function MyProfile() {
       return;
     }
 
-    const result = await fetch(`${API_URL}/domain/content/sticker/delete`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ sticker_node_id: sticker.sticker_node_id, sticker_image_urls: sticker.image_url }),
-    });
-    if (!result.ok) {
+    const result = stickerApi.deleteStickers(sticker.stickerNodeId, sticker.imageUrl);
+    if (!result) {
       alert('스티커 삭제에 실패했습니다.');
       return;
     } else {
@@ -127,16 +108,12 @@ export default function MyProfile() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/domain/content/post/delete-my-content`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ post_node_id: posts.post_node_id, post_image_urls: posts.image_url }),
+      const response = await postApi.deletePost({
+        postNodeId: posts.postNodeId,
+        postImageUrls: posts.imageUrl,
       });
       if (response.ok) {
-        setPosts((prevPosts) => prevPosts.filter((post) => post.post_node_id !== posts.post_node_id));
+        setPosts((prevPosts) => prevPosts.filter((post) => post.postNodeId !== posts.postNodeId));
         alert('게시글이 삭제되었습니다.');
       } else {
         alert('게시글 삭제에 실패했습니다.');
@@ -149,7 +126,6 @@ export default function MyProfile() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Home Button */}
       <button
         onClick={gohomeButtonHandler}
         className="fixed top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
@@ -173,7 +149,7 @@ export default function MyProfile() {
                   </button>
                 </div>
                 <Image
-                  src={typeof userInfo.profile_image_url === 'string' ? userInfo.profile_image_url : userImage}
+                  src={typeof userInfo.profileImageUrl === 'string' ? userInfo.profileImageUrl : userImage}
                   alt="User profile"
                   width={100}
                   height={100}
@@ -183,7 +159,7 @@ export default function MyProfile() {
 
                 <p className="text-gray-600 mb-2 font-bold">{userInfo.username}</p>
                 <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
-                  {userInfo.my_memo}
+                  {userInfo.myMemo}
                 </p>
                 {/* 그룹 관리 UI */}
                 <div className="mb-8">
@@ -199,8 +175,8 @@ export default function MyProfile() {
                         <option value="">새로운 그룹을 추가하세요</option>
                       ) : (
                         groups.map((group) => (
-                          <option key={group.name} value={group.name}>
-                            {group.name} ({group.memberCount}명)
+                          <option key={group.groupName} value={group.groupName}>
+                            {group.groupName} ({group.memberCount}명)
                           </option>
                         ))
                       )}
@@ -257,7 +233,7 @@ export default function MyProfile() {
             <div className="inline-flex space-x-4">
               {stickers.map((sticker) => (
                 <div
-                  key={sticker.sticker_node_id}
+                  key={sticker.stickerNodeId}
                   className="inline-block bg-white border rounded-lg p-4 w-64 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group"
                   onDoubleClick={() => {
                     handleStickerDoubleClick(sticker);
@@ -278,7 +254,7 @@ export default function MyProfile() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {sticker.image_url.slice(0, 1).map((url, index) => (
+                      {sticker.imageUrl.slice(0, 1).map((url, index) => (
                         <Image
                           key={index}
                           alt={`Sticker ${index + 1}`}
@@ -288,13 +264,13 @@ export default function MyProfile() {
                           height={100}
                         />
                       ))}
-                      {sticker.image_url.length > 1 && (
+                      {sticker.imageUrl.length > 1 && (
                         <div className="w-[50px] h-[50px] flex items-center justify-center bg-gray-200 rounded shadow">
-                          +{sticker.image_url.length - 1}
+                          +{sticker.imageUrl.length - 1}
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">{new Date(sticker.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500 mt-2">{new Date(sticker.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))}
@@ -317,7 +293,7 @@ export default function MyProfile() {
             {posts.map((post) => {
               return (
                 <div
-                  key={post.post_node_id}
+                  key={post.postNodeId}
                   className="bg-white border rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg group relative"
                   onDoubleClick={() => {
                     handlePostDoubleClick(post);
@@ -332,7 +308,7 @@ export default function MyProfile() {
                   <div className="p-6">
                     <h3 className="text-xl font-semibold mb-2 text-gray-800 pr-8">{post.title}</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {post.image_url.map((url, index) => (
+                      {post.imageUrl.map((url, index) => (
                         <Image
                           key={index}
                           src={url}
@@ -354,7 +330,7 @@ export default function MyProfile() {
                         : null}
                     </div>
                     <p className="text-sm text-gray-500">
-                      {new Date(post.created_at).toLocaleDateString('ko-KR', {
+                      {new Date(post.createdAt).toLocaleDateString('ko-KR', {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: true,
@@ -390,7 +366,7 @@ export default function MyProfile() {
             setIsCreateStickerModalOpen(false);
             stickerApi.fetchMyStickers().then((data) => setStickers(data));
           }}
-          userId={userInfo.node_id}
+          userId={userInfo.nodeId}
         />
       )}
       <PostModal
@@ -408,7 +384,7 @@ export default function MyProfile() {
             setIsCreatePostModalOpen(false);
             postApi.fetchPosts().then((data) => setPosts(data));
           }}
-          userId={userInfo.node_id}
+          userId={userInfo.nodeId}
         />
       )}
     </div>

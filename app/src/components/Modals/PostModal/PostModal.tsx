@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Post } from '@/src/types/profilePage.type';
+import { Post } from '@/src/types/DomainObject/profilePage.type';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -66,7 +66,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post: post }) =>
         <h2 className="text-2xl font-bold mb-4">Post Details</h2>
         <p className="text-lg mb-4">{post.content}</p>
         <div className="flex flex-wrap gap-2 mb-4">
-          {post.image_url.map((url, index) => (
+          {post.imageUrl.map((url, index) => (
             <Image
               key={index}
               src={url}
@@ -86,7 +86,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post: post }) =>
               ))
             : null}
         </div>
-        <p className="text-sm text-gray-500">Created at: {new Date(post.created_at).toLocaleString()}</p>
+        <p className="text-sm text-gray-500">Created at: {new Date(post.createdAt).toLocaleString()}</p>
       </div>
     </div>
   );

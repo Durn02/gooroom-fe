@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createCast } from '@/src/lib/api/cast.api';
 import Image from 'next/image';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  roommatesInfo: { nickname: string; node_id: string }[];
-  neighborsInfo: { nickname: string; node_id: string }[];
+  roommatesInfo: { nickname: string; nodeId: string }[];
+  neighborsInfo: { nickname: string; nodeId: string }[];
 }
 
 const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps) => {
@@ -16,7 +16,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const [friends, setFriends] = useState<{ nickname: string; node_id: string; selected: boolean }[]>([]);
+  const [friends, setFriends] = useState<{ nickname: string; nodeId: string; selected: boolean }[]>([]);
   const allSelected = friends.length > 0 && friends.every((f) => f.selected);
 
   const toggleAllSelection = () => {
@@ -58,7 +58,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
     setLoading(true);
     try {
       await createCast({
-        friends: friends.filter((f) => f.selected).map((f) => f.node_id),
+        friends: friends.filter((f) => f.selected).map((f) => f.nodeId),
         message: castMessage,
         duration,
       });
@@ -72,9 +72,9 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
     }
   };
 
-  const toggleFriend = (node_id: string) => {
+  const toggleFriend = (nodeId: string) => {
     setFriends(
-      friends.map((friend) => (friend.node_id === node_id ? { ...friend, selected: !friend.selected } : friend)),
+      friends.map((friend) => (friend.nodeId === nodeId ? { ...friend, selected: !friend.selected } : friend)),
     );
   };
 
@@ -98,7 +98,7 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 rounded-lg">
             <div className="text-white text-lg mb-4">Creating Cast...</div>
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
           </div>
         )}
 
@@ -148,8 +148,8 @@ const CastModal = ({ isOpen, onClose, roommatesInfo, neighborsInfo }: ModalProps
               {friends.map((friend) => (
                 <button
                   type="button"
-                  key={friend.node_id}
-                  onClick={() => toggleFriend(friend.node_id)}
+                  key={friend.nodeId}
+                  onClick={() => toggleFriend(friend.nodeId)}
                   className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 transition-colors ${
                     friend.selected
                       ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'

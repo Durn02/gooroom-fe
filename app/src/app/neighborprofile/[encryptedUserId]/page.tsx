@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import userImage from '@/src/assets/images/user.png';
-import { Sticker, Post, FriendInfo } from '@/src/types/profilePage.type';
+import { Sticker, Post, FriendInfo } from '@/src/types/DomainObject/profilePage.type';
 import StickerModal from '@/src/components/Modals/StickerModal/StickerModal';
 import PostModal from '@/src/components/Modals/PostModal/PostModal';
 import { useResizeSection } from '@/src/hooks/useResizeSection';
@@ -32,19 +32,19 @@ export default function RoommateProfile({ params }: Props) {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    friendApi.fetchFriendInfo(selectedUserId).then((data) => {
+    friendApi.fetchFriendInfo({ userNodeId: selectedUserId }).then((data) => {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);
     });
   }, [selectedUserId]);
 
-  const handleStickerDoubleClick = (selected_sticker: Sticker) => {
-    setSelectedSticker(selected_sticker);
+  const handleStickerDoubleClick = (selectedSticker: Sticker) => {
+    setSelectedSticker(selectedSticker);
     setIsStickerModalOpen(true);
   };
-  const handlePostDoubleClick = (selected_post: Post) => {
-    setSelectedPost(selected_post);
+  const handlePostDoubleClick = (selectedPost: Post) => {
+    setSelectedPost(selectedPost);
     setIsPostModalOpen(true);
   };
 
@@ -69,7 +69,7 @@ export default function RoommateProfile({ params }: Props) {
       >
         <div className="w-[120px] h-[120px] rounded-full overflow-hidden border-4 border-blue-100 shadow mb-4 bg-gray-100 flex items-center justify-center">
           <Image
-            src={friendInfo?.profile_image_url || userImage}
+            src={friendInfo?.profileImageUrl || userImage}
             alt="프로필"
             width={120}
             height={120}
@@ -113,22 +113,22 @@ export default function RoommateProfile({ params }: Props) {
           <div className="flex gap-4 overflow-x-auto pb-4">
             {stickers.map((sticker) => (
               <div
-                key={sticker.sticker_node_id}
+                key={sticker.stickerNodeId}
                 className="bg-white border rounded-lg p-4 w-64 shadow hover:shadow-lg transition cursor-pointer"
                 onDoubleClick={() => handleStickerDoubleClick(sticker)}
               >
                 <div className="font-semibold mb-2 text-gray-800 truncate">{sticker.content}</div>
                 <div className="flex gap-2 mb-2">
-                  {sticker.image_url.slice(0, 1).map((url, i) => (
+                  {sticker.imageUrl.slice(0, 1).map((url, i) => (
                     <Image key={i} src={url} alt="" className="rounded shadow" width={60} height={60} />
                   ))}
-                  {sticker.image_url.length > 1 && (
+                  {sticker.imageUrl.length > 1 && (
                     <span className="bg-gray-200 rounded px-2 py-1 text-xs text-gray-700">
-                      +{sticker.image_url.length - 1}
+                      +{sticker.imageUrl.length - 1}
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-400">{new Date(sticker.created_at).toLocaleDateString()}</div>
+                <div className="text-xs text-gray-400">{new Date(sticker.createdAt).toLocaleDateString()}</div>
               </div>
             ))}
           </div>
@@ -141,14 +141,14 @@ export default function RoommateProfile({ params }: Props) {
           <div className="space-y-6">
             {posts.map((post) => (
               <div
-                key={post.post_node_id}
+                key={post.postNodeId}
                 className="bg-white border rounded-lg shadow hover:shadow-lg transition cursor-pointer"
                 onDoubleClick={() => handlePostDoubleClick(post)}
               >
                 <div className="p-6">
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">{post.title}</h3>
                   <div className="flex flex-wrap gap-2 mb-4 max-w-full" style={{ overflowX: 'auto' }}>
-                    {post.image_url.map((url, i) => (
+                    {post.imageUrl.map((url, i) => (
                       <Image
                         key={i}
                         src={url}
@@ -168,7 +168,7 @@ export default function RoommateProfile({ params }: Props) {
                       </span>
                     ))}
                   </div>
-                  <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString('ko-KR')}</div>
+                  <div className="text-xs text-gray-400">{new Date(post.createdAt).toLocaleString('ko-KR')}</div>
                 </div>
               </div>
             ))}

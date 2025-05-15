@@ -1,14 +1,14 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { RoommateWithNeighbors } from '../types/landingPage.type';
+import { RoommateWithNeighbors } from '../types/DomainObject/landingPage.type';
 
 export const initDB = async (): Promise<IDBPDatabase> => {
   return openDB('gooroomidb', 1, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('roommates')) {
-        db.createObjectStore('roommates', { keyPath: 'node_id' });
+        db.createObjectStore('roommates', { keyPath: 'nodeId' });
       }
       if (!db.objectStoreNames.contains('neighbors')) {
-        db.createObjectStore('neighbors', { keyPath: 'node_id' });
+        db.createObjectStore('neighbors', { keyPath: 'nodeId' });
       }
     },
   });
@@ -36,7 +36,7 @@ export const saveRoommates = async (roommatesWithNeighbors: RoommateWithNeighbor
     const batch = roommatesWithNeighbors.slice(i, i + batchSize);
     const transformedBatch = batch.map((item) => ({
       ...item,
-      node_id: item.roommate?.node_id,
+      nodeId: item.roommate?.nodeId,
     }));
 
     console.log('transformedBatch : ', transformedBatch);
@@ -65,7 +65,7 @@ export const getAllRoommates = async () => {
   const allData = await store.getAll();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  return allData.map(({ node_id: _node_id, ...rest }) => rest);
+  return allData.map(({ nodeId: _nodeId, ...rest }) => rest);
 };
 
 export const deleteData = async (storeName: string, key: string) => {

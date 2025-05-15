@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/src/lib/api/axiosApiClient';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 import Image from 'next/image';
 import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
 
@@ -84,7 +84,7 @@ export default function ResetPassword() {
       {loading && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="flex flex-col items-center">
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
             <p className="text-white text-lg mt-4">잠시만 기다려주세요...</p>
           </div>
         </div>

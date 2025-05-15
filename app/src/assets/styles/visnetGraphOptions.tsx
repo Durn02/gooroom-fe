@@ -1,4 +1,4 @@
-const visnet_options = {
+const visnetOptions = {
   nodes: {
     shape: 'dot',
     size: 12,
@@ -35,4 +35,4 @@ const visnet_options = {
   },
 };
 
-export default visnet_options;
+export default visnetOptions;

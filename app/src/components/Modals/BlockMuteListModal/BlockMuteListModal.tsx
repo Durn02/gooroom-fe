@@ -1,8 +1,8 @@
 'use client';
-import { BlockMuteList } from '@/src/types/landingPage.type';
-import { unblockFriend, unmuteFriend } from '@/src/lib/api/friend/friend.api';
+import { BlockMuteList } from '@/src/types/DomainObject/landingPage.type';
 import React, { useEffect, useState, useCallback } from 'react';
 import { clearStore } from '@/src/utils/indexedDB';
+import { friendApi } from '@/src/lib/api';
 
 interface BlockMuteListModalProps {
   isOpen: boolean;
@@ -46,10 +46,10 @@ const BlockMuteListModal: React.FC<BlockMuteListModalProps> = ({ isOpen, onClose
     }
   };
 
-  const unblock_friend = async (userId: string) => {
+  const unblockFriend = async (edgeId: string) => {
     const select = window.confirm('차단을 해제하시겠습니까?');
     if (!select) return;
-    const data = await unblockFriend(userId);
+    const data = await friendApi.unblockFriend({ blockEdgeId: edgeId });
     if (!data) {
       console.error('Failed to unblock friend');
       alert('차단 해제를 실패했습니다');
@@ -60,10 +60,10 @@ const BlockMuteListModal: React.FC<BlockMuteListModalProps> = ({ isOpen, onClose
     }
   };
 
-  const unmute_friend = async (userId: string) => {
+  const unmuteFriend = async (edgeId: string) => {
     const select = window.confirm('음소거를 해제하시겠습니까?');
     if (!select) return;
-    const data = await unmuteFriend(userId);
+    const data = await friendApi.unmuteFriend({ muteEdgeId: edgeId });
     if (!data) {
       console.error('Failed to unmute friend');
       alert('음소거 해제를 실패했습니다');
@@ -101,9 +101,9 @@ const BlockMuteListModal: React.FC<BlockMuteListModalProps> = ({ isOpen, onClose
             <ul className="space-y-2">
               {blockMuteList.blockList.map((block, i) => (
                 <li key={i} className="flex items-center justify-between hover:bg-gray-100 p-2 rounded">
-                  <span>{block.user_nickname}</span>
+                  <span>{block.userNickname}</span>
                   <button
-                    onClick={() => unblock_friend(block.block_edge_id)}
+                    onClick={() => unblockFriend(block.blockEdgeId)}
                     className="text-blue-500 hover:text-blue-700"
                   >
                     Unblock
@@ -121,11 +121,8 @@ const BlockMuteListModal: React.FC<BlockMuteListModalProps> = ({ isOpen, onClose
             <ul className="space-y-2">
               {blockMuteList.muteList.map((mute, i) => (
                 <li key={i} className="flex items-center justify-between hover:bg-gray-100 p-2 rounded">
-                  <span>{mute.user_nickname}</span>
-                  <button
-                    onClick={() => unmute_friend(mute.mute_edge_id)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
+                  <span>{mute.userNickname}</span>
+                  <button onClick={() => unmuteFriend(mute.muteEdgeId)} className="text-blue-500 hover:text-blue-700">
                     Unmute
                   </button>
                 </li>

@@ -1,8 +1,14 @@
-import { API_URL } from '@/src/lib/config';
 import { useState, useEffect, useRef } from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
+import { friendApi } from '@/src/lib/api';
 
-export const EditBox = ({ currentMemo, setRoommateMemo, selectedUserId }) => {
+interface EditBoxProps {
+  currentMemo: string;
+  setRoommateMemo: (memo: string) => void;
+  selectedUserId: string;
+}
+
+export const EditBox = ({ currentMemo, setRoommateMemo, selectedUserId }: EditBoxProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newMemo, setNewMemo] = useState(currentMemo);
   const [isMemoChanged, setIsMemoChanged] = useState(false);
@@ -37,26 +43,15 @@ export const EditBox = ({ currentMemo, setRoommateMemo, selectedUserId }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/domain/friend/memo/modify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          user_node_id: selectedUserId,
-          new_memo: newMemo,
-        }),
+      await friendApi.modifyMemo({
+        userNodeId: selectedUserId,
+        newMemo: newMemo,
       });
-      if (response.ok) {
-        setRoommateMemo(newMemo);
-      } else {
-        throw new Error('Failed to save memo');
-      }
+      setRoommateMemo(newMemo);
     } catch (error) {
       console.error('Error saving memo:', error);
       setNewMemo(currentMemo);
-      alert('메모 저장에 실패했습니다. 다시 시도해주세요.');
+      alert('메모 저장 실패');
     }
   };
 

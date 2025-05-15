@@ -7,7 +7,7 @@ import { encrypt } from '../utils/crypto';
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import KnockListModal from '../components/Modals/KnockListModal/KnockListModal';
 import { getKnocks } from '../lib/api/knock.api';
-import { BlockMuteList, KnockEdge, User } from '../types/landingPage.type';
+import { BlockMuteList, KnockEdge, User } from '../types/DomainObject/landingPage.type';
 import BlockMuteListModal from '../components/Modals/BlockMuteListModal/BlockMuteListModal';
 import { getBlockMuteList } from '../lib/api/user.api';
 import CastUI from '../components/UI/CastUI';
@@ -40,6 +40,7 @@ export default function Landing() {
     const data = await getBlockMuteList();
     setBlockMuteList(data.blockMuteList);
     setIsBlockMuteListModalOpen(true);
+    console.log('blockMute : ', blockMuteList);
   };
 
   const handleCreateCast = () => {
@@ -70,7 +71,7 @@ export default function Landing() {
     if (selectedUserId === '') {
       return;
     }
-    if (selectedUserId === networkManager.getLoggedInUser().node_id) {
+    if (selectedUserId === networkManager.getLoggedInUser().nodeId) {
       router.push('/myprofile');
     } else if (
       networkManager
@@ -130,9 +131,10 @@ export default function Landing() {
 
           {!observing &&
             Object.keys(castData).length > 0 &&
-            Object.values(castData).map(({ userId, content }) => {
+            Object.entries(castData).map(([userId, { content }]) => {
               const position = networkManager?.getPosition(userId);
               if (!position) return null;
+
               return (
                 <CastUI
                   key={userId}

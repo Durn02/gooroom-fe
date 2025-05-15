@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { API_URL } from '@/src/lib/config';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Post } from '@/src/types/profilePage.type';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import { Post } from '@/src/types/DomainObject/profilePage.type';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
+import { postApi } from '@/src/lib/api';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
     title: '',
     content: '',
     tags: [],
-    image_url: [],
+    imageUrl: [],
   });
   const [tagInput, setTagInput] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -56,50 +56,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
         formData.append('images', file);
       });
 
-      const response = await fetch(`${API_URL}/domain/content/post/create`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
-      // const uploadedUrls = await Promise.all(
-      //   images.map(async (file, index) => {
-      //     try {
-      //       if (!userId) {
-      //         alert('로그인 시간이 만료되었습니다.');
-      //         router.push('/');
-      //         throw new Error('User not found');
-      //       }
-      //       return await uploadToS3(file, index, userId);
-      //     } catch (error) {
-      //       console.error('Error uploading to S3:', error);
-      //       throw new Error('Failed to upload image to S3');
-      //     }
-      //   }),
-      // );
-
-      // const submitData = {
-      //   content: postData.content,
-      //   image_url: uploadedUrls,
-      //   title: postData.title,
-      //   tags: postData.tags,
-      //   is_public: true,
-      // };
-      // console.log(submitData);
-      // const response = await fetch(`${API_URL}/domain/content/post/create`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   credentials: 'include',
-      //   body: JSON.stringify(submitData),
-      // });
-
-      if (!response.ok) {
-        throw new Error('Failed to create post');
-      }
+      await postApi.createPost(formData);
 
       alert('게시물이 작성되었습니다.');
-      setPostData({ title: '', content: '', tags: [], image_url: [] });
+      setPostData({ title: '', content: '', tags: [], imageUrl: [] });
       setImages([]);
       onClose();
     } catch (error) {
@@ -182,7 +142,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50">
             <div className="text-white text-lg mb-4">Loading...</div> {/* Added margin-bottom */}
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
           </div>
         )}
 

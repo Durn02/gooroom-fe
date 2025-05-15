@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Sticker } from '@/src/types/profilePage.type';
+import { Sticker } from '@/src/types/DomainObject/profilePage.type';
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -66,7 +66,7 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, sticker })
         <h2 className="text-2xl font-bold mb-4">Sticker Details</h2>
         <p className="text-lg mb-4">{sticker.content}</p>
         <div className="flex flex-wrap gap-2 mb-4">
-          {sticker.image_url.map((url, index) => (
+          {sticker.imageUrl.map((url, index) => (
             <Image
               key={index}
               src={url}
@@ -77,7 +77,7 @@ const StickerModal: React.FC<StickerModalProps> = ({ isOpen, onClose, sticker })
             />
           ))}
         </div>
-        <p className="text-sm text-gray-500">Created at: {new Date(sticker.created_at).toLocaleString()}</p>
+        <p className="text-sm text-gray-500">Created at: {new Date(sticker.createdAt).toLocaleString()}</p>
       </div>
     </div>
   );

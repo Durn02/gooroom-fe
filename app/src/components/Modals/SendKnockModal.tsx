@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import loading_circle from '@/src/assets/gif/loading_circle.gif';
+import loadingCircle from '@/src/assets/gif/loadingCircle.gif';
 
 interface SendKnockModalProps {
   isOpen: boolean;
@@ -57,7 +57,7 @@ const SendKnockModal: React.FC<SendKnockModalProps> = ({ isOpen, onClose, nodeId
       <div className="bg-white rounded-lg p-6 w-full max-w-sm relative">
         {loading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center rounded-lg">
-            <Image src={loading_circle} alt="Loading" width={50} height={50} />
+            <Image src={loadingCircle} alt="Loading" width={50} height={50} />
             <p className="text-white mt-2">처리 중...</p>
           </div>
         )}

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 import { logout } from '../sign';
+import { axiosResponseToCamel, toSnake } from '@/src/utils/camel-snake';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -10,8 +11,27 @@ const apiClient = axios.create({
 let refreshTokenPromise: Promise<void> | null = null;
 let isLoggingOut = false;
 
+apiClient.interceptors.request.use((config) => {
+  if (config.data && typeof config.data === 'object') {
+    config.data = toSnake(config.data);
+  }
+
+  if (config.params && typeof config.params === 'object') {
+    config.params = toSnake(config.params);
+  }
+
+  return config;
+});
+
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('response in interceptor : ', response);
+    if (response?.data) {
+      response = axiosResponseToCamel(response);
+      console.log('camelResponse in interceptor : ', response);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -46,9 +66,9 @@ apiClient.interceptors.response.use(
         isLoggingOut = true;
         logout();
       }
-    } else {
-      return Promise.reject(error);
     }
+
+    return Promise.reject(error);
   },
 );
 

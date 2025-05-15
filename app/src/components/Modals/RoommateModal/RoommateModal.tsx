@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './RoommateModal.module.css';
-import { API_URL } from '@/src/lib/config';
+import { friendApi } from '@/src/lib/api';
 
 interface RoommateModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNodeId: string | null; // 사용자의 노드 ID
 }
-
-const APIURL = API_URL;
 
 const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNodeId }) => {
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
@@ -29,30 +27,17 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
 
   const fetchRoommateData = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/friend/get-member`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_node_id: userNodeId }),
-        credentials: 'include',
-      });
+      const data = await friendApi.fetchFriendInfo({ userNodeId });
 
-      if (response.ok) {
-        const data = await response.json();
-        setRoommateData({
-          nickname: data.friend.nickname,
-          username: data.friend.username,
-          tags: data.friend.tags,
-          memo: data.roommate_edge.memo,
-        });
-      } else {
-        console.error('에러가 발생했습니다.');
-        setResponseMessage('Failed to load memo.');
-      }
+      setRoommateData({
+        nickname: data.friend.nickname,
+        username: data.friend.username,
+        tags: data.friend.tags,
+        memo: data.roommateEdge.memo,
+      });
     } catch (error) {
+      console.error('에러가 발생했습니다.', error);
       setResponseMessage('An error occurred while fetching memo.');
-      console.error(error);
     }
   };
 
@@ -62,27 +47,18 @@ const RoommateModal: React.FC<RoommateModalProps> = ({ isOpen, onClose, userNode
 
   const handleMemoSave = async () => {
     try {
-      const response = await fetch(`${APIURL}/domain/friend/memo/modify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_node_id: userNodeId, new_memo: roommateData.memo }),
-        credentials: 'include',
+      await friendApi.modifyMemo({
+        userNodeId: userNodeId,
+        newMemo: roommateData.memo,
       });
 
-      if (response.ok) {
-        await response.json();
-        setResponseMessage(`Memo updated: ${roommateData.memo}`);
-        alert('메모가 성공적으로 저장되었습니다.');
-        fetchRoommateData();
-      } else {
-        alert('메모 저장에 실패했습니다.');
-        setResponseMessage('Failed to update memo.');
-      }
+      setResponseMessage(`Memo updated: ${roommateData.memo}`);
+      alert('메모가 성공적으로 저장되었습니다.');
+      fetchRoommateData();
     } catch (error) {
+      console.error('메모 저장 중 오류:', error);
+      alert('메모 저장에 실패했습니다.');
       setResponseMessage('An error occurred while saving memo.');
-      console.error(error);
     }
   };
 

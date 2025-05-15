@@ -1,11 +1,18 @@
-import { API_URL } from '../../config';
+import { toDomainGroups } from '@/src/types/DomainObject/friend/group.type';
 import apiClient from '../axiosApiClient';
+import {
+  MemoModifyRequest,
+  GetUserRequest,
+  BlockRequest,
+  MuteRequest,
+  UnblockRequest,
+  UnmuteRequest,
+} from '@/src/types/request/friend';
+import { GetGroupsNameAndNumberResponse } from '@/src/types/response/friend';
 
-export const fetchFriendInfo = async (userNodeId: string) => {
+export const fetchFriendInfo = async (payload: GetUserRequest) => {
   try {
-    const { data } = await apiClient.post('/domain/friend/get-member', {
-      user_node_id: userNodeId,
-    });
+    const { data } = await apiClient.post('/domain/friend/get-member', payload);
     return data;
   } catch (error) {
     console.error('사용자 정보를 불러오는데 실패했습니다.', error);
@@ -14,12 +21,13 @@ export const fetchFriendInfo = async (userNodeId: string) => {
   }
 };
 
-export const blockFreind = async (userNodeId: string) => {
+export const blockFreind = async (payload: BlockRequest) => {
   try {
-    const response = await apiClient.post('/domain/block/add_member', {
-      user_node_id: userNodeId,
-    });
+    const response = await apiClient.post('/domain/block/add_member', payload);
     if (response.status === 200) {
+      console.log('blockFriend response : ', response);
+      console.log('blockFriend response.data: ', response.data);
+
       alert('사용자를 차단했습니다.');
       return response.data;
     }
@@ -29,10 +37,10 @@ export const blockFreind = async (userNodeId: string) => {
   }
 };
 
-export const unblockFriend = async (blockEdgeId: string) => {
+export const unblockFriend = async (payload: UnblockRequest) => {
   try {
     const response = await apiClient.delete('/domain/block/pop-members', {
-      data: { block_edge_id: blockEdgeId },
+      data: payload,
     });
     if (response.status === 200) {
       return response.data;
@@ -43,11 +51,9 @@ export const unblockFriend = async (blockEdgeId: string) => {
   }
 };
 
-export const muteFreind = async (userNodeId: string) => {
+export const muteFreind = async (payload: MuteRequest) => {
   try {
-    const response = await apiClient.post('/domain/mute/add_member', {
-      user_node_id: userNodeId,
-    });
+    const response = await apiClient.post('/domain/mute/add_member', payload);
     if (response.status === 200) {
       if (response.data?.message === 'muted successfully') {
         alert('사용자를 음소거했습니다.');
@@ -62,10 +68,10 @@ export const muteFreind = async (userNodeId: string) => {
   }
 };
 
-export const unmuteFriend = async (muteEdgeId: string) => {
+export const unmuteFriend = async (payload: UnmuteRequest) => {
   try {
     const response = await apiClient.delete('/domain/mute/pop-members', {
-      data: { mute_edge_id: muteEdgeId },
+      data: payload,
     });
     if (response.status === 200) {
       return response.data;
@@ -76,10 +82,20 @@ export const unmuteFriend = async (muteEdgeId: string) => {
   }
 };
 
+export const modifyMemo = async (payload: MemoModifyRequest) => {
+  try {
+    const { data } = await apiClient.post('/domain/friend/memo/modify', payload);
+    return data;
+  } catch (error) {
+    console.error('메모 수정에 실패했습니다.', error);
+  }
+};
+
 export const getGroupsNameAndNumber = async () => {
   try {
-    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-groups-name-and-number`);
-    return data;
+    const response = await apiClient.get(`/domain/friend/group/get-groups-name-and-number`);
+    const data: GetGroupsNameAndNumberResponse = response?.data;
+    return toDomainGroups(data);
   } catch (error) {
     console.error('그룹 멤버 수를 불러오는데 실패했습니다.', error);
     throw error;
@@ -88,7 +104,7 @@ export const getGroupsNameAndNumber = async () => {
 
 export const modifyMyGroups = async (groups) => {
   try {
-    const { data } = await apiClient.put(`${API_URL}/domain/user/my/groups/change`, {
+    const { data } = await apiClient.put(`/domain/user/my/groups/change`, {
       groups,
     });
     return data;
