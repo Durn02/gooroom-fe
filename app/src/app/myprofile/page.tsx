@@ -12,6 +12,7 @@ import CreatePostModal from '@/src/components/Modals/CreatePostModal/CreatePostM
 import { useResizeSection } from '@/src/hooks/useResizeSection';
 import { userApi, postApi, stickerApi } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
+import { getGroupsNameAndNumber, modifyMyGroups } from '@/src/lib/api/friend/friend.api';
 
 export default function MyProfile() {
   const router = useRouter();
@@ -31,9 +32,53 @@ export default function MyProfile() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.name || '');
+  const [newGroupName, setNewGroupName] = useState('');
+
+  const handleAddGroup = async () => {
+    if (!newGroupName.trim()) return;
+    if (groups.some((g) => g.name === newGroupName.trim())) {
+      alert('이미 존재하는 그룹입니다.');
+      return;
+    }
+    try {
+      await modifyMyGroups(groups.map((group) => group.name).concat(newGroupName.trim()));
+      alert('그룹이 추가되었습니다.');
+      setGroups([...groups, { name: newGroupName.trim(), memberCount: 0 }]);
+      setNewGroupName('');
+    } catch (error) {
+      console.error('그룹 추가 실패:', error);
+      alert('그룹 추가에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
-    userApi.fetchMyInfo().then((data) => setUserInfo(data));
+    userApi.fetchMyInfo().then(async (data) => {
+      setUserInfo(data);
+
+      const groupsNameAndNumber = await getGroupsNameAndNumber();
+
+      if (groupsNameAndNumber) {
+        const validGroups = groupsNameAndNumber.group_members.filter((group) => group.name && group.name.trim() !== '');
+        if (validGroups.length > 0) {
+          setGroups(
+            validGroups.map((group) => ({
+              name: group.name,
+              memberCount: group.count || 0,
+            })),
+          );
+          setSelectedGroup(validGroups[0]?.name || '');
+        } else {
+          setGroups([]);
+          setSelectedGroup('');
+        }
+      } else {
+        setGroups([]);
+        setSelectedGroup('');
+      }
+    });
+
     stickerApi.fetchMyStickers().then((data) => setStickers(data));
     postApi.fetchPosts().then((data) => setPosts(data));
   }, []);
@@ -127,10 +172,48 @@ export default function MyProfile() {
                 <p className="mb-4 text-gray-700 whitespace-pre-wrap border border-gray-400 rounded p-4">
                   {userInfo.myMemo}
                 </p>
+                {/* 그룹 관리 UI */}
+                <div className="mb-8">
+                  <label className="block text-lg font-semibold mb-2 text-gray-800">나의 그룹</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    {/* Select 컴포넌트 */}
+                    <select
+                      className="border border-gray-300 rounded px-3 py-2 flex-1 text-gray-800"
+                      value={selectedGroup}
+                      onChange={(e) => setSelectedGroup(e.target.value)}
+                    >
+                      {groups.length === 0 ? (
+                        <option value="">새로운 그룹을 추가하세요</option>
+                      ) : (
+                        groups.map((group) => (
+                          <option key={group.name} value={group.name}>
+                            {group.name} ({group.memberCount}명)
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      className="border border-gray-300 rounded px-3 py-2 flex-1 text-gray-800"
+                      type="text"
+                      placeholder="새 그룹 이름"
+                      value={newGroupName}
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                    />
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition"
+                      onClick={handleAddGroup}
+                    >
+                      추가
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   {userInfo.tags.map((tag, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">
-                      {tag}
+                      #{tag}
                     </span>
                   ))}
                 </div>

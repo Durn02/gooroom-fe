@@ -6,6 +6,7 @@ export interface UserInfo {
   tags: string[];
   removeProfileImage: boolean;
   profileImageUrl: File;
+  groups: string[];
 }
 
 export interface FriendInfo {

@@ -24,6 +24,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       tags: [],
       profileImageUrl: null,
       removeProfileImage: false,
+      groups: [],
     },
   );
   const [newTags, setNewTags] = useState<string>('');
@@ -65,6 +66,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
         tags: myProfile.tags || [],
         profileImageUrl: myProfile.profileImageUrl || null,
         removeProfileImage: myProfile.removeProfileImage || false,
+        groups: myProfile.groups || [],
       });
       setPreviewImage(typeof myProfile.profileImageUrl === 'string' ? myProfile.profileImageUrl : userImage.src);
     }

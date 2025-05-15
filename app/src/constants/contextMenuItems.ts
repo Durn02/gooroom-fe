@@ -1,10 +1,11 @@
 // constants/contextMenuItems.ts
-import { userApi } from '../lib/api';
+import { authApi, userApi } from '../lib/api';
 import { blockFreind, muteFreind } from '../lib/api/friend/friend.api';
 import { sendKnock } from '../lib/api/knock.api';
 import { encrypt } from '../utils/crypto';
 import { clearStore } from '../utils/indexedDB';
 import { createKnockLink } from '../lib/api/knock.api';
+import { logout } from '../lib/sign';
 
 const viewMyProfile = () => {
   window.location.href = '/myprofile';
@@ -21,19 +22,19 @@ const viewNeighborProfile = (nodeId: string, router) => {
 };
 
 const blockFriendFunc = (nodeId: string) => {
-  blockFreind(nodeId);
+  blockFreind({ userNodeId: nodeId });
   Promise.all([clearStore('roommates'), clearStore('neighbors')]);
   window.location.reload();
 };
 
 const muteFriendFunc = (nodeId: string) => {
-  muteFreind(nodeId);
+  muteFreind({ userNodeId: nodeId });
 };
 
-const sendKnockFunc = async (nodeId: string) => {
+const sendKnockFunc = async (nodeId: string, selectedGroup: string) => {
   alert('send knock to ' + nodeId);
   try {
-    const data = await sendKnock(nodeId);
+    const data = await sendKnock(nodeId, selectedGroup);
     if (data.message === 'send knock successfully') {
       alert('노크를 성공적으로 보냈습니다.');
     } else if (data.message === 'knock already sent') {
@@ -61,7 +62,21 @@ const createKnockLinkFunc = async () => {
   } catch (error) {
     console.error(error);
   }
-}
+};
+
+const onLogoutButtonClickHandler = async () => {
+  const isLogout = window.confirm('로그아웃을 진행하시겠습니까?');
+  if (!isLogout) return;
+
+  try {
+    const data = await authApi.RequestLogout();
+    if (data.message === 'logout success') {
+      logout();
+    }
+  } catch {
+    alert('로그아웃 중 문제가 발생했습니다.');
+  }
+};
 
 export const MY_NODE_MENU_ITEMS = [
   ['view my profile', viewMyProfile],
@@ -80,7 +95,7 @@ export const ROOMMATE_NODE_MENU_ITEMS = [
 
 export const NEIGHBOR_NODE_MENU_ITEMS = [
   ['view neighbor profile', viewNeighborProfile],
-  ['send knock', sendKnockFunc],
+  // ['send knock', sendKnockFunc],
   ['block', blockFriendFunc],
   ['mute', muteFriendFunc],
 ];

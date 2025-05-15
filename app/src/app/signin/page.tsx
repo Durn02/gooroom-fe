@@ -4,121 +4,88 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
-import { API_URL } from '@/src/lib/config';
 import { useRouter } from 'next/navigation';
-import { userApi } from '@/src/lib/api';
-
-type signinRequestData = {
-  email: string;
-  password: string;
-};
-type VerifyCodeRequestData = {
-  verifycode: string;
-  email: string;
-};
-type VerifyRequestData = {
-  email: string;
-};
-const APIURL = API_URL;
+import { userApi, authApi } from '@/src/lib/api';
+import { SigninRequest, VerifyCodeRequest, SendVerificationCodeRequest } from '@/src/types/request/auth.type';
 
 export default function Signin() {
   const [emailVerification, setEmailVerification] = useState(false);
   const [userEmailInput, setUserEmailInput] = useState('');
   const [userPwInput, setUserPwInput] = useState('');
   const [userVerifyInput, setUserVerifyCodeInput] = useState('');
-  const [isTransitioning, setIsTransitioning] = useState(false); // 애니메이션 상태 추가
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
 
   const handleBackNavigation = () => {
-    setIsTransitioning(true); // 페이드아웃 시작
+    setIsTransitioning(true);
     setTimeout(() => {
-      router.push('/main'); // 페이지 이동
-    }, 300); // 애니메이션 지속 시간 (300ms)
+      router.push('/main');
+    }, 300);
   };
 
-  const onSignInButtonClickHandler = () => {
-    const signinRequestData: signinRequestData = {
+  const onSignInButtonClickHandler = async () => {
+    const signinRequestData: SigninRequest = {
       email: userEmailInput,
       password: userPwInput,
     };
 
     if (!userEmailInput) {
       alert('이메일을 입력해주세요');
-    } else if (!userPwInput) {
+      return;
+    }
+
+    if (!userPwInput) {
       alert('비밀번호를 입력해주세요');
-    } else {
-      try {
-        fetch(`${APIURL}/domain/auth/signin`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(signinRequestData),
-          credentials: 'include',
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            console.log('data in login : ', data);
-            if (data.detail === 'not registered email') {
-              alert('가입되지 않은 이메일입니다');
-            } else if (data.detail === 'not verified email') {
-              alert('이메일 인증을 해주세요');
-              setEmailVerification(true);
-            } else if (data.detail === 'inconsistent password') {
-              alert('비밀번호가 일치하지 않습니다');
-            } else {
-              alert('로그인 성공');
-              router.push('/');
-            }
-          });
-      } catch (e) {
-        alert(e);
+      return;
+    }
+
+    try {
+      const data = await authApi.signin(signinRequestData);
+
+      if (data.detail === 'not registered email') {
+        alert('가입되지 않은 이메일입니다');
+      } else if (data.detail === 'not verified email') {
+        alert('이메일 인증을 해주세요');
+        setEmailVerification(true);
+      } else if (data.detail === 'inconsistent password') {
+        alert('비밀번호가 일치하지 않습니다');
+      } else {
+        alert('로그인 성공');
+        router.push('/');
       }
+    } catch (error) {
+      console.error('로그인 요청 중 오류 발생:', error);
+      alert('로그인 중 오류가 발생했습니다.');
     }
   };
 
   const onVerifyButtonClickHandler = async () => {
-    const verifyCodeRequest: VerifyCodeRequestData = {
-      verifycode: userVerifyInput,
+    const verifyCodeRequest: VerifyCodeRequest = {
+      verificationCode: userVerifyInput,
       email: userEmailInput,
     };
 
     try {
-      const response = await fetch(`${APIURL}/domain/auth/verify-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(verifyCodeRequest),
-      });
-      if (response.ok) {
-        alert('Verify successful');
-        router.push('/');
-      } else {
-        alert(`Verify failed: ${response.statusText}`);
-      }
+      await authApi.verifySMTPCode(verifyCodeRequest);
+      alert('Verify successful');
+      router.push('/');
     } catch (error) {
       if (error instanceof Error) {
         alert(`Verify failed: ${error.message}`);
+      } else {
+        alert('Verify failed: Unknown error occurred.');
       }
     }
   };
 
   const onResendVerifyButtonClickHandler = async () => {
-    const verifyRequest: VerifyRequestData = {
+    const verifyRequest: SendVerificationCodeRequest = {
       email: userEmailInput,
     };
+
     try {
-      const verifyResponse = await fetch(`${APIURL}/domain/auth/send-verification-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(verifyRequest),
-      });
-      if (!verifyResponse.ok) {
-        throw new Error('server no response');
-      }
+      await authApi.sendVerificationCode(verifyRequest);
+      alert('인증코드가 재전송되었습니다.');
     } catch (error) {
       if (error instanceof Error) {
         alert(`Verify failed: ${error.message}`);
@@ -199,13 +166,13 @@ export default function Signin() {
                 onClick={onResendVerifyButtonClickHandler}
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors w-1/2"
               >
-                Resend Code
+                코드 재전송
               </button>
               <button
                 onClick={onVerifyButtonClickHandler}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors w-1/2"
               >
-                Verify
+                확인
               </button>
             </div>
           </>

@@ -1,3 +1,4 @@
+import { API_URL } from '../../config';
 import apiClient from '../axiosApiClient';
 import {
   MemoModifyRequest,
@@ -83,6 +84,27 @@ export const modifyMemo = async (payload: MemoModifyRequest) => {
     return data;
   } catch (error) {
     console.error('메모 수정에 실패했습니다.', error);
+  }
+};
+
+export const getGroupsNameAndNumber = async () => {
+  try {
+    const { data } = await apiClient.get(`${API_URL}/domain/friend/group/get-groups-name-and-number`);
+    return data;
+  } catch (error) {
+    console.error('그룹 멤버 수를 불러오는데 실패했습니다.', error);
+    throw error;
+  }
+};
+
+export const modifyMyGroups = async (groups) => {
+  try {
+    const { data } = await apiClient.put(`${API_URL}/domain/user/my/groups/change`, {
+      groups,
+    });
+    return data;
+  } catch (error) {
+    console.error('그룹에 사용자를 추가하는데 실패했습니다.', error);
     throw error;
   }
 };

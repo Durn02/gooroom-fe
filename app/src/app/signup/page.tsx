@@ -6,13 +6,12 @@ import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
 import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
 import { authApi } from '@/src/lib/api';
-import { SignupRequestData,SendVerificationCodeRequestData } from '@/src/types/request/auth.type';
-
+import { SignupRequest, SendVerificationCodeRequest, VerifyCodeRequest } from '@/src/types/request/auth.type';
 
 export default function Signup() {
   const [userEmailInput, setEmailInput] = useState<string>('');
   const [userPwInput, setUserPwInput] = useState<string>('');
-  const [userConcernInput, setUserConcernInput] = useState<string>('');
+  const [userTagsInput, setUserTagsInput] = useState<string>('');
   const [userNicknameInput, setUserNicknameInput] = useState<string>('');
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [userVerificationCodeInput, setUserVerificationCodeInput] = useState<string>('');
@@ -29,55 +28,54 @@ export default function Signup() {
   };
 
   const onSignupClickHandler = async () => {
-  const signupRequestData: SignupRequestData = {
-    email: userEmailInput,
-    password: userPwInput,
-    concern: userConcernInput.split(',').map((item) => item.trim()),
-    nickname: userNicknameInput,
-    username: usernameInput,
-  };
+    const signupRequestData: SignupRequest = {
+      email: userEmailInput,
+      password: userPwInput,
+      tags: userTagsInput.split(',').map((item) => item.trim()),
+      nickname: userNicknameInput,
+      username: usernameInput,
+    };
 
-  // const verificationCodeRequest: VerificationCodeRequestData = {
-  //   email: userEmailInput,
-  // };
-
-  if (!userEmailInput) {
-    alert('이메일을 입력해주세요');
-    return;
-  }
-  if (!userPwInput) {
-    alert('비밀번호를 입력해주세요');
-    return;
-  }
-  if (!userNicknameInput) {
-    alert('닉네임을 입력해주세요');
-    return;
-  }
-  if (!usernameInput) {
-    alert('사용자 이름을 입력해주세요');
-    return;
-  }
-
-  try {
-    await authApi.signup(signupRequestData);
-    alert('인증코드가 이메일로 전송되었습니다.');
-    setShowVerifyInputBox(true);
+    if (!userEmailInput) {
+      alert('이메일을 입력해주세요');
+      return;
+    }
+    if (!userPwInput) {
+      alert('비밀번호를 입력해주세요');
+      return;
+    }
+    if (!userNicknameInput) {
+      alert('닉네임을 입력해주세요');
+      return;
+    }
+    if (!usernameInput) {
+      alert('사용자 이름을 입력해주세요');
+      return;
+    }
 
     try {
-      await authApi.sendVerificationCode({verifycode: userVerificationCodeInput,email:userEmailInput});
+      await authApi.signup(signupRequestData);
+      alert('인증코드가 이메일로 전송되었습니다.');
+      setShowVerifyInputBox(true);
+
+      try {
+        const sendVerificationCodeRequest: SendVerificationCodeRequest = {
+          email: userEmailInput,
+        };
+        await authApi.sendVerificationCode(sendVerificationCodeRequest);
+      } catch (error) {
+        console.error('인증코드 전송 실패:', error);
+        alert('인증코드 전송 중 문제가 발생했습니다.');
+      }
     } catch (error) {
-      console.error('인증코드 전송 실패:', error);
-      alert('인증코드 전송 중 문제가 발생했습니다.');
+      console.error('회원가입 실패:', error);
+      alert('회원가입 실패: 서버 오류가 발생했습니다.');
     }
-  } catch (error) {
-    console.error('회원가입 실패:', error);
-    alert('회원가입 실패: 서버 오류가 발생했습니다.');
-  }
-};
+  };
 
   const onVerifyClickHandler = async () => {
-    const sendVerificationCodeRequest: SendVerificationCodeRequestData = {
-      verifycode: userVerificationCodeInput,
+    const sendVerificationCodeRequest: VerifyCodeRequest = {
+      verificationCode: userVerificationCodeInput,
       email: userEmailInput,
     };
 
@@ -150,13 +148,13 @@ export default function Signup() {
           <PwInput placeholder="Enter your password" value={userPwInput} onChange={(e) => setUserPwInput(e)} />
         </div>
 
-        {/* Concern Input */}
+        {/* Tag Input */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-semibold mb-1">Concerns</label>
+          <label className="block text-gray-700 font-semibold mb-1">Tags</label>
           <Input
-            placeholder="Enter your concerns (comma-separated)"
-            value={userConcernInput}
-            onChange={(e) => setUserConcernInput(e)}
+            placeholder="Enter your tags (comma-separated)"
+            value={userTagsInput}
+            onChange={(e) => setUserTagsInput(e)}
           />
         </div>
 

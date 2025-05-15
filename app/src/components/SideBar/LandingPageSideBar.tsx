@@ -108,6 +108,22 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({
     }
   };
 
+  const onSignoutButtonClickHandler = async () => {
+    const isSignout = window.confirm('정말 회원탈퇴를 진행하시겠습니까?');
+    if (!isSignout) return;
+    alert('회원탈퇴를 진행합니다!');
+    try {
+      const { data } = await apiClient.post('/domain/auth/signout');
+      if (data.message === 'signout success') {
+        alert('회원탈퇴가 완료되었습니다.');
+        logout();
+      }
+    } catch (error) {
+      console.error('회원탈퇴 중 오류 발생:', error);
+      alert('회원탈퇴 중 문제가 발생했습니다.');
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -207,7 +223,7 @@ export const LandingPageSideBar: React.FC<LandingPageSideBarProps> = ({
       </div>
       <DefaultButton
         placeholder="Sign Out"
-        onClick={() => userApi.onSignoutButtonClickHandler()}
+        onClick={() => onSignoutButtonClickHandler()}
         className="bg-red-500 hover:bg-red-600 text-gray-500 w-full py-2 rounded-lg"
       />
 
