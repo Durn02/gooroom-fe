@@ -5,24 +5,9 @@ import { useRouter } from 'next/navigation';
 import Input from '@/src/components/Input/DefaultInput';
 import PwInput from '@/src/components/Input/PwInput/PwInput';
 import VerifyInput from '@/src/components/Input/VerifyInput/VerifyInput';
-import { API_URL } from '@/src/lib/config';
+import { authApi } from '@/src/lib/api';
+import { SignupRequestData,SendVerificationCodeRequestData } from '@/src/types/request/auth.type';
 
-type SignupRequestData = {
-  email: string;
-  password: string;
-  concern: string[];
-  nickname: string;
-  username: string;
-};
-type VerificationCodeRequestData = {
-  email: string;
-};
-type SendVerificationCodeRequestData = {
-  verifycode: string;
-  email: string;
-};
-
-const APIURL = API_URL;
 
 export default function Signup() {
   const [userEmailInput, setEmailInput] = useState<string>('');
@@ -44,67 +29,51 @@ export default function Signup() {
   };
 
   const onSignupClickHandler = async () => {
-    const signupRequestData: SignupRequestData = {
-      email: userEmailInput,
-      password: userPwInput,
-      concern: userConcernInput.split(',').map((item) => item.trim()),
-      nickname: userNicknameInput,
-      username: usernameInput,
-    };
-    const verificationCodeRequest: VerificationCodeRequestData = {
-      email: userEmailInput,
-    };
-    if (userEmailInput === '') {
-      alert('이메일을 입력해주세요');
-    } else if (userPwInput === '') {
-      alert('비밀번호를 입력해주세요');
-    } else if (userNicknameInput === '') {
-      alert('닉네임을 입력해주세요');
-    } else if (usernameInput === '') {
-      alert('사용자 이름을 입력해주세요');
-    } else {
-      try {
-        const signupResponse = await fetch(`${APIURL}/domain/auth/signup`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(signupRequestData),
-        });
-
-        if (signupResponse.ok) {
-          setShowVerifyInputBox(true);
-          alert('인증코드가 이메일로 전송되었습니다.');
-          try {
-            const verifyResponse = await fetch(`${APIURL}/domain/auth/send-verification-code`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(verificationCodeRequest),
-            });
-            if (!verifyResponse.ok) {
-              throw new Error('server no response');
-            }
-          } catch (error) {
-            if (error instanceof Error) {
-              alert(`Verify failed: ${error.message}`);
-            } else {
-              alert('Verify failed: unknown error occurred.');
-            }
-          }
-        } else {
-          alert('회원가입 실패');
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          alert(`Signup failed: ${error.message}`);
-        } else {
-          alert('Signup failed: unknown error occurred.');
-        }
-      }
-    }
+  const signupRequestData: SignupRequestData = {
+    email: userEmailInput,
+    password: userPwInput,
+    concern: userConcernInput.split(',').map((item) => item.trim()),
+    nickname: userNicknameInput,
+    username: usernameInput,
   };
+
+  // const verificationCodeRequest: VerificationCodeRequestData = {
+  //   email: userEmailInput,
+  // };
+
+  if (!userEmailInput) {
+    alert('이메일을 입력해주세요');
+    return;
+  }
+  if (!userPwInput) {
+    alert('비밀번호를 입력해주세요');
+    return;
+  }
+  if (!userNicknameInput) {
+    alert('닉네임을 입력해주세요');
+    return;
+  }
+  if (!usernameInput) {
+    alert('사용자 이름을 입력해주세요');
+    return;
+  }
+
+  try {
+    await authApi.signup(signupRequestData);
+    alert('인증코드가 이메일로 전송되었습니다.');
+    setShowVerifyInputBox(true);
+
+    try {
+      await authApi.sendVerificationCode({verifycode: userVerificationCodeInput,email:userEmailInput});
+    } catch (error) {
+      console.error('인증코드 전송 실패:', error);
+      alert('인증코드 전송 중 문제가 발생했습니다.');
+    }
+  } catch (error) {
+    console.error('회원가입 실패:', error);
+    alert('회원가입 실패: 서버 오류가 발생했습니다.');
+  }
+};
 
   const onVerifyClickHandler = async () => {
     const sendVerificationCodeRequest: SendVerificationCodeRequestData = {
@@ -113,19 +82,9 @@ export default function Signup() {
     };
 
     try {
-      const response = await fetch(`${APIURL}/domain/auth/verify-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sendVerificationCodeRequest),
-      });
-      if (response.ok) {
-        alert('회원가입에 성공했습니다.');
-        router.push('/');
-      } else {
-        alert(`Verify failed: ${response.statusText}`);
-      }
+      await authApi.sendVerificationCode(sendVerificationCodeRequest);
+      alert('회원가입에 성공했습니다.');
+      router.push('/');
     } catch (error) {
       if (error instanceof Error) {
         alert(`Verify failed: ${error.message}`);
@@ -136,25 +95,15 @@ export default function Signup() {
   useEffect(() => {
     const checkLogin = async () => {
       try {
-        const response = await fetch(`${APIURL}/domain/auth/verify-access-token`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.message === 'access token validation check successfull') {
-            alert('이미 로그인 되어있습니다.');
-            router.push('/');
-          }
+        const data = await authApi.verifyAccessToken();
+        if (data.message === 'access token validation check successfull') {
+          router.push('/');
         }
       } catch (error) {
-        alert(error);
+        console.error(error);
       }
     };
+
     checkLogin();
   }, [router]);
 

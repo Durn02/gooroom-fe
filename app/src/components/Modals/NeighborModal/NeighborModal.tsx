@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import styles from './NeighborModal.module.css';
-import { API_URL } from '@/src/lib/config';
+import { friendApi } from '@/src/lib/api';
 
 interface NeighborModalProps {
   isOpen: boolean;
@@ -25,29 +25,16 @@ const NeighborModal: React.FC<NeighborModalProps> = ({ isOpen, onClose, userNode
 
   const fetchNeighborData = async () => {
     try {
-      const response = await fetch(`${API_URL}/domain/friend/get-member`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_node_id: userNodeId }),
-        credentials: 'include',
-      });
+      const data = await friendApi.fetchFriendInfo({ userNodeId });
 
-      if (response.ok) {
-        const data = await response.json();
-        setNeighborData({
-          nickname: data.friend.nickname,
-          username: data.friend.username,
-          tags: data.friend.tags,
-        });
-      } else {
-        console.error('에러가 발생했습니다.');
-        setResponseMessage('Failed to load data.');
-      }
+      setNeighborData({
+        nickname: data.friend.nickname,
+        username: data.friend.username,
+        tags: data.friend.tags,
+      });
     } catch (error) {
+      console.error('에러가 발생했습니다.', error);
       setResponseMessage('An error occurred while fetching data.');
-      console.error(error);
     }
   };
 

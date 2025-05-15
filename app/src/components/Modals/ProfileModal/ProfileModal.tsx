@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { API_URL } from '@/src/lib/config';
 import { UserInfo } from '@/src/types/profilePage.type';
 import { userApi } from '@/src/lib/api';
 import Image from 'next/image';
@@ -106,36 +105,25 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
     try {
       setLoading(true);
 
-      // Save logic here
       const formData = new FormData();
       formData.append('nickname', profileData.nickname);
       formData.append('username', profileData.username);
       formData.append('my_memo', profileData.myMemo);
       formData.append('tags', JSON.stringify(profileData.tags));
+
       if (removeProfileImage) {
         formData.append('remove_profile_image', 'True');
       }
       if (imageFile) {
         formData.append('profile_image', imageFile);
       }
-      const response = await fetch(`${API_URL}/domain/user/my/info/change`, {
-        method: 'PUT',
-        credentials: 'include',
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error('Failed to save profile');
-      }
 
-      if (response.ok) {
-        await response.json();
-        const data = await userApi.fetchMyInfo();
-        setProfileData(data);
-        alert('프로필이 성공적으로 저장되었습니다.');
-        onClose();
-      } else {
-        console.error('Failed to update profile.');
-      }
+      await userApi.updateMyInfo(formData);
+
+      const data = await userApi.fetchMyInfo();
+      setProfileData(data);
+      alert('프로필이 성공적으로 저장되었습니다.');
+      onClose();
     } catch (error) {
       alert('프로필 저장 중 오류가 발생했습니다.');
       console.error('An error occurred while saving profile.', error);
@@ -143,7 +131,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       setLoading(false);
     }
   };
-
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (loading) return;
 
@@ -152,22 +139,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
     }
   };
 
-  // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (event.target.files && event.target.files[0]) {
-  //     const file = event.target.files[0];
-  //     const reader = new FileReader();
-
-  //     reader.onloadend = () => {
-  //       setPreviewImage(reader.result as string);
-  //       setProfileData((prevData) => ({
-  //         ...prevData,
-  //         profile_image_url: file,
-  //       }));
-  //     };
-
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       const file = event.target.files[0];

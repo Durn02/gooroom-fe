@@ -56,15 +56,6 @@ export default function MyProfile() {
     if (!response) {
       return;
     }
-    // try {
-    //   for (const imageUrl of sticker.image_url) {
-    //     await deleteFromS3(imageUrl);
-    //   }
-    // } catch (error) {
-    //   console.error('Error deleting sticker:', error);
-    //   alert('스티커 삭제 중 오류가 발생했습니다.');
-    //   return;
-    // }
 
     const result = stickerApi.deleteStickers(sticker.stickerNodeId, sticker.imageUrl);
     if (!result) {

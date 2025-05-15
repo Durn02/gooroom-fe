@@ -6,3 +6,4 @@ export * as landingApi from './landing.api';
 export * as friendApi from './friend/friend.api';
 export * as knockApi from './knock.api';
 export * as userApi from './user.api';
+export * as authApi from './auth.api';

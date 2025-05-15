@@ -33,7 +33,7 @@ export default function NeighborProfile({ params }: Props) {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    friendApi.fetchFriendInfo(selectedUserId).then((data) => {
+    friendApi.fetchFriendInfo({ userNodeId: selectedUserId }).then((data) => {
       setFriendInfo(data.friend);
       setStickers(data.stickers);
       setPosts(data.posts);

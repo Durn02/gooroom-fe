@@ -80,3 +80,17 @@ export const checkLogin = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export const updateMyInfo = async (formData: FormData) => {
+  try {
+    const response = await apiClient.put('/domain/user/my/info/change', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('프로필 저장 실패:', error);
+    throw error;
+  }
+};
