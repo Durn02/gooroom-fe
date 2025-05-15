@@ -1,5 +1,5 @@
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { S3BUCKET, S3CLIENT } from '@/src/lib/config';
+// import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+// import { S3BUCKET, S3CLIENT } from '@/src/lib/config';
 
 // export const deleteFromS3 = async (url: string) => {
 //   const key = url.split('/').slice(3).join('/');
