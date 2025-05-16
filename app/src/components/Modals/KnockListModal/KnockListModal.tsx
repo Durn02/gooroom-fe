@@ -22,14 +22,13 @@ const KnockListModal: React.FC<KnockListModalProps> = ({ isOpen, onClose, knocks
   const parseUserGroups = () => {
     try {
       if (!loggedInUserInfo?.groups) return [];
-      const rawGroups = loggedInUserInfo.groups.toString();
-
-      if (Array.isArray(rawGroups)) {
-        return rawGroups.filter((g) => g && g.trim() !== '');
+      if (loggedInUserInfo.groups[0] === '') {
+        const createGroup = window.confirm('그룹이 없습니다. 프로필 페이지에서 새 그룹을 생성하시겠습니까?');
+        if (createGroup) {
+          router.push('/myprofile');
+        }
       }
-
-      const parsed = JSON.parse(rawGroups.replace(/'/g, '"'));
-      return Array.isArray(parsed) ? parsed.filter((g) => g && g.trim() !== '') : [];
+      return loggedInUserInfo?.groups;
     } catch (e) {
       console.error('그룹 파싱 실패:', e);
       return [];

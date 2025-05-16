@@ -74,19 +74,17 @@ export default function Signup() {
   };
 
   const onVerifyClickHandler = async () => {
-    const sendVerificationCodeRequest: VerifyCodeRequest = {
-      verificationCode: userVerificationCodeInput,
+    const verifyCodeRequest: VerifyCodeRequest = {
+      verifycode: userVerificationCodeInput,
       email: userEmailInput,
     };
 
     try {
-      await authApi.sendVerificationCode(sendVerificationCodeRequest);
+      await authApi.verifySMTPCode(verifyCodeRequest);
       alert('회원가입에 성공했습니다.');
       router.push('/');
     } catch (error) {
-      if (error instanceof Error) {
-        alert(`Verify failed: ${error.message}`);
-      }
+      console.error(error);
     }
   };
 

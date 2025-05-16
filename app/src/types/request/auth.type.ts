@@ -12,7 +12,7 @@ export interface SigninRequest {
 }
 
 export interface VerifyCodeRequest {
-  verificationCode: string;
+  verifycode: string;
   email: string;
 }
 
