@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 import { logout } from '../sign';
-import { axiosResponseToCamel, toSnake } from '@/src/utils/camel-snake';
+import { axiosResponseToCamel, formDataWithSnakeKeys, toSnake } from '@/src/utils/camel-snake';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -12,7 +12,9 @@ let refreshTokenPromise: Promise<void> | null = null;
 let isLoggingOut = false;
 
 apiClient.interceptors.request.use((config) => {
-  if (config.data && typeof config.data === 'object') {
+  if (config.data instanceof FormData) {
+    config.data = formDataWithSnakeKeys(config.data);
+  } else if (config.data && typeof config.data === 'object') {
     config.data = toSnake(config.data);
   }
 

@@ -15,11 +15,7 @@ export const fetchPosts = async () => {
 
 export const createPost = async (formData: FormData) => {
   try {
-    const response = await apiClient.post('/domain/content/post/create', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.post('/domain/content/post/create', formData);
     return response.data;
   } catch (error) {
     console.error('게시글 생성 실패:', error);

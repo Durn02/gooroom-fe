@@ -26,11 +26,7 @@ export const fetchStickers = async (userNodeId: string) => {
 
 export const createSticker = async (formData: FormData) => {
   try {
-    const response = await apiClient.post('/domain/content/sticker/create', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.post('/domain/content/sticker/create', formData);
     return response.data;
   } catch (error) {
     console.error('스티커 생성 실패:', error);

@@ -110,14 +110,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, myProfile 
       const formData = new FormData();
       formData.append('nickname', profileData.nickname);
       formData.append('username', profileData.username);
-      formData.append('my_memo', profileData.myMemo);
+      formData.append('myMemo', profileData.myMemo);
       formData.append('tags', JSON.stringify(profileData.tags));
 
       if (removeProfileImage) {
-        formData.append('remove_profile_image', 'True');
+        formData.append('removeProfileImage', 'True');
       }
       if (imageFile) {
-        formData.append('profile_image', imageFile);
+        formData.append('profileImage', imageFile);
       }
 
       await userApi.updateMyInfo(formData);

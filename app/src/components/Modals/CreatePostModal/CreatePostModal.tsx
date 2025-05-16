@@ -51,7 +51,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, user
       formData.append('content', postData.content);
       formData.append('title', postData.title);
       formData.append('tags', JSON.stringify(postData.tags));
-      formData.append('is_public', 'true');
+      formData.append('isPublic', 'true');
       images.forEach((file) => {
         formData.append('images', file);
       });
