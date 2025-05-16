@@ -59,7 +59,7 @@ export default function MyProfile() {
       setUserInfo(data);
 
       const groups = await getGroupsNameAndNumber();
-      if(groups.length>0){
+      if (groups.length > 0) {
         setGroups(groups);
         setSelectedGroup(groups[0].groupName);
       } else {
@@ -112,7 +112,7 @@ export default function MyProfile() {
         postNodeId: posts.postNodeId,
         postImageUrls: posts.imageUrl,
       });
-      if (response.ok) {
+      if (response) {
         setPosts((prevPosts) => prevPosts.filter((post) => post.postNodeId !== posts.postNodeId));
         alert('게시글이 삭제되었습니다.');
       } else {

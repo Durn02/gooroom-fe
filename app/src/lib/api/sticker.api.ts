@@ -36,11 +36,11 @@ export const createSticker = async (formData: FormData) => {
 
 export const deleteStickers = async (stickerNodeId: string, stickerImageUrls: string[]) => {
   try {
-    const stringImageUrl = stickerImageUrls.toString();
+    const stringImageUrl = stickerImageUrls;
     const { data } = await apiClient.delete('domain/content/sticker/delete', {
       data: {
         stickerNodeId: stickerNodeId,
-        stickerImageUrl: stringImageUrl,
+        stickerImageUrls: stringImageUrl,
       },
     });
     return data;

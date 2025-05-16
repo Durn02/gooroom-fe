@@ -30,7 +30,7 @@ export const deletePost = async (payload: DeleteMyPostRequest) => {
     const response = await apiClient.delete('/domain/content/post/delete-my-content', {
       data: {
         postNodeId,
-        postImageUrls: postImageUrls.toString(), // string[] → comma-separated string
+        postImageUrls: postImageUrls,
       },
     });
 
