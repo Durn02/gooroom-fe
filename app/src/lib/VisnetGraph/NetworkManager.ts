@@ -121,25 +121,19 @@ export class NetworkManager {
       }
     });
     this.network.on('dragStart', () => {
-      console.log('dragStart');
       this.startObservation();
     });
     this.network.on('dragEnd', () => {
-      console.log('dragEnd');
       this.stopObservation();
     });
     this.network.on('startStabilizing', () => {
-      console.log('startStabilizing');
       this.startObservation();
     });
     this.network.on('stabilized', () => {
-      console.log('stablized');
       this.stopObservation();
     });
 
     this.network.on('zoom', () => {
-      console.log('zoomed');
-
       this.startObservation();
       setTimeout(() => {
         this.stopObservation();

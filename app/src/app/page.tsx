@@ -57,7 +57,8 @@ export default function Landing() {
     },
   };
 
-  const { networkManager, networkContainer, castData, contextMenu, setContextMenu, observing } = useNetwork(callbacks);
+  const { networkManager, networkContainer, castData, setCastData, contextMenu, setContextMenu, observing } =
+    useNetwork(callbacks);
 
   const { width, handleMouseDown } = useResizeSection({
     minWidth: 20,
@@ -65,6 +66,28 @@ export default function Landing() {
     initialWidth: 30,
     sectionSide: 'right',
   });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCastData((prev) => {
+        const now = Date.now();
+        const updated = Object.fromEntries(
+          Object.entries(prev)
+            .map(([userId, { content }]) => {
+              const filtered = content.filter((c) => {
+                const created = new Date(c.createdAt).getTime();
+                return now < created + c.duration * 60_000;
+              });
+              return filtered.length > 0 ? [userId, { content: filtered }] : null;
+            })
+            .filter(Boolean) as [string, { content: (typeof prev)[string]['content'] }][],
+        );
+        return updated;
+      });
+    }, 60_000);
+
+    return () => clearInterval(interval);
+  }, [setCastData]);
 
   useEffect(() => {
     setLoggedInUserInfo(networkManager?.getLoggedInUser());
