@@ -61,7 +61,7 @@ export default function Signin() {
 
   const onVerifyButtonClickHandler = async () => {
     const verifyCodeRequest: VerifyCodeRequest = {
-      verificationCode: userVerifyInput,
+      verifycode: userVerifyInput,
       email: userEmailInput,
     };
 
